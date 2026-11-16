@@ -97,6 +97,32 @@ export const FloatingAICopilot: React.FC<FloatingAICopilotProps> = ({
     const isRsiOverbought = rsi14 > 70;
     const isRsiOversold = rsi14 < 35;
 
+    // 0. Beginner / Getting Started Query (Hindi & English)
+    if (
+      q.includes("shuru") ||
+      q.includes("start") ||
+      q.includes("begin") ||
+      q.includes("kese karu") ||
+      q.includes("kaise karu") ||
+      q.includes("seekhna") ||
+      q.includes("guide") ||
+      q.includes("kya karu")
+    ) {
+      return `### 🚀 TradeX Pro Par Shuruat Kaise Karein (Beginner's Step-by-Step Guide)\n\n` +
+        `Aap bina kisi risk ke 5 aasan steps mein trading sikh sakte hain:\n\n` +
+        `1. **💰 ₹10,00,000 Virtual Cash Use Karein:**\n` +
+        `   Aapko Paper Trading wallet mein bina real paise ke practice karne ke liye virtual cash mila hai. Aap bina tension ke trade test kar sakte hain.\n\n` +
+        `2. **📈 Stock & Chart Select Karein:**\n` +
+        `   Upar watchlist se koi stock chune (jaise **RELIANCE**, **TCS**, **HDFCBANK**). Chart par real price action aur indicators dekhein.\n\n` +
+        `3. **🤖 AI Prediction & Target Dekhein:**\n` +
+        `   Chart ke upar **AI Neural Prediction** badge dekhein — yeh aapko Signal (**STRONG BUY / HOLD**), Target price, aur Stop-Loss suggest karta hai.\n\n` +
+        `4. **⚡ Virtual Order Place Karein:**\n` +
+        `   Right side panel par **BUY** ya **SELL** click karein, quantity enter karein aur order confirm karein!\n\n` +
+        `5. **🎓 Trading Academy Explore Karein:**\n` +
+        `   Top bar mein **Academy** tab par jayein jahan pure beginner lessons (Hinglish mein) available hain!\n\n` +
+        `> 💬 *Aap mujhse kisi bhi stock ke baare mein pooch sakte hain, jaise: "RELIANCE kal kaisa rahega?" ya "Stop-loss kitna lagayein?"*`;
+    }
+
     // 1. Tomorrow / Prediction Query
     if (q.includes("predict") || q.includes("tomorrow") || q.includes("kal") || q.includes("next day") || q.includes("signal")) {
       const direction = isTrendBullish && isMacdCross ? "BULLISH (UPWARD MOMENTUM)" : currentPrice < sma20 ? "BEARISH / CONSOLIDATION" : "RANGE-BOUND NEUTRAL";
@@ -195,6 +221,7 @@ export const FloatingAICopilot: React.FC<FloatingAICopilotProps> = ({
   };
 
   const quickPills = [
+    `Main shuru kaise karu?`,
     `Predict tomorrow for ${currentSymbol}`,
     `Key Support & Resistance`,
     `Stop-Loss & Risk calculation`,
