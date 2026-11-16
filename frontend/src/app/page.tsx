@@ -680,7 +680,7 @@ export default function HomePage() {
                       {currentStock.changePercent.toFixed(2)}%
                     </span>
                     <span className="text-[11px] text-[#787B86] font-medium hidden sm:inline" title="Verified Close Price (NOT a real-time quote)">
-                      Observation: {currentStock.timestamp ? currentStock.timestamp.split("T")[0] : "Recent"} • Verified Close Price (NOT a real-time quote)
+                      Session: {currentStock.timestamp ? currentStock.timestamp.split("T")[0] : "Recent"} • Verified Close Price (NOT a real-time quote)
                     </span>
                     {isLoading && (
                       <span className="text-xs text-[#2962FF] animate-pulse font-medium">
