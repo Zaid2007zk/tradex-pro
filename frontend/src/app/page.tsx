@@ -31,6 +31,7 @@ import { TradeJournalModal } from "@/components/trading/TradeJournalModal";
 import { MultiChartGrid } from "@/components/trading/MultiChartGrid";
 import { AlgoStrategyStudio } from "@/components/trading/AlgoStrategyStudio";
 import { AIPredictionBadge } from "@/components/AIPredictionBadge";
+import { AIVisualDecisionNodes } from "@/components/AIVisualDecisionNodes";
 import { FloatingAICopilot } from "@/components/FloatingAICopilot";
 import { soundEngine } from "@/utils/soundEngine";
 import {
@@ -766,6 +767,37 @@ export default function HomePage() {
                   }}
                   onOpenCopilot={(q) => {
                     setCopilotInitialQuery(q || `Analyze ${currentStock.symbol} AI signals`);
+                    setIsCopilotOpen(true);
+                  }}
+                />
+
+                {/* AI Visual Decision Nodes & Strategy Flow Navigator */}
+                <AIVisualDecisionNodes
+                  symbol={currentStock.symbol}
+                  price={currentStock.lastClose}
+                  currency={currentStock.currency}
+                  changePercent={currentStock.changePercent}
+                  rsi14={currentStock.rsi14}
+                  macd={currentStock.macd}
+                  macdSignal={currentStock.macdSignal}
+                  sma20={currentStock.sma20}
+                  sma50={currentStock.sma50}
+                  volatility={currentStock.volatility}
+                  onSelectStock={(sym) => setSelectedSymbol(sym)}
+                  onPreFillOrder={(ord) => {
+                    soundEngine.playOrderFilled();
+                    handleExecuteOrder({
+                      symbol: ord.symbol,
+                      side: ord.side,
+                      product: ord.product,
+                      orderType: ord.orderType,
+                      quantity: ord.quantity,
+                      price: ord.price,
+                      marginRequired: (ord.price * ord.quantity) / (ord.product === "MIS" ? 5 : 1),
+                    });
+                  }}
+                  onOpenCopilot={(q) => {
+                    setCopilotInitialQuery(q);
                     setIsCopilotOpen(true);
                   }}
                 />

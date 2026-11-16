@@ -123,6 +123,37 @@ export const FloatingAICopilot: React.FC<FloatingAICopilotProps> = ({
         `> 💬 *Aap mujhse kisi bhi stock ke baare mein pooch sakte hain, jaise: "RELIANCE kal kaisa rahega?" ya "Stop-loss kitna lagayein?"*`;
     }
 
+    // Node & Decision Flow / Up-Down / Risk / Difference Query
+    if (
+      q.includes("node") ||
+      q.includes("flow") ||
+      q.includes("kaha up") ||
+      q.includes("kaha down") ||
+      q.includes("konsa buy") ||
+      q.includes("kisme risk") ||
+      q.includes("difference") ||
+      q.includes("yee karo") ||
+      q.includes("uske bad")
+    ) {
+      const upLevel = (currentPrice * 1.008).toFixed(2);
+      const downLevel = (currentPrice * 0.992).toFixed(2);
+      const t1 = (currentPrice * (isTrendBullish ? 1.025 : 0.98)).toFixed(2);
+      const sl = (currentPrice * (isTrendBullish ? 0.985 : 1.015)).toFixed(2);
+
+      return `### 🗺️ AI Sequential Decision Nodes for **${currentSymbol}**\n\n` +
+        `**📍 Node 1: Kahan Market UP hoga vs Kahan DOWN hoga?**\n` +
+        `* 🚀 **UP Condition:** Agar price **${currSym}${upLevel}** ke upar sustain kare, toh market UP hoga (+2.5% target: **${currSym}${t1}**).\n` +
+        `* 🔻 **DOWN Condition:** Agar price **${currSym}${downLevel}** ke niche slip kare, toh down-move aayega.\n\n` +
+        `**📍 Node 2: Konsa Buy Karein? (Difference & Risk Breakdown)**\n` +
+        `* 🟢 **Delivery (CNC) - LOW RISK:** Best for beginners. Share hold kar sakte hain, koi daily expiry nahi hoti.\n` +
+        `* 🔴 **Intraday (MIS) - HIGH RISK:** 5x margin milta hai par 3:20 PM tak close karna hota hai. Strict stop-loss zaroori hai.\n\n` +
+        `**📍 Node 3: Yee Karo, Uske Baad Yee Karo (Action Plan):**\n` +
+        `1. **Step 1:** Chart par 20-Day SMA (${currSym}${sma20.toFixed(2)}) ke upar price dekh kar Buy entry plan karein.\n` +
+        `2. **Step 2:** Stop-Loss hamesha **${currSym}${sl}** (-1.5%) par set karein.\n` +
+        `3. **Step 3:** Target **${currSym}${t1}** aane par 50% profit book karke rest hold karein.\n\n` +
+        `> 💡 *Chart ke theek upar ab **AI Visual Decision Nodes** panel active ho chuka hai, jahan se aap Visual Nodes, Aasan Hinglish Guide, aur Konsa Buy Karein Screener switch kar sakte hain!*`;
+    }
+
     // 1. Tomorrow / Prediction Query
     if (q.includes("predict") || q.includes("tomorrow") || q.includes("kal") || q.includes("next day") || q.includes("signal")) {
       const direction = isTrendBullish && isMacdCross ? "BULLISH (UPWARD MOMENTUM)" : currentPrice < sma20 ? "BEARISH / CONSOLIDATION" : "RANGE-BOUND NEUTRAL";
@@ -222,10 +253,11 @@ export const FloatingAICopilot: React.FC<FloatingAICopilotProps> = ({
 
   const quickPills = [
     `Main shuru kaise karu?`,
+    `Kahan market UP hoga aur kahan DOWN?`,
+    `Konsa buy karein aur kisme risk hai?`,
+    `AI Sequential Decision Nodes`,
     `Predict tomorrow for ${currentSymbol}`,
-    `Key Support & Resistance`,
     `Stop-Loss & Risk calculation`,
-    `Top 3 Breakout stocks today`,
     `Hinglish mein batao`,
   ];
 
