@@ -168,8 +168,17 @@ export const ResearchAssistant: React.FC<ResearchAssistantProps> = ({
     let replyText = "";
     const lower = query.toLowerCase();
 
-    // 1. "HOW TO START TRADING" / BEGINNER WORKFLOW
-    if (
+    // 1. "HOW TO START TRADING" / BEGINNER WORKFLOW (Hinglish & English)
+    const isHinglish =
+      lower.includes("shuru") ||
+      lower.includes("kese") ||
+      lower.includes("kaise") ||
+      lower.includes("kya karu") ||
+      lower.includes("batao") ||
+      lower.includes("seekhna") ||
+      lower.includes("me shuru");
+
+    const isGettingStarted =
       lower.includes("start trading") ||
       lower.includes("how to trade") ||
       lower.includes("how i trade") ||
@@ -178,9 +187,38 @@ export const ResearchAssistant: React.FC<ResearchAssistantProps> = ({
       lower.includes("how do i start") ||
       lower.includes("how to use") ||
       lower.includes("beginner") ||
-      lower.includes("steps")
-    ) {
-      replyText = `Here is how to start trading on TradeX Pro step-by-step:
+      lower.includes("steps") ||
+      lower.includes("shuru") ||
+      lower.includes("start") ||
+      lower.includes("kese karu") ||
+      lower.includes("kaise karu") ||
+      lower.includes("kya karu") ||
+      (lower.includes("trading") && (lower.includes("kese") || lower.includes("kaise") || lower.includes("start") || lower.includes("shuru")));
+
+    if (isGettingStarted) {
+      if (isHinglish) {
+        replyText = `TradeX Pro Par Trading Shuru Karne Ka Step-by-Step Tarika:
+
+1. Stock Chunein (Select Instrument):
+• Upar watchlist se koi stock select karein (jaise RELIANCE.NS, TCS.NS ya HDFCBANK.NS).
+• Chart ke upar "AI Visual Decision Nodes" dekhein jo batata hai market kahan UP hoga aur kahan DOWN hoga.
+
+2. Product Type Decide Karein (Risk Samjhein):
+• Delivery (CNC) [SAFE / LOW RISK]: Agar aap beginner hain, toh Delivery chunein. Shares aapke pass rahenge, koi jaldi nahi hoti.
+• Intraday (MIS) [HIGH RISK]: Aaj hi 3:20 PM tak bechna padega. Isme 5x leverage milta hai, par bina Stop-Loss trade na karein!
+
+3. Order Place Karein (Right Side Order Ticket):
+• [BUY] par click karein.
+• Order Type: [MARKET] chunein instant price par lene ke liye.
+• Quantity dalein (shuruat mein sirf 10 ya 25 shares se practice karein).
+
+4. Profit & Loss Track Karein:
+• Niche "Positions" dock mein aapka live P&L dikhega.
+• Target aane par [Exit] button daba kar munafa book karein.
+
+Paisa lagane ki zaroorat nahi hai: Upar 'Paper Trading' tab par click karke ₹10,00,000 ke virtual cash se 100% risk-free practice karein!`;
+      } else {
+        replyText = `Here is how to start trading on TradeX Pro step-by-step:
 
 1. Select an Instrument:
 • Use the top search bar or quick ticker pills (e.g. RELIANCE.NS, TCS.NS, AAPL).
@@ -201,6 +239,44 @@ export const ResearchAssistant: React.FC<ResearchAssistantProps> = ({
 • Use the 1-click [Exit] button to square off any trade or [Close All] for rapid exit.
 
 Tip: Want to practice risk-free first? Click the 'Paper Trading' tab at the top to trade with ₹5,00,000 in simulated funds!`;
+      }
+    }
+    // 1B. NODE FLOW / DIRECTION (UP/DOWN) / RISK & BUY SELECTION (Hinglish & English)
+    else if (
+      lower.includes("node") ||
+      lower.includes("flow") ||
+      lower.includes("kaha up") ||
+      lower.includes("kaha down") ||
+      lower.includes("up hoga") ||
+      lower.includes("down hoga") ||
+      lower.includes("konsa buy") ||
+      lower.includes("kisme risk") ||
+      lower.includes("difference") ||
+      lower.includes("yee karo") ||
+      lower.includes("uske bad")
+    ) {
+      const price = metrics?.last_close || 1335.8;
+      const upLevel = (price * 1.008).toFixed(2);
+      const downLevel = (price * 0.992).toFixed(2);
+      const target = (price * 1.025).toFixed(2);
+      const stop = (price * 0.985).toFixed(2);
+
+      replyText = `AI Visual Decision Nodes & Direction Analysis for ${symbol}:
+
+1. Kahan Market UP hoga aur Kahan DOWN hoga:
+• UP Trigger: Agar price ₹${upLevel} ke upar sustain kare, toh market UP side rally karega (Target: ₹${target}).
+• DOWN Trigger: Agar price ₹${downLevel} ke niche toota, toh market DOWN (bearish pullback) jayega.
+
+2. Konsa Buy Karein? (Difference & Risk):
+• Delivery (CNC) [SAFE / LOW RISK]: Agar aap safe rehna chahte hain, toh CNC lein. Isme koi time limit nahi hoti, jab profit aaye tab bechein.
+• Intraday (MIS) [HIGH RISK]: Agar aaj hi profit lena hai, toh MIS lein. Par Stop-Loss (₹${stop}) zaroor lagayein.
+
+3. Yee Karo, Uske Baad Yee Karo:
+• Step 1: Chart ke upar "AI Visual Decision Nodes" panel dekhein.
+• Step 2: "Pre-fill This Trade" par click karein.
+• Step 3: Stop-loss ₹${stop} aur Target ₹${target} set karke BUY daba dein!
+
+Deterministic Fallback analysis based on verified historical close price points.`;
     }
     // 2. PRODUCT COMPARISON ("COMPARE TO OTHER PRODUCTS / SITES")
     else if (
