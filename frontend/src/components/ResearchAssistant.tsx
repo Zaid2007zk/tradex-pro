@@ -14,7 +14,15 @@ import {
   HelpCircle,
   TrendingUp,
   BookOpen,
+  Cpu,
+  Zap,
 } from "lucide-react";
+import {
+  queryGemini,
+  hasActiveGeminiKey,
+  generateNeuralSynthesis,
+} from "@/services/geminiAiService";
+import { GeminiKeyModal } from "./GeminiKeyModal";
 
 export interface Citation {
   id: string;
@@ -145,10 +153,13 @@ export const ResearchAssistant: React.FC<ResearchAssistantProps> = ({
     },
   ]);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
+  const [isLoadingAi, setIsLoadingAi] = useState(false);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     const query = question.trim();
-    if (!query) return;
+    if (!query || isLoadingAi) return;
 
     // Client-side zero-trust privacy check
     const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
@@ -164,7 +175,59 @@ export const ResearchAssistant: React.FC<ResearchAssistantProps> = ({
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
-    // Intelligent context-aware NLP engine for trading inquiries
+    setQuestion("");
+    const updatedHistory = [...chatHistory, userMsg];
+    setChatHistory(updatedHistory);
+    setIsLoadingAi(true);
+
+    const marketCtx = {
+      symbol,
+      price: metrics?.last_close || 1335.8,
+      currency: "₹",
+      changePercent: 0,
+      rsi14: metrics?.rsi_14 || 58.4,
+      macd: metrics?.macd || 1.5,
+      macdSignal: metrics?.macd_signal || 0.8,
+      sma20: metrics?.sma_20 || 1320.0,
+      sma50: metrics?.sma_50 || 1305.0,
+      volatility: metrics?.volatility || 18.5,
+    };
+
+    // If Google Gemini key is present, use real generative LLM
+    if (hasActiveGeminiKey()) {
+      try {
+        const geminiHistory = updatedHistory.slice(-8).map((m) => ({
+          role: (m.sender === "user" ? "user" : "model") as "user" | "model",
+          text: m.text,
+        }));
+        const aiAnswer = await queryGemini(query, marketCtx, geminiHistory);
+        const assistantMsg: ChatMessage = {
+          id: `ast-${Date.now()}`,
+          sender: "assistant",
+          text: aiAnswer,
+          citations: [
+            {
+              id: "GEMINI-LLM",
+              source: "Google Gemini 1.5 Flash API",
+              source_type: "live_feed",
+              timestamp: new Date().toISOString(),
+              metric_name: "Generative AI Confluence",
+              metric_value: marketCtx.price,
+              calculation_method: "Direct multimodal neural inference via Google AI Studio",
+            },
+            ...brief.citations,
+          ],
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        };
+        setChatHistory([...updatedHistory, assistantMsg]);
+        setIsLoadingAi(false);
+        return;
+      } catch (err) {
+        console.error("Gemini failed, falling back to neural synthesis:", err);
+      }
+    }
+
+    // Intelligent context-aware NLP engine for trading inquiries (Offline / Fallback)
     let replyText = "";
     const lower = query.toLowerCase();
 
@@ -363,17 +426,9 @@ Deterministic Narrative grounded in mathematical calculations.`;
 • MTF (Margin Trading Facility): Allows swing traders to hold positions for multiple days with 4x margin leverage.
 • Stop-Loss (SL): Automatically triggers a market exit if the stock drops to your specified trigger price, strictly limiting potential loss.`;
     }
-    // 8. GENERAL / DEFAULT SMART ANSWER
+    // 8. GENERAL / DEFAULT SMART ANSWER (Multi-Factor Neural Synthesis)
     else {
-      replyText = `Factor & Market Brief for ${symbol}:
-• Composite Factor Rank: ${brief.factor_scorecard.composite_score}/100 (Value: ${brief.factor_scorecard.value_score}, Momentum: ${brief.factor_scorecard.momentum_score}, Quality: ${brief.factor_scorecard.quality_score}).
-• 14-Day RSI: ${(metrics?.rsi_14 || 58.4).toFixed(1)}.
-• Volatility (Ann.): ${(metrics?.volatility || 18.5).toFixed(1)}%.
-
-You can also ask me:
-1. "How do I start trading?" — Full beginner guide and order routing walkthrough.
-2. "Compare with other products" — TradeX Pro vs TradingView, Zerodha, and Bloomberg.
-3. "Explain MIS vs CNC" — Order types and margin leverage details.`;
+      replyText = generateNeuralSynthesis(query, marketCtx);
     }
 
     const assistantMsg: ChatMessage = {
@@ -384,8 +439,8 @@ You can also ask me:
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
-    setChatHistory([...chatHistory, userMsg, assistantMsg]);
-    setQuestion("");
+    setChatHistory([...updatedHistory, assistantMsg]);
+    setIsLoadingAi(false);
   };
 
   return (
@@ -405,9 +460,19 @@ You can also ask me:
             </span>
           </div>
         </div>
-        <div className="flex items-center space-x-1 text-[#089981] bg-[#089981]/10 px-2 py-0.5 rounded text-[10px] font-semibold border border-[#089981]/20">
-          <Lock className="w-2.5 h-2.5" />
-          <span>Zero-Trust Privacy Filter</span>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setIsKeyModalOpen(true)}
+            className="flex items-center space-x-1.5 px-2.5 py-1 rounded text-[10px] font-semibold transition bg-gradient-to-r from-purple-600/25 to-blue-600/25 border border-purple-500/30 text-purple-300 hover:text-white hover:border-purple-400"
+            title="Configure Google Gemini 1.5 Flash API Key for Real Generative Intelligence"
+          >
+            <Sparkles className="w-3 h-3 text-purple-400" />
+            <span>{hasActiveGeminiKey() ? "Gemini LLM Active" : "Connect Gemini AI"}</span>
+          </button>
+          <div className="flex items-center space-x-1 text-[#089981] bg-[#089981]/10 px-2 py-0.5 rounded text-[10px] font-semibold border border-[#089981]/20">
+            <Lock className="w-2.5 h-2.5" />
+            <span>Zero-Trust Privacy Filter</span>
+          </div>
         </div>
       </div>
 
@@ -485,6 +550,14 @@ You can also ask me:
                   </div>
                 </div>
               ))}
+              {isLoadingAi && (
+                <div className="flex flex-col items-start">
+                  <div className="bg-[#1E222D] text-purple-300 border border-purple-500/30 rounded p-2 text-xs flex items-center space-x-2">
+                    <Sparkles className="w-3.5 h-3.5 animate-spin text-purple-400" />
+                    <span>Analyzing multi-factor confluence with Gemini AI...</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Quick Prompts */}
@@ -604,6 +677,12 @@ You can also ask me:
           </div>
         )}
       </div>
+
+      {/* Gemini AI Key Setup Modal */}
+      <GeminiKeyModal
+        isOpen={isKeyModalOpen}
+        onClose={() => setIsKeyModalOpen(false)}
+      />
     </div>
   );
 };
