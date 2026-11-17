@@ -122,19 +122,43 @@ export const OrderExecutionDock: React.FC<OrderExecutionProps> = ({
         <p className="text-[11px] text-[#D1D4DC] leading-snug">
           Recommended: <strong className="text-emerald-400">Delivery (CNC)</strong> for safe growth, or <strong className="text-blue-400">Intraday (MIS 5x)</strong> with SL at {curr}{(currentPrice * 0.985).toFixed(2)}.
         </p>
-        <button
-          type="button"
-          onClick={() => {
-            setActiveSide("BUY");
-            setProductType("CNC");
-            setOrderType("MARKET");
-            setQuantity(25);
-          }}
-          className="w-full py-1.5 px-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded font-bold text-[11px] flex items-center justify-center gap-1.5 transition shadow-sm cursor-pointer"
-        >
-          <Zap className="w-3 h-3 text-amber-300" />
-          <span>⚡ Auto-Apply AI Trade Setup</span>
-        </button>
+        <div className="grid grid-cols-2 gap-1.5 pt-0.5">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveSide("BUY");
+              setProductType("CNC");
+              setOrderType("MARKET");
+              setQuantity(25);
+              setOrderSuccess("AI Setup Applied: BUY 25 Delivery (CNC)");
+              setTimeout(() => setOrderSuccess(null), 2500);
+            }}
+            className="py-1.5 px-2 bg-[#131722] hover:bg-[#2A2E39] border border-purple-500/40 text-purple-300 rounded font-bold text-[10px] flex items-center justify-center gap-1 transition cursor-pointer"
+          >
+            <Zap className="w-3 h-3 text-amber-300" />
+            <span>Auto-Apply Setup</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onExecuteOrder({
+                symbol,
+                side: "BUY",
+                product: "CNC",
+                orderType: "MARKET",
+                quantity: 25,
+                price: currentPrice,
+                marginRequired: currentPrice * 25,
+              });
+              setOrderSuccess(`AI Auto-Executed: BUY 25 ${symbol} Filled!`);
+              setTimeout(() => setOrderSuccess(null), 3000);
+            }}
+            className="py-1.5 px-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded font-bold text-[10px] flex items-center justify-center gap-1 transition shadow-sm cursor-pointer"
+          >
+            <Zap className="w-3 h-3 text-amber-300" />
+            <span>⚡ 1-Click AI Buy</span>
+          </button>
+        </div>
       </div>
 
       {/* Side Selector Tabs (Buy vs Sell) */}

@@ -647,6 +647,8 @@ export default function HomePage() {
               sma20={currentStock.sma20}
               sma50={currentStock.sma50}
               volatility={currentStock.volatility}
+              availableMargin={availableMargin}
+              activePositions={positions}
               onExecuteTrade={(ord) => {
                 handleExecuteOrder({
                   symbol: ord.symbol,

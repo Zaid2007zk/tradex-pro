@@ -41,6 +41,8 @@ export interface PersonalTradingMentorProps {
   sma20: number;
   sma50: number;
   volatility: number;
+  availableMargin?: number;
+  activePositions?: any[];
   onExecuteTrade?: (order: {
     symbol: string;
     side: "BUY" | "SELL";
@@ -64,6 +66,8 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
   sma20,
   sma50,
   volatility,
+  availableMargin,
+  activePositions,
   onExecuteTrade,
   onSelectStock,
 }) => {
@@ -107,10 +111,18 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
     window.speechSynthesis.speak(utterance);
   };
 
-  // Default Guidance based on active step
+  // Default Guidance based on active step & open position
   useEffect(() => {
+    const activePos = activePositions?.find((p) => p.symbol === symbol);
     let msg = "";
-    if (currentStep === 1) {
+    if (activePos) {
+      setCurrentStep(4);
+      msg = `🎉 Active Trade Alert: Aapka ${activePos.side} ${activePos.quantity} shares of ${symbol} active hai! Entry: ${curr}${activePos.entryPrice.toFixed(
+        2
+      )}, Live P&L: ${activePos.unrealizedPnl >= 0 ? "+" : ""}${curr}${activePos.unrealizedPnl.toFixed(
+        2
+      )}. Target: ${curr}${target1}, Stop-Loss: ${curr}${stopLoss}. Target aate hi munafa book karein!`;
+    } else if (currentStep === 1) {
       msg = `Namaste! Main aapki Personal Trading Assistant "Aria" hoon. Abhi hum ${symbol} dekh rahe hain (LTP: ${curr}${price.toFixed(
         2
       )}). AI Decision Model ke anusar trend ${
@@ -124,7 +136,7 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
       msg = `Step 4 P&L Protection: Trade place ho gaya hai! Niche "Positions Dock" me apna live munafa track karein. Jaise hi Target ${curr}${target1} hit hoga, main aapko profit book karne ka alert doongi!`;
     }
     setAssistantMessage(msg);
-  }, [currentStep, symbol, price, isBullish]);
+  }, [currentStep, symbol, price, isBullish, activePositions]);
 
   // Handle custom query to assistant
   const handleAskAssistant = async (queryText: string) => {
