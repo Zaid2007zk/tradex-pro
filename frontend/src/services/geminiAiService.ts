@@ -136,7 +136,137 @@ export function generateNeuralSynthesis(prompt: string, context: MarketContext):
   const target1 = (context.price * (isTrendUp ? 1.025 : 0.98)).toFixed(2);
   const stopLoss = (context.price * (isTrendUp ? 0.985 : 1.015)).toFixed(2);
 
-  // 1. Beginner / Start queries
+  // 1. Selling, Exit & Profit Booking Timing (Highest Priority for Exit Execution)
+  if (
+    q.includes("sell") ||
+    q.includes("bech") ||
+    q.includes("exit") ||
+    q.includes("booking") ||
+    q.includes("profit book") ||
+    q.includes("kab nikle") ||
+    q.includes("kab nikal") ||
+    (q.includes("best time") && (q.includes("sell") || q.includes("bech") || q.includes("exit") || q.includes("nikal")))
+  ) {
+    return `### 🎯 AI Guidance: Stock Kab Sell (Exit) Karein — Best Timing & Rules for **${context.symbol}**\n\n` +
+      `Trading mein munafa tabhi banta hai jab aap **sahi time par sell (exit) karein**:\n\n` +
+      `1. **⏰ Intraday (MIS) ke liye Best Selling Time:**\n` +
+      `   • **Morning Wave (9:45 AM - 10:30 AM):** Opening momentum par buyers ka first surge aate hi apna 50% profit lock karein.\n` +
+      `   • **Power Hour (2:00 PM - 3:00 PM):** European market movement aur intraday closing trend par target exit lein.\n` +
+      `   • **⚠️ 3:15 PM Hard Exit:** Intraday trades ko har haal mein 3:15 PM se pehle close karein, warna 3:20 PM par broker auto square-off karke extra charges lagata hai.\n\n` +
+      `2. **📊 ${context.symbol} ke Live Exit Targets (Aaj ke Levels):**\n` +
+      `   • **Target 1 (50% Quantity Sell):** **${currSym}${target1}** (+2.5% move). Yahan adha profit lock karein.\n` +
+      `   • **Target 2 (Runner Quantity Sell):** **${currSym}${(context.price * 1.042).toFixed(2)}** (+4.2% move).\n` +
+      `   • **Strict Stop-Loss (Sell in Loss):** **${currSym}${stopLoss}** (-1.5%). Agar price iske niche gire toh bina kisi lalach ke turant bech kar loss cut karein!\n\n` +
+      `3. **💡 Technical Signs: Kab Sell Button Dabayein?**\n` +
+      `   • **RSI Overbought:** Current RSI **${context.rsi14.toFixed(1)}** hai. Agar RSI 75-80 cross kare toh buyers thak chuke hote hain—turant sell karein.\n` +
+      `   • **Candle Breakdown:** Agar 15-minute chart par 20-Day SMA (${currSym}${context.sma20.toFixed(2)}) ke niche red candle close ho jaye.\n\n` +
+      `> 🏆 *AI Golden Rule: "Kabi top tick par bechne ka wait mat karo. Jab profit green me ho, partial quantity sell karke capital safe karo!"*`;
+  }
+
+  // 2. Buying, Entry Timing & Opportunities
+  if (
+    (q.includes("buy") || q.includes("khareed") || q.includes("entry") || q.includes("le lu")) &&
+    (q.includes("best time") || q.includes("kab") || q.includes("sahi time") || q.includes("karein") || q.includes("kya"))
+  ) {
+    return `### 🚀 AI Guidance: Stock Kab Buy (Enter) Karein — Best Timing Rules for **${context.symbol}**\n\n` +
+      `Galat time par buy karne se loss hota hai. Sahi entry lene ke 3 golden rules:\n\n` +
+      `1. **⏰ Day Trading Entry Window:**\n` +
+      `   • **9:15 AM - 9:30 AM me trade MAT lein:** Is waqt opening trap hota hai.\n` +
+      `   • **Best Time (9:45 AM - 10:30 AM):** First 30 minutes ka high break hone par safe entry banti hai.\n` +
+      `   • **Afternoon Dip Entry (1:30 PM - 2:15 PM):** Jab pullback support se bounce kare.\n\n` +
+      `2. **📊 ${context.symbol} ke Live Entry Triggers:**\n` +
+      `   • **Breakout Entry (Bullish):** Buy above **${currSym}${upThreshold}** candle confirmation ke sath.\n` +
+      `   • **Dip Entry:** 20-Day SMA (**${currSym}${context.sma20.toFixed(2)}**) par bounce hone par buy karein.\n` +
+      `   • **Stop-Loss Mandate:** **${currSym}${stopLoss}** lagana na bhoolein.\n\n` +
+      `3. **🛡️ Safe Trading Recommendation:**\n` +
+      `   Beginners ke liye **Delivery (CNC)** sabse safe hai kyunki koi daily expiry nahi hoti!`;
+  }
+
+  // 3. Stop-Loss, Capital Protection & Loss Management
+  if (
+    q.includes("stop loss") ||
+    q.includes("stoploss") ||
+    q.includes("sl ") ||
+    q.includes("loss se") ||
+    q.includes("loss ho") ||
+    q.includes("recovery") ||
+    q.includes("ghata")
+  ) {
+    return `### 🛡️ AI Risk Management: Stop-Loss & Loss Recovery Rules\n\n` +
+      `Stock market mein kamyabi profit se nahi, balki **loss ko control karne se** milti hai:\n\n` +
+      `1. **Stop-Loss Kaise Kaam Karta Hai?**\n` +
+      `   Yeh aapka automated safety net hai. Agar price **${currSym}${stopLoss}** ke niche fisla, toh system aapko sirf 1.5% chote loss par automatically bahar nikal dega taaki aapka baki 98.5% capital safe rahe.\n\n` +
+      `2. **${context.symbol} Risk-Reward Equation:**\n` +
+      `   • **Current Price:** ${currSym}${context.price.toFixed(2)}\n` +
+      `   • **Stop-Loss (SL):** **${currSym}${stopLoss}** (-1.5%)\n` +
+      `   • **Target 1:** **${currSym}${target1}** (+2.5%)\n` +
+      `   • **Risk : Reward:** **1 : 1.7** (Institutional Grade Setup).\n\n` +
+      `3. **Loss Ho Jaye Toh Yeh 3 Galatiya Kabi Mat Karna:**\n` +
+      `   • **Revenge Trading:** Gusse me double quantity se trade na lein.\n` +
+      `   • **Averaging in Losing Trade:** Girte hue stock me aur paisa na dalein.\n` +
+      `   • **Max 2 Trades/Day:** Din me 2 Stop-Loss hit hote hi system band kar dein!`;
+  }
+
+  // 4. Market Timings & Sessions
+  if (
+    q.includes("timing") ||
+    q.includes("open") ||
+    q.includes("close") ||
+    q.includes("kitne baje") ||
+    q.includes("kab khulta") ||
+    q.includes("kab band") ||
+    q.includes("hours")
+  ) {
+    return `### ⏱️ Indian Stock Market (NSE / BSE) Trading Timings\n\n` +
+      `* **Pre-Open Session:** 9:00 AM - 9:08 AM (Opening price discovery).\n` +
+      `* **Normal Market Hours:** **9:15 AM - 3:30 PM IST** (Continuous equity trading).\n` +
+      `* **Intraday (MIS) Square-Off:** **3:20 PM IST** (Broker auto exit time).\n` +
+      `* **Market Working Days:** Monday se Friday (Saturday, Sunday aur National Holidays par market band rehta hai).\n\n` +
+      `> 💡 *AI Pro Tip: 9:15 - 9:30 AM me beginners trade na karein. Best intraday trading 9:45 AM se 11:30 AM aur 1:45 PM se 3:00 PM tak hoti hai!*`;
+  }
+
+  // 5. Technical Indicators Explained (RSI, MACD, Moving Averages)
+  if (
+    q.includes("rsi") ||
+    q.includes("macd") ||
+    q.includes("moving average") ||
+    q.includes("sma") ||
+    q.includes("indicator") ||
+    q.includes("candle") ||
+    q.includes("chart")
+  ) {
+    return `### 📊 Technical Indicators Simplified for **${context.symbol}**\n\n` +
+      `1. **RSI (Relative Strength Index):**\n` +
+      `   • Current RSI: **${context.rsi14.toFixed(1)}**\n` +
+      `   • **Under 30 (Oversold):** Stock bohot gir chuka hai, yahan se bounce aayega (BUY signal).\n` +
+      `   • **Above 70 (Overbought):** Stock overstretched hai, selling aane ka risk hai (PROFIT BOOKING signal).\n\n` +
+      `2. **20-Day & 50-Day SMA (Simple Moving Average):**\n` +
+      `   • 20-Day SMA: **${currSym}${context.sma20.toFixed(2)}** | 50-Day SMA: **${currSym}${context.sma50.toFixed(2)}**\n` +
+      `   • Price SMA ke upar chal raha hai = **Strong Bullish Trend**.\n\n` +
+      `3. **MACD (Moving Average Convergence Divergence):**\n` +
+      `   • MACD: **${context.macd.toFixed(2)}** vs Signal: **${context.macdSignal.toFixed(2)}**\n` +
+      `   • Positive divergence indicates buyers market me aggressive hain!`;
+  }
+
+  // 6. Capital, Money & Quantity
+  if (
+    q.includes("kitna paisa") ||
+    q.includes("capital") ||
+    q.includes("quantity") ||
+    q.includes("kitne share") ||
+    q.includes("budget")
+  ) {
+    return `### 💰 Capital & Position Sizing Guide for **${context.symbol}**\n\n` +
+      `1. **Virtual Practice First (Zero Cost):**\n` +
+      `   TradeX Pro par aapko **₹10,00,000 ka Virtual Paper Trading Wallet** diya gaya hai. Shuruat me bina real paise ke practice karein.\n\n` +
+      `2. **Position Size for ${context.symbol}:**\n` +
+      `   • **Beginner Batch:** 10 se 25 shares.\n` +
+      `   • **Delivery (CNC):** 25 shares ke liye ~${currSym}${(context.price * 25).toFixed(0)} full cash chahiye.\n` +
+      `   • **Intraday (MIS 5x):** Sirf ~${currSym}${((context.price * 25) / 5).toFixed(0)} margin chahiye!\n\n` +
+      `3. **Capital Rule:** Single trade me pure portfolio ka 2% se zyada risk na lein!`;
+  }
+
+  // 7. Beginner / Start queries
   if (
     q.includes("shuru") ||
     q.includes("start") ||
