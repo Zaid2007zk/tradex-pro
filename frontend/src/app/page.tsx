@@ -33,6 +33,7 @@ import { AlgoStrategyStudio } from "@/components/trading/AlgoStrategyStudio";
 import { AIPredictionBadge } from "@/components/AIPredictionBadge";
 import { AIVisualDecisionNodes } from "@/components/AIVisualDecisionNodes";
 import { FloatingAICopilot } from "@/components/FloatingAICopilot";
+import { PersonalTradingMentor } from "@/components/PersonalTradingMentor";
 import { soundEngine } from "@/utils/soundEngine";
 import {
   TrendingUp,
@@ -634,6 +635,32 @@ export default function HomePage() {
         {/* View Switcher Content */}
         {activeTab === "overview" && (
           <div className="space-y-4">
+            {/* Hired Personal AI Trading Guide & Assistant (Aria) */}
+            <PersonalTradingMentor
+              symbol={currentStock.symbol}
+              price={currentStock.lastClose}
+              currency={currentStock.currency}
+              changePercent={currentStock.changePercent}
+              rsi14={currentStock.rsi14}
+              macd={currentStock.macd}
+              macdSignal={currentStock.macdSignal}
+              sma20={currentStock.sma20}
+              sma50={currentStock.sma50}
+              volatility={currentStock.volatility}
+              onExecuteTrade={(ord) => {
+                handleExecuteOrder({
+                  symbol: ord.symbol,
+                  side: ord.side,
+                  product: ord.product,
+                  orderType: ord.orderType,
+                  quantity: ord.quantity,
+                  price: ord.price,
+                  marginRequired: ord.marginRequired,
+                });
+              }}
+              onSelectStock={(sym) => setSelectedSymbol(sym)}
+            />
+
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
               {/* Left Main Section: Chart, Indicators, Matrix (8 Cols) */}
               <div className="lg:col-span-8 space-y-4">

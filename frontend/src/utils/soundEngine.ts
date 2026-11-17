@@ -139,6 +139,28 @@ class TradeSoundEngine {
       osc.stop(now + 0.25);
     } catch {}
   }
+
+  /**
+   * Subtle click / tab switch pulse
+   */
+  public playTabSwitch() {
+    if (!this.enabled) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+    try {
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(600.0, now);
+      gain.gain.setValueAtTime(0.04, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.08);
+    } catch {}
+  }
 }
 
 export const soundEngine = new TradeSoundEngine();
