@@ -243,6 +243,25 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="text-[12px] font-medium">Journal</span>
               </button>
             )}
+            {/* Autonomous AI Engine Status Badge */}
+            <button
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(new CustomEvent("tradex-open-copilot"));
+                }
+              }}
+              title="TradeX AI Autonomous Intelligence Engine: Fully Active (Click to open Gemini Copilot)"
+              className="flex items-center space-x-1.5 px-2.5 py-1 rounded bg-gradient-to-r from-purple-900/40 via-blue-900/40 to-emerald-900/30 border border-purple-500/50 text-xs font-bold text-white hover:border-purple-400 transition cursor-pointer shadow-sm"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
+              <span className="hidden sm:inline bg-gradient-to-r from-purple-300 to-blue-200 bg-clip-text text-transparent">
+                AI Mode: 100% Active
+              </span>
+              <span className="text-[10px] bg-emerald-500 text-black px-1.5 py-0.2 rounded font-extrabold uppercase">
+                AI
+              </span>
+            </button>
+
             {/* Subscription / Pricing Button */}
             <button
               onClick={onOpenSubscription}

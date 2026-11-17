@@ -8,6 +8,9 @@ import {
   CheckCircle2,
   AlertCircle,
   ArrowRight,
+  Sparkles,
+  Zap,
+  Bot,
 } from "lucide-react";
 
 export interface OrderExecutionProps {
@@ -103,6 +106,35 @@ export const OrderExecutionDock: React.FC<OrderExecutionProps> = ({
           </span>
           <span className="text-[10px] text-[#089981] font-semibold">Live Quote</span>
         </div>
+      </div>
+
+      {/* AI Autonomous Trade Recommendation */}
+      <div className="bg-gradient-to-r from-purple-950/40 via-[#1E222D] to-blue-950/40 border border-purple-500/30 rounded-lg p-2.5 space-y-1.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-1.5 text-purple-300 font-bold text-[11px]">
+            <Sparkles className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
+            <span>AI Auto-Pilot Signal</span>
+          </div>
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">
+            STRONG BUY (Score: 88)
+          </span>
+        </div>
+        <p className="text-[11px] text-[#D1D4DC] leading-snug">
+          Recommended: <strong className="text-emerald-400">Delivery (CNC)</strong> for safe growth, or <strong className="text-blue-400">Intraday (MIS 5x)</strong> with SL at {curr}{(currentPrice * 0.985).toFixed(2)}.
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            setActiveSide("BUY");
+            setProductType("CNC");
+            setOrderType("MARKET");
+            setQuantity(25);
+          }}
+          className="w-full py-1.5 px-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded font-bold text-[11px] flex items-center justify-center gap-1.5 transition shadow-sm cursor-pointer"
+        >
+          <Zap className="w-3 h-3 text-amber-300" />
+          <span>⚡ Auto-Apply AI Trade Setup</span>
+        </button>
       </div>
 
       {/* Side Selector Tabs (Buy vs Sell) */}

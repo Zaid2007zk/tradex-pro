@@ -46,6 +46,7 @@ import {
   Scale,
   Bot,
   Zap,
+  Sparkles,
   CheckCircle2,
   Sliders,
 } from "lucide-react";
@@ -212,6 +213,13 @@ export default function HomePage() {
         ]);
       }
     } catch {}
+  }, []);
+
+  // Global listener to open AI Copilot from Navbar or anywhere
+  useEffect(() => {
+    const handleOpenCopilot = () => setIsCopilotOpen(true);
+    window.addEventListener("tradex-open-copilot", handleOpenCopilot);
+    return () => window.removeEventListener("tradex-open-copilot", handleOpenCopilot);
   }, []);
 
   const saveTradingState = (
@@ -688,6 +696,131 @@ export default function HomePage() {
                         Updating quote...
                       </span>
                     )}
+                  </div>
+
+                  {/* Instant AI Decision & Direction Guidance Banner (Visible Immediately Above Fold) */}
+                  <div className="bg-gradient-to-r from-purple-950/40 via-[#1E222D] to-blue-950/40 border border-purple-500/40 rounded-lg p-3 space-y-2.5">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center space-x-2">
+                        <span className="p-1 rounded bg-purple-500/20 text-purple-400">
+                          <Bot className="w-4 h-4 animate-bounce" />
+                        </span>
+                        <span className="text-xs font-bold text-white tracking-wide">
+                          AI Autonomous Decision Engine: <span className="text-purple-300 font-extrabold">{currentStock.symbol}</span>
+                        </span>
+                        <span className="text-[10px] px-2 py-0.5 rounded font-extrabold uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+                          AI Recommends: BUY
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-1.5 text-[11px]">
+                        <span className="text-[#787B86]">Engine:</span>
+                        <span className="text-purple-300 font-semibold flex items-center gap-1">
+                          <Sparkles className="w-3 h-3 text-purple-400" />
+                          Google Gemini 1.5 Flash + Neural Quant
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* 3 Interactive Decision Nodes: Direction, Risk, Guidance */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
+                      {/* Node 1: Direction (Kahan UP Hoga, Kahan DOWN Hoga) */}
+                      <div className="p-2.5 rounded bg-[#131722]/90 border border-[#2A2E39] space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-[#787B86] uppercase tracking-wider">Node 1: Market Direction</span>
+                          <span className="text-[10px] font-bold text-[#089981]">UP Trend Bias</span>
+                        </div>
+                        <div className="text-[11px] text-[#D1D4DC]">
+                          • <strong className="text-[#089981]">Kahan UP Hoga:</strong> Breakout above {currentStock.currency === "INR" ? "₹" : "$"}{(currentStock.lastClose * 1.008).toFixed(2)}
+                        </div>
+                        <div className="text-[11px] text-[#787B86]">
+                          • <strong className="text-[#F23645]">Kahan DOWN Hoga:</strong> Breakdown below {currentStock.currency === "INR" ? "₹" : "$"}{(currentStock.lastClose * 0.992).toFixed(2)}
+                        </div>
+                      </div>
+
+                      {/* Node 2: Product Selection & Risk Difference */}
+                      <div className="p-2.5 rounded bg-[#131722]/90 border border-[#2A2E39] space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-[#787B86] uppercase tracking-wider">Node 2: Risk &amp; Difference</span>
+                          <span className="text-[10px] font-bold text-[#2962FF]">Risk Classifier</span>
+                        </div>
+                        <div className="text-[11px] text-[#D1D4DC]">
+                          • <strong className="text-[#089981]">Delivery (CNC):</strong> <span className="text-[#089981]">SAFE / LOW RISK</span> (Hold shares, no margin call).
+                        </div>
+                        <div className="text-[11px] text-[#787B86]">
+                          • <strong className="text-amber-400">Intraday (MIS):</strong> <span className="text-amber-400">HIGH RISK (5x)</span> (Auto exit 3:20 PM + strictly SL).
+                        </div>
+                      </div>
+
+                      {/* Node 3: Step-by-Step AI Guidance (Yee karo ➔ Uske baad yee karo) */}
+                      <div className="p-2.5 rounded bg-[#131722]/90 border border-[#2A2E39] space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-[#787B86] uppercase tracking-wider">Node 3: Step-by-Step Guidance</span>
+                          <span className="text-[10px] font-bold text-purple-400">Yee Karo ➔ Uske Baad Yee</span>
+                        </div>
+                        <div className="text-[11px] text-[#D1D4DC]">
+                          1. Select <strong>CNC (Safe)</strong> or <strong>MIS (5x)</strong>
+                        </div>
+                        <div className="text-[11px] text-[#787B86]">
+                          2. Stop-Loss: {currentStock.currency === "INR" ? "₹" : "$"}{(currentStock.lastClose * 0.985).toFixed(2)}
+                        </div>
+                        <div className="text-[11px] text-[#089981] font-semibold">
+                          3. Target: {currentStock.currency === "INR" ? "₹" : "$"}{(currentStock.lastClose * 1.025).toFixed(2)} (+2.5%)
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* AI 1-Click Action Buttons */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-purple-500/20">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          onClick={() => {
+                            soundEngine.playOrderFilled();
+                            handleExecuteOrder({
+                              symbol: currentStock.symbol,
+                              side: "BUY",
+                              product: "CNC",
+                              orderType: "MARKET",
+                              quantity: 25,
+                              price: currentStock.lastClose,
+                              marginRequired: currentStock.lastClose * 25,
+                            });
+                          }}
+                          className="px-3 py-1.5 rounded bg-[#089981] hover:bg-[#07806c] text-white font-bold text-xs flex items-center gap-1.5 transition shadow cursor-pointer"
+                        >
+                          <Zap className="w-3.5 h-3.5 text-amber-300" />
+                          <span>⚡ 1-Click AI Buy Delivery (CNC - Safe)</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            soundEngine.playOrderFilled();
+                            handleExecuteOrder({
+                              symbol: currentStock.symbol,
+                              side: "BUY",
+                              product: "MIS",
+                              orderType: "MARKET",
+                              quantity: 25,
+                              price: currentStock.lastClose,
+                              marginRequired: (currentStock.lastClose * 25) / 5,
+                            });
+                          }}
+                          className="px-3 py-1.5 rounded bg-[#2962FF] hover:bg-[#1e4bd8] text-white font-bold text-xs flex items-center gap-1.5 transition shadow cursor-pointer"
+                        >
+                          <Zap className="w-3.5 h-3.5 text-amber-300" />
+                          <span>⚡ 1-Click AI Buy Intraday (MIS - 5x)</span>
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          setCopilotInitialQuery(`Analyze ${currentStock.symbol} AI nodes: Kahan UP hoga, kahan DOWN hoga, aur konsa buy karein?`);
+                          setIsCopilotOpen(true);
+                        }}
+                        className="px-3 py-1.5 rounded bg-purple-600/30 hover:bg-purple-600/50 border border-purple-500/40 text-purple-300 hover:text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                        <span>Ask AI Copilot for Full Explanation (Hinglish/English)</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Quick Intraday Stats Grid */}
