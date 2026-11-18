@@ -37,7 +37,7 @@ export type UserPersonaType = "beginner" | "scalper" | "quant" | "autopilot";
 export interface UserPersonaOption {
   id: UserPersonaType;
   title: string;
-  hindiTitle: string;
+  subtitle: string;
   badge: string;
   level: string;
   description: string;
@@ -304,22 +304,22 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
     setPortalStage("persona");
   };
 
-  // Persona options definition - Hierarchical Progressive SaaS Model (Level 1 -> 2 -> 3 -> 4 Max)
+  // Persona options definition - Institutional Progression Architecture (Level 1 -> 2 -> 3 -> 4 Max)
   const personaOptions: UserPersonaOption[] = [
     {
       id: "beginner",
-      title: "Beginner & Student Trader",
-      hindiTitle: "Naye Trader (Step-by-Step Learning)",
+      title: "Foundational Trader",
+      subtitle: "Risk-Free Simulation & AI Mentorship",
       badge: "LEVEL 1 • STARTER",
-      level: "Zero Risk",
+      level: "Foundation Tier",
       description:
-        "Main trading bilkul basic se sikhna chahta hoon bina kisi paise ke risk ke. Har chart aur indicator ko Aria AI mentor mujhe voice me explain kare.",
-      includesPrior: "Base Features (Free Simulator):",
+        "Master the financial markets systematically with zero capital exposure. Real-time chart analysis, risk mitigation principles, and interactive AI voice telemetry.",
+      includesPrior: "Base Platform Features (Included):",
       features: [
-        "Aria AI Voice Guidance (Hindi & English)",
-        "₹10,00,000 Zero-Risk Virtual Capital",
-        "Clear Buy/Sell Explanations & Target Rules",
-        "Safe Delivery (CNC) Mode with No Margin Risk",
+        "Interactive AI Voice Guidance & Financial Telemetry",
+        "₹10,00,000 Institutional Virtual Margin Allocation",
+        "Real-Time Multi-Exchange Technical Charting",
+        "Full Delivery (CNC) Risk-Free Execution Simulator",
       ],
       gradient: "from-emerald-500/20 via-emerald-500/5 to-transparent",
       borderHover: "hover:border-emerald-400 group-hover:shadow-emerald-500/20",
@@ -327,18 +327,18 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
     },
     {
       id: "scalper",
-      title: "Active Day Trader / Scalper",
-      hindiTitle: "Intraday Momentum & High-Octane MIS",
-      badge: "LEVEL 2 • PRO SCALPER",
-      level: "Intraday MIS",
+      title: "Active Momentum Scalper",
+      subtitle: "High-Frequency Execution & DMA Routing",
+      badge: "LEVEL 2 • PRO VELOCITY",
+      level: "Velocity Tier",
       description:
-        "Mujhe fast scalping, tight stop-loss, 1-click turbo execution aur real broker accounts ke sath high-speed intraday trading karni hai.",
-      includesPrior: "Includes ALL Level 1 Features, PLUS:",
+        "Engineered for active intraday participants prioritizing ultra-low latency execution, tight risk parameters, and direct broker liquidity gateway integration.",
+      includesPrior: "Includes All Level 1 Capabilities, PLUS:",
       features: [
-        "1-Click Turbo Order Execution (5x Leverage MIS)",
-        "Live Breakout Sound Alerts & Ticker Scanner",
-        "Direct DMA Broker Gateway (Zerodha, Upstox, Angel)",
-        "Dynamic Intraday Breakout & Stop-Loss Engine",
+        "1-Click Turbo Order Routing (5x Margin Leverage)",
+        "Real-Time Volatility Breakout Scanner & Audio Chimes",
+        "Direct Market Access (Zerodha Kite, Upstox, Angel)",
+        "Dynamic Breakout Pivots & Automated Stop-Loss Engine",
       ],
       gradient: "from-amber-500/20 via-amber-500/5 to-transparent",
       borderHover: "hover:border-amber-400 group-hover:shadow-amber-500/20",
@@ -347,16 +347,16 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
     {
       id: "quant",
       title: "Quantitative Analyst / Swing Pro",
-      hindiTitle: "Data Science, Alpha & Strategy Studio",
+      subtitle: "Data Science, Factor Alpha & Backtesting",
       badge: "LEVEL 3 • TACTICAL QUANT",
-      level: "Statistical Edge",
+      level: "Tactical Quant Tier",
       description:
-        "Mujhe deep institutional analytics, factor alpha ratings, multi-chart quantitative radar, strategy backtester aur options Greeks chahiye.",
-      includesPrior: "Includes ALL Level 1 & 2 Features, PLUS:",
+        "Designed for systematic researchers requiring algorithmic strategy backtesting, multi-factor alpha ranking, sector correlation matrices, and derivatives Greeks.",
+      includesPrior: "Includes All Level 1 & 2 Capabilities, PLUS:",
       features: [
         "Multi-Factor Quantitative Alpha Radar (Sharpe, Volatility)",
-        "Algorithmic Strategy Backtesting Studio (MACD+SMA)",
-        "Sector Heatmap Correlation & Options Chain Greeks",
+        "Algorithmic Walk-Forward Strategy Backtesting Studio",
+        "Cross-Sector Heatmap & Complete Options Greeks Matrix",
         "Institutional Trade Journal & Performance Analytics",
       ],
       gradient: "from-blue-500/20 via-blue-500/5 to-transparent",
@@ -365,19 +365,19 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
     },
     {
       id: "autopilot",
-      title: "Autonomous AI Hands-Free Trader",
-      hindiTitle: "100% Autonomous Bot Mode (Max Power)",
+      title: "Autonomous AI Trading System",
+      subtitle: "100% Autonomous Algorithmic Execution",
       badge: "LEVEL 4 • AUTONOMOUS MAX",
-      level: "Hands-Free Max",
+      level: "Enterprise Max",
       isPopular: true,
       description:
-        "Aria aur AI Bot market ko automatically scan karein (20-SMA, RSI), setups pakadkar auto-trades execute karein aur live voice me update karein.",
-      includesPrior: "ALL FEATURES UNLOCKED (Level 1, 2, 3 + Max):",
+        "Complete unrestricted institutional access with autonomous market-scanning agents, real-time algorithmic execution, and automated dynamic trailing risk controls.",
+      includesPrior: "ALL CAPABILITIES UNLOCKED (LEVEL 1, 2, 3 + MAX):",
       features: [
-        "100% Autonomous AI Trading Bot (Auto-Scans 20-SMA & RSI)",
-        "Auto Order Execution with Dynamic Trailing Stop-Loss",
-        "Live Audio Trade Broadcast & Continuous Feed",
-        "Ultra-Low Latency Institutional Quant Engine Speed",
+        "Autonomous AI Trading Agent (20-SMA & RSI Confluence)",
+        "Automated Order Execution with Dynamic Trailing SL",
+        "Live High-Fidelity Audio Telemetry Trade Broadcasts",
+        "Institutional Co-Location Ultra-Low Latency Engine Speed",
       ],
       gradient: "from-purple-500/20 via-purple-500/5 to-transparent",
       borderHover: "hover:border-purple-400 group-hover:shadow-purple-500/20",
@@ -856,10 +856,10 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
                 <span>Interactive AI Customization</span>
               </div>
               <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
-                What Type of Trader Are You?
+                Select Your Trading Profile
               </h1>
               <p className="text-sm sm:text-base text-slate-400 leading-relaxed">
-                Aap kis tarah trading karna chahte hain? Select your persona to personalize Aria AI’s voice guidance, indicators, and execution mode.
+                Calibrate your terminal environment. Each tier unlocks specialized analytical algorithms, execution latency profiles, and risk parameters.
               </p>
             </div>
 
@@ -908,7 +908,7 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
                             {opt.title}
                           </h3>
                           <span className="text-[11px] font-semibold text-slate-400 block mt-0.5">
-                            {opt.hindiTitle}
+                            {opt.subtitle}
                           </span>
                         </div>
 

@@ -237,31 +237,31 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
           : typeof activePos.unrealizedPnl === "number"
           ? activePos.unrealizedPnl
           : 0;
-      msg = `🎉 Active Trade Alert: Aapka ${activePos.side || "BUY"} ${activePos.quantity || 0} shares of ${symbol} active hai! Entry: ${curr}${avgPrice.toFixed(
+      msg = `Active Position Telemetry: ${activePos.side || "BUY"} ${activePos.quantity || 0} shares of ${symbol}. Entry: ${curr}${avgPrice.toFixed(
         2
-      )}, Live P&L: ${pnlNum >= 0 ? "+" : ""}${curr}${pnlNum.toFixed(
+      )} | Unrealized P&L: ${pnlNum >= 0 ? "+" : ""}${curr}${pnlNum.toFixed(
         2
-      )}. Target: ${curr}${target1}, Stop-Loss: ${curr}${stopLoss}. Target aate hi munafa book karein!`;
+      )}. Target: ${curr}${target1} | Dynamic SL: ${curr}${stopLoss}. Profit protection active.`;
     } else if (currentStep === 1) {
       if (persona === "scalper") {
-        msg = `⚡ Scalper Momentum Mode Active: ${symbol} @ ${curr}${numPrice.toFixed(2)}. Immediate intraday breakout: ${curr}${upBreakout} (TGT: ${curr}${target1}, SL: ${curr}${stopLoss}). Fast 1-click execution ready!`;
+        msg = `Velocity Momentum Mode: ${symbol} @ ${curr}${numPrice.toFixed(2)}. Immediate intraday breakout trigger: ${curr}${upBreakout} (TGT: ${curr}${target1}, SL: ${curr}${stopLoss}). 1-click DMA execution ready.`;
       } else if (persona === "quant") {
-        msg = `📊 Quantitative Alpha Analysis for ${symbol} @ ${curr}${numPrice.toFixed(2)}: Volatility ${(Number(volatility) || 18).toFixed(1)}%, Trend ${isBullish ? "Bullish (>20 SMA)" : "Consolidating"}. Risk-reward ratio: 1:2.5.`;
+        msg = `Quantitative Alpha Analysis: ${symbol} @ ${curr}${numPrice.toFixed(2)}. Volatility ${(Number(volatility) || 18).toFixed(1)}%, Trend ${isBullish ? "Bullish (>20 SMA)" : "Consolidation Zone"}. Risk/Reward: 1:2.5.`;
       } else if (persona === "autopilot") {
-        msg = `🤖 Autonomous AI Bot Ready for ${symbol} @ ${curr}${numPrice.toFixed(2)}. Bot scanning momentum triggers every 18s. Auto-trade execution is armed.`;
+        msg = `Autonomous AI Engine Active: ${symbol} @ ${curr}${numPrice.toFixed(2)}. Scanning 20-SMA momentum triggers at 18s intervals. Algorithmic trade execution is armed.`;
       } else {
-        msg = `Namaste! Main aapki Personal Trading Assistant "Aria" hoon. Abhi hum ${symbol} dekh rahe hain (LTP: ${curr}${numPrice.toFixed(
+        msg = `Aria AI Trade Mentor: Monitoring ${symbol} (LTP: ${curr}${numPrice.toFixed(
           2
-        )}). AI Decision Model ke anusar trend ${
-          isBullish ? "BULLISH (UP)" : "CONSOLIDATING"
-        } hai. Breakout trigger ${curr}${upBreakout} ke upar buy momentum tezi se banega, jabki ${curr}${downBreakdown} ke niche breakdown risk hai.`;
+        )}). Quantitative Bias: ${
+          isBullish ? "BULLISH (UPWARD MOMENTUM)" : "CONSOLIDATION"
+        }. Breakout trigger above ${curr}${upBreakout} accelerates buy velocity, breakdown below ${curr}${downBreakdown} tests structural support.`;
       }
     } else if (currentStep === 2) {
-      msg = `Ab Step 2: Risk decide karein. Agar aap safe rehna chahte hain toh "Delivery (CNC)" chunein—isme koi margin risk nahi hai. Agar aap aaj hi 5x leverage ke sath profit banana chahte hain toh "Intraday (MIS)" lein, lekin Stop-Loss ${curr}${stopLoss} lagana mandatory hai!`;
+      msg = `Risk Parameter Selection: Select "Delivery (CNC)" for zero-margin capital preservation, or "Intraday (MIS)" for 5x leverage execution with mandatory Stop-Loss at ${curr}${stopLoss}.`;
     } else if (currentStep === 3) {
-      msg = `Step 3 Execution: Main aapke liye optimal trade ready kar chuki hoon. Quantity: 25 shares, Stop-Loss: ${curr}${stopLoss}, Target: ${curr}${target1}. Niche diye button par click karke trade auto-execute karein!`;
+      msg = `Order Routing Ready: Position sized at 25 shares. Target: ${curr}${target1}, Stop-Loss: ${curr}${stopLoss}. Click "Auto-Execute Trade" to route order to execution gateway.`;
     } else if (currentStep === 4) {
-      msg = `Step 4 P&L Protection: Trade place ho gaya hai! Niche "Positions Dock" me apna live munafa track karein. Jaise hi Target ${curr}${target1} hit hoga, main aapko profit book karne ka alert doongi!`;
+      msg = `Order Executed & Filled: Monitor real-time position telemetry in the Positions Dock below. Aria AI will trigger profit-booking alerts as Target ${curr}${target1} approaches.`;
     }
     setAssistantMessage(msg);
   }, [currentStep, symbol, price, isBullish, activePositions]);
