@@ -16,6 +16,8 @@ import {
   getStoredGeminiKey,
   setStoredGeminiKey,
   hasActiveGeminiKey,
+  getStoredGeminiModel,
+  verifyAndDiscoverGeminiModel,
 } from "@/services/geminiAiService";
 
 interface GeminiKeyModalProps {
@@ -30,14 +32,17 @@ export const GeminiKeyModal: React.FC<GeminiKeyModalProps> = ({
   onKeyUpdated,
 }) => {
   const [apiKey, setApiKey] = useState("");
+  const [activeModel, setActiveModel] = useState("gemini-2.0-flash");
   const [status, setStatus] = useState<"idle" | "testing" | "success" | "error">("idle");
   const [statusMsg, setStatusMsg] = useState("");
 
   useEffect(() => {
     if (isOpen) {
       setApiKey(getStoredGeminiKey());
-      setStatus(hasActiveGeminiKey() ? "success" : "idle");
-      setStatusMsg(hasActiveGeminiKey() ? "Gemini Generative AI is active" : "");
+      setActiveModel(getStoredGeminiModel());
+      const hasKey = hasActiveGeminiKey();
+      setStatus(hasKey ? "success" : "idle");
+      setStatusMsg(hasKey ? `Google Gemini (${getStoredGeminiModel()}) is active and armed.` : "");
     }
   }, [isOpen]);
 
@@ -47,39 +52,32 @@ export const GeminiKeyModal: React.FC<GeminiKeyModalProps> = ({
     if (!apiKey.trim()) {
       setStoredGeminiKey("");
       setStatus("idle");
-      setStatusMsg("Cleared. Falling back to TradeX Autonomous Neural Engine.");
+      setStatusMsg("API key cleared. Reverted to TradeX Autonomous Neural Engine.");
       if (onKeyUpdated) onKeyUpdated();
       return;
     }
 
     setStatus("testing");
-    setStatusMsg("Testing connection with Google Gemini...");
+    setStatusMsg("Discovering supported Gemini model and validating key...");
 
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: "Respond with 'OK'" }] }],
-        }),
-      });
+      const result = await verifyAndDiscoverGeminiModel(apiKey.trim());
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.error?.message || `HTTP ${res.status}`);
+      if (result.success) {
+        setActiveModel(result.model);
+        setStatus("success");
+        setStatusMsg(result.message);
+        if (onKeyUpdated) onKeyUpdated();
+        setTimeout(() => {
+          onClose();
+        }, 1200);
+      } else {
+        setStatus("error");
+        setStatusMsg(result.message);
       }
-
-      setStoredGeminiKey(apiKey.trim());
-      setStatus("success");
-      setStatusMsg("Connected! TradeX Pro is now running 100% Google Gemini Generative AI.");
-      if (onKeyUpdated) onKeyUpdated();
-      setTimeout(() => {
-        onClose();
-      }, 1200);
     } catch (e: any) {
       setStatus("error");
-      setStatusMsg(e.message || "Failed to verify key. Check permissions.");
+      setStatusMsg(e.message || "Failed to verify key. Check network and permissions.");
     }
   };
 
@@ -108,7 +106,7 @@ export const GeminiKeyModal: React.FC<GeminiKeyModalProps> = ({
                 </span>
               </h3>
               <p className="text-[11px] text-[#787B86]">
-                Make TradeX Pro 100% AI-Powered with natural conversational reasoning
+                Empower TradeX Pro with real-time generative conversational financial intelligence
               </p>
             </div>
           </div>
@@ -135,11 +133,11 @@ export const GeminiKeyModal: React.FC<GeminiKeyModalProps> = ({
                     : "bg-blue-500/20 text-blue-400 border border-blue-500/30"
                 }`}
               >
-                {status === "success" ? "Google Gemini 1.5 Flash (Active)" : "TradeX Neural Engine (Autonomous)"}
+                {status === "success" ? `Google Gemini (${activeModel})` : "TradeX Neural Engine (Autonomous)"}
               </span>
             </div>
             <p className="text-[11px] text-[#787B86] leading-relaxed">
-              Google Gemini API se connect karke aap kisi bhi bhasha (Hindi, Hinglish, English) mein natural baat kar sakte hain. Free Google AI Studio API key 100% free hai.
+              Connect your free Google AI Studio API key to activate live multi-turn reasoning, deep scenario synthesis, and conversational trade guidance.
             </p>
           </div>
 
@@ -189,7 +187,7 @@ export const GeminiKeyModal: React.FC<GeminiKeyModalProps> = ({
           {/* Privacy Note */}
           <div className="flex items-center gap-2 text-[10px] text-[#787B86] pt-1">
             <Shield className="w-3 h-3 text-emerald-400" />
-            <span>Aapki API key aapke hi browser (localStorage) mein secure rehti hai. Kisi server par save nahi hoti.</span>
+            <span>Your API key is encrypted and stored strictly inside your browser sandbox (localStorage). It is never sent to external servers.</span>
           </div>
         </div>
 
@@ -203,7 +201,7 @@ export const GeminiKeyModal: React.FC<GeminiKeyModalProps> = ({
               Disconnect Key
             </button>
           ) : (
-            <span className="text-[11px] text-[#787B86]">No key needed for autonomous mode</span>
+            <span className="text-[11px] text-[#787B86]">Default: TradeX Autonomous Neural Engine</span>
           )}
 
           <div className="flex items-center gap-2">
@@ -216,7 +214,7 @@ export const GeminiKeyModal: React.FC<GeminiKeyModalProps> = ({
             <button
               onClick={handleTestAndSave}
               disabled={status === "testing"}
-              className="px-4 py-1.5 rounded bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-xs font-bold text-white shadow-lg shadow-blue-500/20 transition disabled:opacity-50 flex items-center gap-1.5"
+              className="px-4 py-1.5 rounded bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-xs font-bold text-white shadow-lg shadow-blue-500/20 transition disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
             >
               {status === "testing" ? (
                 <>

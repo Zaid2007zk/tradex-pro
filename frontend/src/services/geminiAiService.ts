@@ -18,7 +18,17 @@ export interface MarketContext {
 }
 
 const STORAGE_KEY = "tradex_gemini_api_key";
-const DEFAULT_MODEL = "gemini-1.5-flash";
+const MODEL_STORAGE_KEY = "tradex_gemini_active_model";
+
+export const FALLBACK_MODELS = [
+  "gemini-2.0-flash",
+  "gemini-1.5-flash-latest",
+  "gemini-1.5-flash",
+  "gemini-2.5-flash",
+  "gemini-1.5-flash-8b",
+  "gemini-1.5-pro",
+  "gemini-pro",
+];
 
 export const getStoredGeminiKey = (): string => {
   if (typeof window === "undefined") {
@@ -35,14 +45,130 @@ export const setStoredGeminiKey = (key: string): void => {
   if (typeof window === "undefined") return;
   if (!key.trim()) {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(MODEL_STORAGE_KEY);
   } else {
     localStorage.setItem(STORAGE_KEY, key.trim());
   }
 };
 
+export const getStoredGeminiModel = (): string => {
+  if (typeof window === "undefined") return "gemini-2.0-flash";
+  return localStorage.getItem(MODEL_STORAGE_KEY) || "gemini-2.0-flash";
+};
+
+export const setStoredGeminiModel = (model: string): void => {
+  if (typeof window === "undefined") return;
+  const clean = model.replace(/^models\//, "").trim();
+  localStorage.setItem(MODEL_STORAGE_KEY, clean);
+};
+
 export const hasActiveGeminiKey = (): boolean => {
   return !!getStoredGeminiKey();
 };
+
+/**
+ * Robust Model Discovery & Verification Engine
+ * Dynamically queries Google ModelService to detect supported models for the user's key,
+ * preventing 'model not found' errors.
+ */
+export async function verifyAndDiscoverGeminiModel(
+  apiKey: string
+): Promise<{ success: boolean; model: string; message: string }> {
+  const cleanKey = apiKey.trim();
+  if (!cleanKey) {
+    return { success: false, model: "", message: "API key cannot be empty." };
+  }
+
+  // 1. Dynamic Discovery via ModelService.ListModels
+  try {
+    const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${cleanKey}`;
+    const listRes = await fetch(listUrl, { method: "GET" });
+
+    if (listRes.ok) {
+      const listData = await listRes.json();
+      const modelsList: Array<{ name: string; supportedGenerationMethods?: string[] }> =
+        listData.models || [];
+
+      // Filter models supporting generateContent
+      const validModels = modelsList
+        .filter((m) =>
+          Array.isArray(m.supportedGenerationMethods)
+            ? m.supportedGenerationMethods.includes("generateContent")
+            : true
+        )
+        .map((m) => m.name.replace(/^models\//, ""));
+
+      if (validModels.length > 0) {
+        // Find best match according to prioritized list
+        let chosenModel = validModels[0];
+        for (const preferred of FALLBACK_MODELS) {
+          const match = validModels.find(
+            (vm) => vm.toLowerCase() === preferred.toLowerCase()
+          );
+          if (match) {
+            chosenModel = match;
+            break;
+          }
+        }
+
+        // Test generation with chosen model
+        const testRes = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${chosenModel}:generateContent?key=${cleanKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: "Respond 'OK'" }] }],
+            }),
+          }
+        );
+
+        if (testRes.ok) {
+          setStoredGeminiKey(cleanKey);
+          setStoredGeminiModel(chosenModel);
+          return {
+            success: true,
+            model: chosenModel,
+            message: `Connected successfully to Google Gemini (${chosenModel}).`,
+          };
+        }
+      }
+    }
+  } catch {}
+
+  // 2. Systematic candidate trial across fallback list (v1beta and v1)
+  for (const candidate of FALLBACK_MODELS) {
+    for (const apiVersion of ["v1beta", "v1"]) {
+      try {
+        const testUrl = `https://generativelanguage.googleapis.com/${apiVersion}/models/${candidate}:generateContent?key=${cleanKey}`;
+        const res = await fetch(testUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: "OK" }] }],
+          }),
+        });
+
+        if (res.ok) {
+          setStoredGeminiKey(cleanKey);
+          setStoredGeminiModel(candidate);
+          return {
+            success: true,
+            model: candidate,
+            message: `Connected successfully to Google Gemini (${candidate}).`,
+          };
+        }
+      } catch {}
+    }
+  }
+
+  return {
+    success: false,
+    model: "",
+    message:
+      "Unable to verify model on this API key. Ensure Generative Language API is enabled in Google AI Studio or Google Cloud Console.",
+  };
+}
 
 /**
  * Call Google Gemini REST API directly from client
@@ -96,22 +222,31 @@ CRITICAL MANDATORY INSTRUCTIONS:
     }],
   });
 
-  try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${DEFAULT_MODEL}:generateContent?key=${apiKey}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents }),
-    });
+  const activeModel = getStoredGeminiModel();
+  const modelsToTry = [
+    activeModel,
+    ...FALLBACK_MODELS.filter((m) => m !== activeModel),
+  ];
 
-    if (response.ok) {
-      const data = await response.json();
-      const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (generatedText && generatedText.trim()) {
-        return generatedText.trim();
+  for (const modelCandidate of modelsToTry) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelCandidate}:generateContent?key=${apiKey}`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (generatedText && generatedText.trim()) {
+          setStoredGeminiModel(modelCandidate);
+          return generatedText.trim();
+        }
       }
-    }
-  } catch {}
+    } catch {}
+  }
 
   return generateNeuralSynthesis(prompt, context);
 }
