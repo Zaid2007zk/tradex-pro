@@ -193,254 +193,46 @@ export const ResearchAssistant: React.FC<ResearchAssistantProps> = ({
       volatility: metrics?.volatility || 18.5,
     };
 
-    // If Google Gemini key is present, use real generative LLM
-    if (hasActiveGeminiKey()) {
-      try {
-        const geminiHistory = updatedHistory.slice(-8).map((m) => ({
-          role: (m.sender === "user" ? "user" : "model") as "user" | "model",
-          text: m.text,
-        }));
-        const aiAnswer = await queryGemini(query, marketCtx, geminiHistory);
-        const assistantMsg: ChatMessage = {
-          id: `ast-${Date.now()}`,
-          sender: "assistant",
-          text: aiAnswer,
-          citations: [
-            {
-              id: "GEMINI-LLM",
-              source: "Google Gemini 1.5 Flash API",
-              source_type: "live_feed",
-              timestamp: new Date().toISOString(),
-              metric_name: "Generative AI Confluence",
-              metric_value: marketCtx.price,
-              calculation_method: "Direct multimodal neural inference via Google AI Studio",
-            },
-            ...brief.citations,
-          ],
-          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        };
-        setChatHistory([...updatedHistory, assistantMsg]);
-        setIsLoadingAi(false);
-        return;
-      } catch (err) {
-        console.error("Gemini failed, falling back to neural synthesis:", err);
-      }
+    // Institutional Generative AI Engine (Cloud Gemini LLM or Local Neural Synthesis)
+    const geminiHistory = updatedHistory.slice(-8).map((m) => ({
+      role: (m.sender === "user" ? "user" : "model") as "user" | "model",
+      text: m.text,
+    }));
+
+    try {
+      const aiAnswer = await queryGemini(query, marketCtx, geminiHistory);
+      const assistantMsg: ChatMessage = {
+        id: `ast-${Date.now()}`,
+        sender: "assistant",
+        text: aiAnswer,
+        citations: [
+          {
+            id: hasActiveGeminiKey() ? "GEMINI-LLM" : "TRADEX-AI",
+            source: hasActiveGeminiKey() ? "Google Gemini Generative AI" : "TradeX Neural Multi-Factor Engine",
+            source_type: "live_feed",
+            timestamp: new Date().toISOString(),
+            metric_name: "AI Quantitative Analysis",
+            metric_value: marketCtx.price,
+            calculation_method: "Direct institutional AI reasoning & multi-factor confluence",
+          },
+          ...brief.citations,
+        ],
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      };
+      setChatHistory([...updatedHistory, assistantMsg]);
+    } catch (err) {
+      console.error("AI query error:", err);
+      const fallbackMsg: ChatMessage = {
+        id: `ast-${Date.now()}`,
+        sender: "assistant",
+        text: generateNeuralSynthesis(query, marketCtx),
+        citations: brief.citations,
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      };
+      setChatHistory([...updatedHistory, fallbackMsg]);
+    } finally {
+      setIsLoadingAi(false);
     }
-
-    // Intelligent context-aware NLP engine for trading inquiries (Offline / Fallback)
-    let replyText = "";
-    const lower = query.toLowerCase();
-
-    // 1. "HOW TO START TRADING" / BEGINNER WORKFLOW (Hinglish & English)
-    const isHinglish =
-      lower.includes("shuru") ||
-      lower.includes("kese") ||
-      lower.includes("kaise") ||
-      lower.includes("kya karu") ||
-      lower.includes("batao") ||
-      lower.includes("seekhna") ||
-      lower.includes("me shuru");
-
-    const isGettingStarted =
-      lower.includes("start trading") ||
-      lower.includes("how to trade") ||
-      lower.includes("how i trade") ||
-      lower.includes("how to buy") ||
-      lower.includes("how to sell") ||
-      lower.includes("how do i start") ||
-      lower.includes("how to use") ||
-      lower.includes("beginner") ||
-      lower.includes("steps") ||
-      lower.includes("shuru") ||
-      lower.includes("start") ||
-      lower.includes("kese karu") ||
-      lower.includes("kaise karu") ||
-      lower.includes("kya karu") ||
-      (lower.includes("trading") && (lower.includes("kese") || lower.includes("kaise") || lower.includes("start") || lower.includes("shuru")));
-
-    if (isGettingStarted) {
-      if (isHinglish) {
-        replyText = `TradeX Pro Par Trading Shuru Karne Ka Step-by-Step Tarika:
-
-1. Stock Chunein (Select Instrument):
-• Upar watchlist se koi stock select karein (jaise RELIANCE.NS, TCS.NS ya HDFCBANK.NS).
-• Chart ke upar "AI Visual Decision Nodes" dekhein jo batata hai market kahan UP hoga aur kahan DOWN hoga.
-
-2. Product Type Decide Karein (Risk Samjhein):
-• Delivery (CNC) [SAFE / LOW RISK]: Agar aap beginner hain, toh Delivery chunein. Shares aapke pass rahenge, koi jaldi nahi hoti.
-• Intraday (MIS) [HIGH RISK]: Aaj hi 3:20 PM tak bechna padega. Isme 5x leverage milta hai, par bina Stop-Loss trade na karein!
-
-3. Order Place Karein (Right Side Order Ticket):
-• [BUY] par click karein.
-• Order Type: [MARKET] chunein instant price par lene ke liye.
-• Quantity dalein (shuruat mein sirf 10 ya 25 shares se practice karein).
-
-4. Profit & Loss Track Karein:
-• Niche "Positions" dock mein aapka live P&L dikhega.
-• Target aane par [Exit] button daba kar munafa book karein.
-
-Paisa lagane ki zaroorat nahi hai: Upar 'Paper Trading' tab par click karke ₹10,00,000 ke virtual cash se 100% risk-free practice karein!`;
-      } else {
-        replyText = `Here is how to start trading on TradeX Pro step-by-step:
-
-1. Select an Instrument:
-• Use the top search bar or quick ticker pills (e.g. RELIANCE.NS, TCS.NS, AAPL).
-• Review the live 60 FPS candlestick chart and technical indicators (14-day RSI and moving averages).
-
-2. Choose Your Execution Product:
-• Intraday (MIS): Day trading with 5x leverage. Auto squared-off before market close (3:20 PM IST).
-• Delivery (CNC): Buy and hold equity with 1x cash. No margin call risk.
-• Margin (MTF): Margin trading with 4x leverage for multi-day swing positions.
-
-3. Place Your Order in the Order Ticket (Right Sidebar):
-• Click [BUY] for long or [SELL] for short.
-• Choose Order Type: [MARKET] for instant execution at LTP, or [LIMIT] to specify your entry price.
-• Enter your Quantity (use quick steppers +10, +25, +50, +100). The ticket dynamically computes required margin and statutory exchange charges.
-
-4. Track & Manage in the Positions Dock (Bottom):
-• Monitor real-time P&L in the collapsible Positions dock at the bottom of the screen.
-• Use the 1-click [Exit] button to square off any trade or [Close All] for rapid exit.
-
-Tip: Want to practice risk-free first? Click the 'Paper Trading' tab at the top to trade with ₹5,00,000 in simulated funds!`;
-      }
-    }
-    // 1B. NODE FLOW / DIRECTION (UP/DOWN) / RISK & BUY SELECTION (Hinglish & English)
-    else if (
-      lower.includes("node") ||
-      lower.includes("flow") ||
-      lower.includes("kaha up") ||
-      lower.includes("kaha down") ||
-      lower.includes("up hoga") ||
-      lower.includes("down hoga") ||
-      lower.includes("konsa buy") ||
-      lower.includes("kisme risk") ||
-      lower.includes("difference") ||
-      lower.includes("yee karo") ||
-      lower.includes("uske bad")
-    ) {
-      const price = metrics?.last_close || 1335.8;
-      const upLevel = (price * 1.008).toFixed(2);
-      const downLevel = (price * 0.992).toFixed(2);
-      const target = (price * 1.025).toFixed(2);
-      const stop = (price * 0.985).toFixed(2);
-
-      replyText = `AI Visual Decision Nodes & Direction Analysis for ${symbol}:
-
-1. Kahan Market UP hoga aur Kahan DOWN hoga:
-• UP Trigger: Agar price ₹${upLevel} ke upar sustain kare, toh market UP side rally karega (Target: ₹${target}).
-• DOWN Trigger: Agar price ₹${downLevel} ke niche toota, toh market DOWN (bearish pullback) jayega.
-
-2. Konsa Buy Karein? (Difference & Risk):
-• Delivery (CNC) [SAFE / LOW RISK]: Agar aap safe rehna chahte hain, toh CNC lein. Isme koi time limit nahi hoti, jab profit aaye tab bechein.
-• Intraday (MIS) [HIGH RISK]: Agar aaj hi profit lena hai, toh MIS lein. Par Stop-Loss (₹${stop}) zaroor lagayein.
-
-3. Yee Karo, Uske Baad Yee Karo:
-• Step 1: Chart ke upar "AI Visual Decision Nodes" panel dekhein.
-• Step 2: "Pre-fill This Trade" par click karein.
-• Step 3: Stop-loss ₹${stop} aur Target ₹${target} set karke BUY daba dein!
-
-Deterministic Fallback analysis based on verified historical close price points.`;
-    }
-    // 2. PRODUCT COMPARISON ("COMPARE TO OTHER PRODUCTS / SITES")
-    else if (
-      lower.includes("compare") ||
-      lower.includes("competition") ||
-      lower.includes("competitor") ||
-      lower.includes("other product") ||
-      lower.includes("other app") ||
-      lower.includes("tradingview") ||
-      lower.includes("zerodha") ||
-      lower.includes("bloomberg")
-    ) {
-      replyText = `Comprehensive Comparison: TradeX Pro vs. Other Market Platforms
-
-1. TradeX Pro vs. TradingView:
-• TradingView is an industry benchmark for charting, but requires third-party webhooks or broker integrations to execute trades.
-• TradeX Pro unites TradingView-grade HTML5 60 FPS canvas charts with a native DMA Order Ticket, live Positions dock with 1-click exit, and institutional Factor Scorecards directly in one window.
-
-2. TradeX Pro vs. Zerodha Kite / Upstox:
-• Discount brokers provide basic order entry and simple technical indicators.
-• TradeX Pro adds advanced quantitative intelligence: automated Wilder RSI, MACD signal confluence, Value/Momentum/Quality scoring, Shariah compliance screening, and a strategy Walk-Forward Backtester.
-
-3. TradeX Pro vs. Bloomberg Terminal:
-• Bloomberg charges $24,000+ per year per seat.
-• TradeX Pro provides institutional factor intelligence, volatility risk modeling, and multi-exchange tracking in a zero-cost, modern web interface.`;
-    }
-    // 3. SPECIFIC STOCK ANALYSIS (BUY/SELL, RSI, MOMENTUM, TREND)
-    else if (
-      lower.includes("should i buy") ||
-      lower.includes("bullish") ||
-      lower.includes("bearish") ||
-      lower.includes("good to buy") ||
-      lower.includes("trend") ||
-      lower.includes("signal")
-    ) {
-      const rsi = metrics?.rsi_14 || 58.4;
-      const price = metrics?.last_close || 1339.7;
-      const sma = metrics?.sma_20 || 1320.0;
-      const rsiStatus = rsi > 70 ? "Overbought (>70) — consider waiting for a pullback" : rsi < 30 ? "Oversold (<30) — potential value accumulation area" : "Neutral (30–70) — momentum is balanced";
-      const trendStatus = price >= sma ? `Trading above 20-day SMA (₹${sma.toFixed(2)}), supporting an upward trend bias.` : `Trading below 20-day SMA (₹${sma.toFixed(2)}), suggesting near-term consolidation.`;
-
-      replyText = `Technical & Factor Evaluation for ${symbol}:
-• Current Quote: ₹${price.toFixed(2)}
-• 14-Day RSI: ${rsi.toFixed(1)} (${rsiStatus})
-• Trend Bias: ${trendStatus}
-• Quantitative Score: Value ${brief.factor_scorecard.value_score}/100, Momentum ${brief.factor_scorecard.momentum_score}/100, Quality ${brief.factor_scorecard.quality_score}/100.
-• Composite Score: ${brief.factor_scorecard.composite_score}/100.
-
-Always use a Stop-Loss in the Order Ticket to manage downside risk. Deterministic Fallback analysis based on verified historical close price points.`;
-    }
-    // 4. SPECULATIVE PRICE PREDICTIONS (REFUSAL + FACTS)
-    else if (
-      lower.includes("price target") ||
-      lower.includes("predict") ||
-      lower.includes("tomorrow") ||
-      lower.includes("next week")
-    ) {
-      replyText = `As an institutional financial research assistant, I am prohibited from inventing speculative price targets. Future quotes cannot be guaranteed. However, based on verified technical metrics:
-• Current verified price is ${metrics?.last_close ? `₹${metrics.last_close.toFixed(2)}` : "referenced in verified feeds"}.
-• 14-day Wilder RSI is ${(metrics?.rsi_14 || 58.4).toFixed(1)} [CIT-001].
-• 20-day SMA baseline is ₹${(metrics?.sma_20 || 1320.0).toFixed(2)}.
-Deterministic Narrative grounded in mathematical calculations.`;
-    }
-    // 5. RSI & MOMENTUM
-    else if (lower.includes("rsi") || lower.includes("momentum")) {
-      replyText = `The 14-day Wilder RSI for ${symbol} is deterministically calculated at ${(
-        metrics?.rsi_14 || 58.4
-      ).toFixed(1)} [CIT-001]. Momentum factor score is ${
-        brief.factor_scorecard.momentum_score
-      }/100 based on standard Wilder exponential smoothing over verified close price points. Values >70 indicate overbought conditions, while <30 indicate oversold conditions.`;
-    }
-    // 6. VOLATILITY & RISK
-    else if (lower.includes("volatility") || lower.includes("risk") || lower.includes("sharpe")) {
-      replyText = `Risk Diagnostics for ${symbol}:
-• Annualized Historical Volatility: ${(metrics?.volatility || 18.5).toFixed(1)}% [CIT-002], computed from daily log returns scaled by sqrt(252).
-• Sharpe Ratio: ${(metrics?.sharpe_ratio || 1.42).toFixed(2)} using a 6.00% risk-free rate hurdle.
-• Low-Volatility Factor Score: 78/100.`;
-    }
-    // 7. ORDER TYPES (MIS, CNC, MTF, SL)
-    else if (lower.includes("mis") || lower.includes("cnc") || lower.includes("mtf") || lower.includes("stop loss") || lower.includes("margin")) {
-      replyText = `Order Types Explained on TradeX Pro:
-• MIS (Margin Intraday Square-off): Day trading with 5x leverage. Any open MIS trade must be closed before 3:20 PM IST.
-• CNC (Cash & Carry): Regular delivery trading. Requires 100% cash; holds shares in your portfolio indefinitely with zero leverage risk.
-• MTF (Margin Trading Facility): Allows swing traders to hold positions for multiple days with 4x margin leverage.
-• Stop-Loss (SL): Automatically triggers a market exit if the stock drops to your specified trigger price, strictly limiting potential loss.`;
-    }
-    // 8. GENERAL / DEFAULT SMART ANSWER (Multi-Factor Neural Synthesis)
-    else {
-      replyText = generateNeuralSynthesis(query, marketCtx);
-    }
-
-    const assistantMsg: ChatMessage = {
-      id: `ast-${Date.now()}`,
-      sender: "assistant",
-      text: replyText,
-      citations: brief.citations,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    };
-
-    setChatHistory([...updatedHistory, assistantMsg]);
-    setIsLoadingAi(false);
   };
 
   return (

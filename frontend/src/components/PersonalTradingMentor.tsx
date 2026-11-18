@@ -117,9 +117,21 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
     let msg = "";
     if (activePos) {
       setCurrentStep(4);
-      msg = `🎉 Active Trade Alert: Aapka ${activePos.side} ${activePos.quantity} shares of ${symbol} active hai! Entry: ${curr}${activePos.entryPrice.toFixed(
+      const avgPrice =
+        typeof activePos.averagePrice === "number"
+          ? activePos.averagePrice
+          : typeof activePos.entryPrice === "number"
+          ? activePos.entryPrice
+          : price;
+      const pnlNum =
+        typeof activePos.pnl === "number"
+          ? activePos.pnl
+          : typeof activePos.unrealizedPnl === "number"
+          ? activePos.unrealizedPnl
+          : 0;
+      msg = `🎉 Active Trade Alert: Aapka ${activePos.side || "BUY"} ${activePos.quantity || 0} shares of ${symbol} active hai! Entry: ${curr}${avgPrice.toFixed(
         2
-      )}, Live P&L: ${activePos.unrealizedPnl >= 0 ? "+" : ""}${curr}${activePos.unrealizedPnl.toFixed(
+      )}, Live P&L: ${pnlNum >= 0 ? "+" : ""}${curr}${pnlNum.toFixed(
         2
       )}. Target: ${curr}${target1}, Stop-Loss: ${curr}${stopLoss}. Target aate hi munafa book karein!`;
     } else if (currentStep === 1) {
