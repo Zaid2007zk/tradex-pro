@@ -34,6 +34,7 @@ import { AIPredictionBadge } from "@/components/AIPredictionBadge";
 import { AIVisualDecisionNodes } from "@/components/AIVisualDecisionNodes";
 import { FloatingAICopilot } from "@/components/FloatingAICopilot";
 import { PersonalTradingMentor } from "@/components/PersonalTradingMentor";
+import { LuxuryAuthPortal } from "@/components/LuxuryAuthPortal";
 import { soundEngine } from "@/utils/soundEngine";
 import {
   TrendingUp,
@@ -48,6 +49,7 @@ import {
   Bot,
   Zap,
   Sparkles,
+  Crown,
   CheckCircle2,
   Sliders,
 } from "lucide-react";
@@ -157,6 +159,7 @@ export default function HomePage() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authInitialTab, setAuthInitialTab] = useState<"login" | "signup" | "demo">("login");
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [isAuthLoaded, setIsAuthLoaded] = useState<boolean>(false);
 
   // Real Trading Execution & Portfolio State
   const [activeBroker, setActiveBroker] = useState<string>("Zerodha Kite DMA");
@@ -175,7 +178,9 @@ export default function HomePage() {
   // Load user & trading state on mount
   useEffect(() => {
     try {
-      const savedAuth = localStorage.getItem("marketpulse_auth");
+      const savedAuth =
+        localStorage.getItem("marketpulse_auth") ||
+        localStorage.getItem("marketpulse_auth_user");
       if (savedAuth) setUser(JSON.parse(savedAuth));
 
       const savedTrading = localStorage.getItem("marketpulse_terminal_trading");
@@ -213,7 +218,9 @@ export default function HomePage() {
           },
         ]);
       }
-    } catch {}
+    } catch {} finally {
+      setIsAuthLoaded(true);
+    }
   }, []);
 
   // Global listener to open AI Copilot from Navbar or anywhere
@@ -241,6 +248,7 @@ export default function HomePage() {
     setUser(authUser);
     try {
       localStorage.setItem("marketpulse_auth", JSON.stringify(authUser));
+      localStorage.setItem("marketpulse_auth_user", JSON.stringify(authUser));
     } catch {}
     setIsAuthOpen(false);
   };
@@ -249,6 +257,7 @@ export default function HomePage() {
     setUser(null);
     try {
       localStorage.removeItem("marketpulse_auth");
+      localStorage.removeItem("marketpulse_auth_user");
     } catch {}
   };
 
@@ -522,7 +531,22 @@ export default function HomePage() {
   const totalAccountValue = availableMargin + utilizedMargin + positions.reduce((acc, p) => acc + p.pnl, 0);
 
   return (
-    <div className="min-h-screen bg-[#070A10] text-slate-100 flex flex-col font-sans selection:bg-sky-500/30 selection:text-sky-200">
+    <div className="min-h-screen bg-[#07090E] text-slate-100 flex flex-col font-sans selection:bg-amber-500/30 selection:text-amber-200 relative overflow-x-hidden">
+      {/* Luxury ambient light auras */}
+      <div className="absolute top-0 left-1/4 w-[600px] h-[300px] bg-amber-500/5 blur-[140px] pointer-events-none rounded-full" />
+      <div className="absolute top-1/4 right-1/4 w-[600px] h-[300px] bg-blue-500/5 blur-[140px] pointer-events-none rounded-full" />
+
+      {/* Mandatory Authentication Gate: If visitor is not signed in or opens auth, show Luxury Auth Portal */}
+      {(!user || isAuthOpen) && (
+        <div className="fixed inset-0 z-[100] overflow-y-auto">
+          <LuxuryAuthPortal
+            onAuthSuccess={handleAuthSuccess}
+            defaultTab={authInitialTab === "signup" ? "signup" : "login"}
+          />
+        </div>
+      )}
+
+      {/* Navigation Header with Broker DMA Controls */}
       {/* Navigation Header with Broker DMA Controls */}
       <Navbar
         activeTab={activeTab}
@@ -556,22 +580,22 @@ export default function HomePage() {
             return (
               <div
                 key={idx.symbol}
-                className="bg-[#1E222D] border border-[#2A2E39] hover:border-[#363C4E] p-3 rounded-lg transition-colors"
+                className="bg-[#0D111A]/90 backdrop-blur-md border border-amber-500/15 hover:border-amber-500/40 p-3.5 rounded-xl transition-all shadow-md group"
               >
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-white">
+                    <span className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors">
                       {idx.name}
                     </span>
-                    <span className="text-[10px] font-semibold text-[#787B86] bg-[#131722] px-1 py-0.2 rounded border border-[#2A2E39]">
+                    <span className="text-[10px] font-semibold text-slate-400 bg-[#07090F] px-1.5 py-0.2 rounded border border-white/5">
                       {idx.exchange}
                     </span>
                   </div>
                   <span
                     className={`inline-flex items-center text-[11px] font-tabular font-bold px-1.5 py-0.2 rounded ${
                       isIdxUp
-                        ? "bg-[#089981]/15 text-[#089981]"
-                        : "bg-[#F23645]/15 text-[#F23645]"
+                        ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20"
+                        : "bg-rose-500/15 text-rose-400 border border-rose-500/20"
                     }`}
                   >
                     {isIdxUp ? "+" : ""}
@@ -582,7 +606,7 @@ export default function HomePage() {
                   <div className="text-lg font-tabular font-bold text-white tracking-tight">
                     {idx.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
-                  <span className="text-[10px] text-[#787B86] font-medium uppercase">
+                  <span className="text-[10px] text-slate-500 font-medium uppercase font-mono">
                     {idx.region}
                   </span>
                 </div>
@@ -592,7 +616,7 @@ export default function HomePage() {
         </div>
 
         {/* Top Control Bar: Search & Quick Pick */}
-        <div className="bg-[#1E222D] border border-[#2A2E39] rounded-lg p-2.5 flex flex-wrap items-center justify-between gap-3">
+        <div className="bg-[#0D111A]/90 backdrop-blur-md border border-amber-500/15 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 shadow-md">
           <div className="flex-1 min-w-[260px] max-w-md">
             <StockSearch
               onSelectSymbol={(sym) => setSelectedSymbol(sym)}
@@ -666,9 +690,10 @@ export default function HomePage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
               {/* Left Main Section: Chart, Indicators, Matrix (8 Cols) */}
               <div className="lg:col-span-8 space-y-4">
-                {/* Active Ticker Hero Command Header Card */}
-                <div className="bg-[#1E222D] border border-[#2A2E39] rounded-lg p-4 space-y-3">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
+                {/* Active Ticker Hero Command Header Card (Ultra-Luxury Glassmorphic) */}
+                <div className="bg-[#0D111A]/95 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-5 space-y-4 shadow-[0_4px_30px_rgba(0,0,0,0.5)] relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-32 bg-amber-500/5 blur-3xl pointer-events-none rounded-full" />
+                  <div className="flex flex-wrap items-start justify-between gap-3 relative z-10">
                     <div>
                       <div className="flex items-center space-x-2.5">
                         <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">

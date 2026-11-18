@@ -83,24 +83,26 @@ export const Navbar: React.FC<NavbarProps> = ({
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 bg-[#131722] border-b border-[#2A2E39] select-none">
+    <header className="sticky top-0 z-50 bg-[#090C13]/90 backdrop-blur-xl border-b border-amber-500/15 select-none shadow-[0_4px_25px_rgba(0,0,0,0.6)]">
       <div className="max-w-[1720px] mx-auto px-3 sm:px-5">
         <div className="flex justify-between items-center h-13 py-2">
           {/* Left: Brand & Main Navigation */}
           <div className="flex items-center space-x-6">
             {/* Brand Logo */}
             <div
-              className="flex items-center space-x-2.5 cursor-pointer"
+              className="flex items-center space-x-2.5 cursor-pointer group"
               onClick={() => setActiveTab("overview")}
             >
-              <div className="w-8 h-8 rounded-lg bg-[#2962FF] flex items-center justify-center text-white font-bold shadow-sm">
-                <TrendingUp className="w-4 h-4 stroke-[2.5]" />
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 p-[1.5px] shadow-[0_0_15px_rgba(245,158,11,0.25)] flex items-center justify-center transition-transform group-hover:scale-105">
+                <div className="w-full h-full bg-[#0B0E17] rounded-[7px] flex items-center justify-center">
+                  <Crown className="w-4 h-4 text-amber-400" />
+                </div>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-base font-extrabold tracking-tight text-white">
-                  TradeX
+              <div className="flex items-center gap-1.5 font-mono">
+                <span className="text-base font-black tracking-tight text-white">
+                  TradeX <span className="bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 bg-clip-text text-transparent">ELITE</span>
                 </span>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#2962FF] bg-[#2962FF]/10 px-1.5 py-0.5 rounded border border-[#2962FF]/30">
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/30">
                   PRO
                 </span>
               </div>
@@ -299,32 +301,36 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* User Account / Profile / Auth */}
             {user ? (
-              <div className="relative" ref={menuRef}>
-                <button
-                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center space-x-2 text-xs text-[#D1D4DC] bg-[#1E222D] hover:bg-[#2A2E39] px-2.5 py-1 rounded border border-[#2A2E39] transition cursor-pointer"
-                >
-                  <div className="w-5 h-5 rounded-full bg-[#2962FF] text-white flex items-center justify-center font-bold text-[10px]">
-                    {user.email ? user.email.charAt(0).toUpperCase() : "U"}
-                  </div>
-                  <span className="truncate max-w-[100px] sm:max-w-[130px] font-medium">
-                    {user.email}
-                  </span>
-                  <ChevronDown className="w-3 h-3 text-[#787B86]" />
-                </button>
-
-                {/* Dropdown Menu */}
-                {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-1.5 w-60 bg-[#1E222D] border border-[#2A2E39] rounded-lg shadow-2xl py-1.5 z-50 text-xs">
-                    <div className="px-3 py-2 border-b border-[#2A2E39] bg-[#131722]/50">
-                      <div className="font-semibold text-white truncate">{user.email}</div>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <span className="text-[10px] bg-[#089981]/20 text-[#089981] px-1.5 py-0.5 rounded font-bold border border-[#089981]/30">
-                          PRO SUBSCRIBER
-                        </span>
-                        <span className="text-[10px] text-[#787B86]">ID: MP-98421</span>
-                      </div>
+              <div className="flex items-center space-x-2">
+                <div className="relative" ref={menuRef}>
+                  <button
+                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                    className="flex items-center space-x-2 text-xs text-slate-100 bg-[#0F1420] hover:bg-[#161D2E] px-2.5 py-1 rounded-lg border border-amber-500/25 transition cursor-pointer shadow-sm"
+                  >
+                    <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 text-black flex items-center justify-center font-black text-[10px]">
+                      👑
                     </div>
+                    <span className="truncate max-w-[100px] sm:max-w-[140px] font-bold text-amber-300">
+                      {user.email}
+                    </span>
+                    <ChevronDown className="w-3 h-3 text-slate-400" />
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {isUserMenuOpen && (
+                    <div className="absolute right-0 mt-1.5 w-64 bg-[#0E121C] border border-amber-500/20 rounded-xl shadow-2xl py-1.5 z-50 text-xs backdrop-blur-xl">
+                      <div className="px-3 py-2 border-b border-[#202738] bg-[#07090F]/70">
+                        <div className="font-bold text-white truncate flex items-center gap-1.5">
+                          <Crown className="w-3.5 h-3.5 text-amber-400" />
+                          <span>{user.email}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <span className="text-[10px] bg-amber-400/15 text-amber-300 px-1.5 py-0.5 rounded font-black border border-amber-400/30">
+                            VIP ELITE TRADER
+                          </span>
+                          <span className="text-[10px] text-slate-400">ID: MP-98421</span>
+                        </div>
+                      </div>
 
                     <div className="py-1">
                       <button
@@ -437,7 +443,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
                 )}
               </div>
-            ) : (
+
+              {/* Direct Quick Sign Out Button */}
+              <button
+                onClick={onLogout}
+                title="Sign Out & Lock Terminal"
+                className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold transition cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                <span>Sign Out</span>
+              </button>
+            </div>
+          ) : (
               <div className="flex items-center space-x-1.5 sm:space-x-2">
                 <button
                   onClick={() => onOpenAuth("login")}
