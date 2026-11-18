@@ -35,6 +35,9 @@ import { AIVisualDecisionNodes } from "@/components/AIVisualDecisionNodes";
 import { FloatingAICopilot } from "@/components/FloatingAICopilot";
 import { PersonalTradingMentor } from "@/components/PersonalTradingMentor";
 import { LuxuryAuthPortal } from "@/components/LuxuryAuthPortal";
+import { SectorHeatmapModal } from "@/components/trading/SectorHeatmapModal";
+import { LiveAlertsScannerModal } from "@/components/trading/LiveAlertsScannerModal";
+import { VIPLeaderboardModal } from "@/components/trading/VIPLeaderboardModal";
 import { soundEngine } from "@/utils/soundEngine";
 import {
   TrendingUp,
@@ -169,26 +172,59 @@ export default function HomePage() {
   const [isSebiModalOpen, setIsSebiModalOpen] = useState<boolean>(false);
   const [isOptionsChainOpen, setIsOptionsChainOpen] = useState<boolean>(false);
   const [isTradeJournalOpen, setIsTradeJournalOpen] = useState<boolean>(false);
+  const [isHeatmapOpen, setIsHeatmapOpen] = useState<boolean>(false);
+  const [isAlertsOpen, setIsAlertsOpen] = useState<boolean>(false);
+  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState<boolean>(false);
   const [isCopilotOpen, setIsCopilotOpen] = useState<boolean>(false);
   const [copilotInitialQuery, setCopilotInitialQuery] = useState<string>("");
   const [availableMargin, setAvailableMargin] = useState<number>(1000000.0);
   const [positions, setPositions] = useState<ActivePosition[]>([]);
   const [orders, setOrders] = useState<ExecutedOrder[]>([]);
 
-  // Load user & trading state on mount
+  // Load user & trading state on mount with safe sanitization
   useEffect(() => {
     try {
       const savedAuth =
         localStorage.getItem("marketpulse_auth") ||
         localStorage.getItem("marketpulse_auth_user");
-      if (savedAuth) setUser(JSON.parse(savedAuth));
+      if (savedAuth) {
+        const parsed = JSON.parse(savedAuth);
+        if (parsed && typeof parsed === "object" && parsed.email) {
+          setUser(parsed);
+        }
+      }
 
       const savedTrading = localStorage.getItem("marketpulse_terminal_trading");
       if (savedTrading) {
         const data = JSON.parse(savedTrading);
-        if (data.margin !== undefined) setAvailableMargin(data.margin);
-        if (data.positions) setPositions(data.positions);
-        if (data.orders) setOrders(data.orders);
+        if (typeof data.margin === "number") setAvailableMargin(data.margin);
+        if (Array.isArray(data.positions)) {
+          const sanitized: ActivePosition[] = data.positions.map((p: any, idx: number) => ({
+            id: p.id || `pos-${idx}`,
+            symbol: p.symbol || "RELIANCE.NS",
+            side: p.side === "SELL" ? "SELL" : "BUY",
+            product: p.product || "MIS",
+            quantity: Number(p.quantity) || 1,
+            averagePrice: Number(p.averagePrice ?? p.entryPrice ?? p.price ?? 100),
+            currentPrice: Number(p.currentPrice ?? p.averagePrice ?? p.entryPrice ?? 100),
+            pnl: Number(p.pnl ?? p.unrealizedPnl ?? 0),
+            pnlPercent: Number(p.pnlPercent ?? 0),
+          }));
+          setPositions(sanitized);
+        }
+        if (Array.isArray(data.orders)) {
+          const sanitizedOrders: ExecutedOrder[] = data.orders.map((ord: any, idx: number) => ({
+            id: ord.id || `ord-${idx}`,
+            time: ord.time || "09:15:00",
+            symbol: ord.symbol || "RELIANCE.NS",
+            side: ord.side === "SELL" ? "SELL" : "BUY",
+            product: ord.product || "MIS",
+            quantity: Number(ord.quantity) || 1,
+            price: Number(ord.price || 0),
+            status: ord.status || "FILLED",
+          }));
+          setOrders(sanitizedOrders);
+        }
         if (data.broker) setActiveBroker(data.broker);
       } else {
         // Initial sample position to illustrate live terminal capability
@@ -525,10 +561,20 @@ export default function HomePage() {
   };
 
   const utilizedMargin = positions.reduce(
-    (acc, p) => acc + (p.quantity * p.averagePrice) / (p.product === "MIS" ? 5 : 1),
+    (acc, p) =>
+      acc +
+      (Number(p.quantity || 0) *
+        Number(p.averagePrice ?? (p as any).entryPrice ?? p.currentPrice ?? 0)) /
+        (p.product === "MIS" ? 5 : 1),
     0
   );
-  const totalAccountValue = availableMargin + utilizedMargin + positions.reduce((acc, p) => acc + p.pnl, 0);
+  const totalAccountValue =
+    (Number(availableMargin) || 0) +
+    utilizedMargin +
+    positions.reduce(
+      (acc, p) => acc + Number(p.pnl ?? (p as any).unrealizedPnl ?? 0),
+      0
+    );
 
   return (
     <div className="min-h-screen bg-[#07090E] text-slate-100 flex flex-col font-sans selection:bg-amber-500/30 selection:text-amber-200 relative overflow-x-hidden">
@@ -563,6 +609,9 @@ export default function HomePage() {
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenOptionsChain={() => setIsOptionsChainOpen(true)}
         onOpenTradeJournal={() => setIsTradeJournalOpen(true)}
+        onOpenHeatmap={() => setIsHeatmapOpen(true)}
+        onOpenAlerts={() => setIsAlertsOpen(true)}
+        onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
       />
 
       {/* Streaming Live Marquee Tape */}
@@ -1347,6 +1396,38 @@ export default function HomePage() {
         isOpenExternal={isCopilotOpen}
         onCloseExternal={() => setIsCopilotOpen(false)}
         initialQuery={copilotInitialQuery}
+      />
+
+      {/* Feature 4: Sector Heatmap & Market Sentiment Radar Modal */}
+      <SectorHeatmapModal
+        isOpen={isHeatmapOpen}
+        onClose={() => setIsHeatmapOpen(false)}
+        onSelectSymbol={(sym) => setSelectedSymbol(sym)}
+      />
+
+      {/* Feature 3: Live AI Trade Alerts & Breakout Scanner Modal */}
+      <LiveAlertsScannerModal
+        isOpen={isAlertsOpen}
+        onClose={() => setIsAlertsOpen(false)}
+        onExecuteTrade={(ord) =>
+          handleExecuteOrder({
+            symbol: ord.symbol,
+            side: ord.side,
+            product: ord.product,
+            orderType: ord.orderType,
+            quantity: ord.quantity,
+            price: ord.price,
+            marginRequired: ord.marginRequired,
+          })
+        }
+        onSelectSymbol={(sym) => setSelectedSymbol(sym)}
+      />
+
+      {/* Feature 5: VIP Trader Leaderboard & Gamified Performance Scorecard Modal */}
+      <VIPLeaderboardModal
+        isOpen={isLeaderboardOpen}
+        onClose={() => setIsLeaderboardOpen(false)}
+        userEmail={user?.email || "vip.trader@tradex.elite"}
       />
     </div>
   );

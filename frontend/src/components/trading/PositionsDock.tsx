@@ -60,8 +60,11 @@ export const PositionsDock: React.FC<PositionsDockProps> = ({
   const curr = currency === "INR" ? "₹" : "$";
 
   // Total Realized / Unrealized P&L
-  const totalPnL = positions.reduce((acc, p) => acc + p.pnl, 0);
-  const isPnLPositive = totalPnL >= 0;
+  const totalPnL = positions.reduce(
+    (acc, p) => acc + Number(p.pnl ?? (p as any).unrealizedPnl ?? 0),
+    0
+  );
+  const isPnLPositive = (totalPnL || 0) >= 0;
 
   return (
     <div className="w-full bg-[#1E222D] border border-[#2A2E39] rounded-lg overflow-hidden select-none">
@@ -184,7 +187,11 @@ export const PositionsDock: React.FC<PositionsDockProps> = ({
                     </thead>
                     <tbody className="divide-y divide-[#2A2E39] font-tabular">
                       {positions.map((pos) => {
-                        const isUp = pos.pnl >= 0;
+                        const avgPrice = Number(pos.averagePrice ?? (pos as any).entryPrice ?? pos.currentPrice ?? 0);
+                        const curPrice = Number(pos.currentPrice ?? pos.averagePrice ?? (pos as any).entryPrice ?? 0);
+                        const posPnl = Number(pos.pnl ?? (pos as any).unrealizedPnl ?? 0);
+                        const posPnlPct = Number(pos.pnlPercent ?? 0);
+                        const isUp = posPnl >= 0;
                         return (
                           <tr key={pos.id} className="hover:bg-[#2A2E39]/40 transition-colors">
                             <td className="py-2 font-bold text-white">{pos.symbol}</td>
@@ -202,16 +209,16 @@ export const PositionsDock: React.FC<PositionsDockProps> = ({
                             <td className="py-2 text-[#787B86]">{pos.product}</td>
                             <td className="py-2 text-right font-semibold text-white">{pos.quantity}</td>
                             <td className="py-2 text-right text-[#D1D4DC]">
-                              {curr}{pos.averagePrice.toFixed(2)}
+                              {curr}{avgPrice.toFixed(2)}
                             </td>
                             <td className="py-2 text-right font-semibold text-white">
-                              {curr}{pos.currentPrice.toFixed(2)}
+                              {curr}{curPrice.toFixed(2)}
                             </td>
                             <td className="py-2 text-right font-bold">
                               <span className={isUp ? "text-[#089981]" : "text-[#F23645]"}>
                                 {isUp ? "+" : ""}
-                                {curr}{pos.pnl.toFixed(2)} ({isUp ? "+" : ""}
-                                {pos.pnlPercent.toFixed(2)}%)
+                                {curr}{posPnl.toFixed(2)} ({isUp ? "+" : ""}
+                                {posPnlPct.toFixed(2)}%)
                               </span>
                             </td>
                             <td className="py-2 text-center">
@@ -275,7 +282,7 @@ export const PositionsDock: React.FC<PositionsDockProps> = ({
                           <td className="py-2 text-[#787B86]">{ord.product}</td>
                           <td className="py-2 text-right text-white font-medium">{ord.quantity}</td>
                           <td className="py-2 text-right text-[#D1D4DC]">
-                            {curr}{ord.price.toFixed(2)}
+                            {curr}{Number(ord.price || 0).toFixed(2)}
                           </td>
                           <td className="py-2 text-center">
                             <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#089981]/15 text-[#089981]">
@@ -299,7 +306,7 @@ export const PositionsDock: React.FC<PositionsDockProps> = ({
                   Total Equity
                 </span>
                 <span className="text-base font-bold text-white">
-                  {curr}{totalAccountValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {curr}{Number(totalAccountValue || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
 
@@ -308,7 +315,7 @@ export const PositionsDock: React.FC<PositionsDockProps> = ({
                   Available Margin
                 </span>
                 <span className="text-base font-bold text-[#089981]">
-                  {curr}{availableMargin.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {curr}{Number(availableMargin || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
 
@@ -317,7 +324,7 @@ export const PositionsDock: React.FC<PositionsDockProps> = ({
                   Utilized Margin
                 </span>
                 <span className="text-base font-bold text-[#D1D4DC]">
-                  {curr}{utilizedMargin.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {curr}{Number(utilizedMargin || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
 
@@ -331,7 +338,7 @@ export const PositionsDock: React.FC<PositionsDockProps> = ({
                   }`}
                 >
                   {isPnLPositive ? "+" : ""}
-                  {curr}{totalPnL.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {curr}{Number(totalPnL || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
             </div>

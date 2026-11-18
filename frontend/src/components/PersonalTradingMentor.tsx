@@ -20,6 +20,12 @@ import {
   Play,
   RotateCcw,
   UserCheck,
+  Mic,
+  MicOff,
+  Radio,
+  PlayCircle,
+  PauseCircle,
+  Crown,
 } from "lucide-react";
 import { soundEngine } from "@/utils/soundEngine";
 import {
@@ -81,6 +87,71 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
   const [isLoadingAnswer, setIsLoadingAnswer] = useState<boolean>(false);
   const [selectedProduct, setSelectedProduct] = useState<"CNC" | "MIS">("CNC");
 
+  // Feature 2: 2-Way Voice Microphone with SpeechRecognition
+  const [isListening, setIsListening] = useState<boolean>(false);
+  const recognitionRef = useRef<any>(null);
+
+  // Feature 1: Autonomous AI Auto-Pilot Bot
+  const [isAutoPilotActive, setIsAutoPilotActive] = useState<boolean>(false);
+  const [autoPilotRisk, setAutoPilotRisk] = useState<"SAFE" | "MOMENTUM" | "SCALP">("SAFE");
+  const [botLogs, setBotLogs] = useState<string[]>([
+    "⚡ Auto-Pilot Ready: Institutional Quantitative Engine initialized.",
+  ]);
+  const [botTradeCount, setBotTradeCount] = useState<number>(0);
+
+  const toggleListening = () => {
+    if (typeof window === "undefined") return;
+    const SpeechRecognition =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert("Browser speech recognition is not supported in this browser. Please use Chrome, Edge, or Brave.");
+      return;
+    }
+
+    if (isListening) {
+      try {
+        recognitionRef.current?.stop();
+      } catch {}
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognitionRef.current = recognition;
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = "hi-IN"; // Speaks & understands Hinglish / Hindi / English
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results?.[0]?.[0]?.transcript;
+        if (transcript) {
+          setCustomQuestion(transcript);
+          setIsListening(false);
+          handleAskAssistant(transcript);
+        }
+      };
+
+      recognition.onerror = () => {
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.start();
+    } catch {
+      setIsListening(false);
+    }
+  };
+
   const curr = currency === "INR" || currency === "₹" ? "₹" : "$";
   const upBreakout = (price * 1.008).toFixed(2);
   const downBreakdown = (price * 0.992).toFixed(2);
@@ -88,6 +159,40 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
   const target2 = (price * 1.042).toFixed(2);
   const stopLoss = (price * 0.985).toFixed(2);
   const isBullish = price > sma20 && macd > macdSignal;
+
+  // Auto-Pilot Autonomous Loop
+  useEffect(() => {
+    if (!isAutoPilotActive) return;
+
+    const interval = setInterval(() => {
+      const isGoodBuy = price > sma20 && rsi14 > 45 && rsi14 < 72;
+      const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+
+      if (isGoodBuy && onExecuteTrade) {
+        soundEngine.playOrderFilled();
+        const prod = autoPilotRisk === "SAFE" ? "CNC" : "MIS";
+        onExecuteTrade({
+          symbol,
+          side: "BUY",
+          product: prod,
+          orderType: "MARKET",
+          quantity: 25,
+          price,
+          marginRequired: prod === "CNC" ? price * 25 : (price * 25) / 5,
+        });
+
+        const logEntry = `[${timeStr}] 🤖 Auto-Pilot (${autoPilotRisk}): Executed BUY 25x ${symbol} @ ${curr}${price.toFixed(2)} (SL: ${curr}${stopLoss}, TGT: ${curr}${target1})`;
+        setBotLogs((prev) => [logEntry, ...prev.slice(0, 3)]);
+        setBotTradeCount((prev) => prev + 1);
+
+        if (isVoiceActive) {
+          speakText(`Auto-Pilot Bot ne ${symbol} par trade execute kar diya hai!`);
+        }
+      }
+    }, 18000);
+
+    return () => clearInterval(interval);
+  }, [isAutoPilotActive, symbol, price, sma20, rsi14, autoPilotRisk, onExecuteTrade, isVoiceActive, curr, stopLoss, target1]);
 
   // Speech Synthesizer for Audio Guidance
   const speakText = (text: string) => {
@@ -419,6 +524,105 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
             </div>
           </div>
 
+          {/* Autonomous AI Auto-Pilot Bot Controller */}
+          <div className="p-3 rounded-xl bg-[#121624] border border-amber-500/25 space-y-2.5 shadow-md">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-black font-black text-xs shadow-sm">
+                  🤖
+                </div>
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs font-black text-white font-mono">
+                      Autonomous AI Auto-Pilot Bot
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-0.2 rounded-full border ${
+                      isAutoPilotActive
+                        ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40 animate-pulse"
+                        : "bg-slate-500/10 text-slate-400 border-slate-500/20"
+                    }`}>
+                      {isAutoPilotActive ? "ACTIVE (SCANNING 60 FPS)" : "PAUSED"}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-slate-400">
+                    Auto-scans technical breakouts &amp; executes virtual trades with Stop-Loss
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                {/* Risk Selector */}
+                <div className="flex p-0.5 rounded-lg bg-[#0B0E17] border border-[#212738] text-[10px] font-bold">
+                  {(["SAFE", "MOMENTUM", "SCALP"] as const).map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => setAutoPilotRisk(r)}
+                      className={`px-2 py-0.5 rounded transition ${
+                        autoPilotRisk === r
+                          ? "bg-amber-400 text-black shadow"
+                          : "text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      {r === "SAFE" ? "Safe 1x" : r === "MOMENTUM" ? "Momentum 5x" : "Scalp"}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Toggle Bot Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEngine.playTabSwitch();
+                    const next = !isAutoPilotActive;
+                    setIsAutoPilotActive(next);
+                    if (next) {
+                      soundEngine.playOrderFilled();
+                      setBotLogs((prev) => [
+                        `[${new Date().toLocaleTimeString()}] 🚀 Auto-Pilot Bot started in ${autoPilotRisk} mode.`,
+                        ...prev,
+                      ]);
+                      if (isVoiceActive) speakText("Auto-Pilot active ho gaya hai. Main market scan karke trades execute karungi.");
+                    }
+                  }}
+                  className={`px-3 py-1.5 rounded-lg font-extrabold text-xs flex items-center gap-1.5 transition shadow cursor-pointer ${
+                    isAutoPilotActive
+                      ? "bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30"
+                      : "bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black shadow-amber-500/20"
+                  }`}
+                >
+                  {isAutoPilotActive ? (
+                    <>
+                      <PauseCircle className="w-3.5 h-3.5" />
+                      <span>Pause Bot</span>
+                    </>
+                  ) : (
+                    <>
+                      <PlayCircle className="w-3.5 h-3.5" />
+                      <span>Start Auto-Pilot</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Live Bot Activity Stream */}
+            <div className="bg-[#090C13] p-2 rounded-lg border border-white/5 space-y-1 font-mono text-[10px]">
+              <div className="flex items-center justify-between text-slate-400 pb-1 border-b border-white/5">
+                <span className="flex items-center gap-1">
+                  <Radio className={`w-3 h-3 ${isAutoPilotActive ? "text-emerald-400 animate-pulse" : "text-slate-600"}`} />
+                  <span>Live Bot Activity Feed</span>
+                </span>
+                <span className="text-amber-300 font-bold">Auto-Trades Executed: {botTradeCount}</span>
+              </div>
+              {botLogs.map((log, lIdx) => (
+                <div key={lIdx} className="text-slate-300 truncate">
+                  {log}
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Ask Aria Anything (Direct input in card) */}
           <form
             onSubmit={(e) => {
@@ -427,17 +631,41 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
             }}
             className="flex items-center gap-2 pt-1"
           >
+            {/* 2-Way Voice Microphone Button */}
+            <button
+              type="button"
+              onClick={toggleListening}
+              title={isListening ? "Listening to your voice... (Click to stop)" : "Speak to Aria (Hindi/Hinglish/English voice chat)"}
+              className={`px-3 py-2 rounded-lg font-bold text-xs flex items-center gap-1.5 transition cursor-pointer ${
+                isListening
+                  ? "bg-rose-500 text-white animate-pulse shadow-lg shadow-rose-500/30"
+                  : "bg-amber-400/15 text-amber-300 border border-amber-400/30 hover:bg-amber-400/25"
+              }`}
+            >
+              {isListening ? (
+                <>
+                  <MicOff className="w-4 h-4" />
+                  <span>Listening...</span>
+                </>
+              ) : (
+                <>
+                  <Mic className="w-4 h-4 text-amber-400" />
+                  <span className="hidden sm:inline">Speak</span>
+                </>
+              )}
+            </button>
+
             <input
               type="text"
               value={customQuestion}
               onChange={(e) => setCustomQuestion(e.target.value)}
-              placeholder="Aria se kuch bhi poochein: 'Mujhe trading kaise sikhni hai', 'Kab bechna hai'..."
-              className="flex-1 px-3.5 py-2 text-xs bg-[#131722] border border-[#2A2E39] focus:border-purple-500 text-white placeholder-[#787B86] rounded-lg outline-none transition"
+              placeholder="Aria se bol kar ya likh kar poochein: 'Kab bechna hai', 'Reliance ka target kya hai'..."
+              className="flex-1 px-3.5 py-2 text-xs bg-[#131722] border border-[#2A2E39] focus:border-amber-400 text-white placeholder-[#787B86] rounded-lg outline-none transition"
             />
             <button
               type="submit"
               disabled={!customQuestion.trim() || isLoadingAnswer}
-              className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs rounded-lg transition disabled:opacity-50 flex items-center gap-1 cursor-pointer"
+              className="px-4 py-2 bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-black font-extrabold text-xs rounded-lg transition disabled:opacity-50 flex items-center gap-1 cursor-pointer shadow-md shadow-amber-500/20"
             >
               <MessageSquare className="w-3.5 h-3.5" />
               <span>Poochein</span>

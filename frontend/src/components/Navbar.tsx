@@ -25,6 +25,9 @@ import {
   BookOpen,
   Cpu,
   Grid,
+  Bell,
+  Flame,
+  Trophy,
 } from "lucide-react";
 import { AuthUser } from "./AuthModal";
 
@@ -53,6 +56,9 @@ interface NavbarProps {
   onOpenSettings?: () => void;
   onOpenOptionsChain?: () => void;
   onOpenTradeJournal?: () => void;
+  onOpenHeatmap?: () => void;
+  onOpenAlerts?: () => void;
+  onOpenLeaderboard?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -67,6 +73,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenSettings,
   onOpenOptionsChain,
   onOpenTradeJournal,
+  onOpenHeatmap,
+  onOpenAlerts,
+  onOpenLeaderboard,
 }) => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -243,6 +252,49 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <BookOpen className="w-3.5 h-3.5 text-purple-400" />
                 <span className="text-[12px] font-medium">Journal</span>
+              </button>
+            )}
+
+            {/* Live Breakout Alerts Button */}
+            {onOpenAlerts && (
+              <button
+                onClick={onOpenAlerts}
+                title="Live AI Trade Alerts & Scanner"
+                className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-bold text-amber-300 transition cursor-pointer relative"
+              >
+                <div className="relative">
+                  <Bell className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                  <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-rose-500" />
+                </div>
+                <span className="hidden sm:inline">Alerts</span>
+                <span className="text-[10px] bg-amber-400 text-black px-1.5 py-0.2 rounded-full font-black">
+                  4
+                </span>
+              </button>
+            )}
+
+            {/* Sector Heatmap & Market Mood Button */}
+            {onOpenHeatmap && (
+              <button
+                onClick={onOpenHeatmap}
+                title="Sector Heatmap & Fear/Greed Sentiment Radar"
+                className="hidden lg:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-[#0F1422] hover:bg-[#181F33] border border-emerald-500/30 text-xs font-bold text-emerald-400 transition cursor-pointer"
+              >
+                <Flame className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Heatmap</span>
+              </button>
+            )}
+
+            {/* VIP Trader Leaderboard Button */}
+            {onOpenLeaderboard && (
+              <button
+                onClick={onOpenLeaderboard}
+                title="VIP Trader Leaderboard & Discipline Scorecard"
+                className="hidden xl:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-[#0F1422] hover:bg-[#181F33] border border-amber-500/30 text-xs font-bold text-amber-300 transition cursor-pointer"
+              >
+                <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                <span>Rank #4</span>
               </button>
             )}
             {/* Autonomous AI Engine Status Badge */}
