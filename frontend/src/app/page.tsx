@@ -34,7 +34,7 @@ import { AIPredictionBadge } from "@/components/AIPredictionBadge";
 import { AIVisualDecisionNodes } from "@/components/AIVisualDecisionNodes";
 import { FloatingAICopilot } from "@/components/FloatingAICopilot";
 import { PersonalTradingMentor } from "@/components/PersonalTradingMentor";
-import { LuxuryAuthPortal } from "@/components/LuxuryAuthPortal";
+import { LuxuryAuthPortal, UserPersonaType } from "@/components/LuxuryAuthPortal";
 import { SectorHeatmapModal } from "@/components/trading/SectorHeatmapModal";
 import { LiveAlertsScannerModal } from "@/components/trading/LiveAlertsScannerModal";
 import { VIPLeaderboardModal } from "@/components/trading/VIPLeaderboardModal";
@@ -159,6 +159,8 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Authentication State with LocalStorage Persistence
+  const [isPortalOpen, setIsPortalOpen] = useState<boolean>(true);
+  const [userPersona, setUserPersona] = useState<UserPersonaType>("beginner");
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authInitialTab, setAuthInitialTab] = useState<"login" | "signup" | "demo">("login");
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -192,6 +194,11 @@ export default function HomePage() {
         if (parsed && typeof parsed === "object" && parsed.email) {
           setUser(parsed);
         }
+      }
+
+      const savedPersona = localStorage.getItem("marketpulse_user_persona") as UserPersonaType | null;
+      if (savedPersona) {
+        setUserPersona(savedPersona);
       }
 
       const savedTrading = localStorage.getItem("marketpulse_terminal_trading");
@@ -280,12 +287,19 @@ export default function HomePage() {
     } catch {}
   };
 
-  const handleAuthSuccess = (authUser: AuthUser) => {
+  const handleAuthSuccess = (authUser: AuthUser, persona?: UserPersonaType) => {
     setUser(authUser);
+    if (persona) {
+      setUserPersona(persona);
+      try {
+        localStorage.setItem("marketpulse_user_persona", persona);
+      } catch {}
+    }
     try {
       localStorage.setItem("marketpulse_auth", JSON.stringify(authUser));
       localStorage.setItem("marketpulse_auth_user", JSON.stringify(authUser));
     } catch {}
+    setIsPortalOpen(false);
     setIsAuthOpen(false);
   };
 
@@ -295,6 +309,7 @@ export default function HomePage() {
       localStorage.removeItem("marketpulse_auth");
       localStorage.removeItem("marketpulse_auth_user");
     } catch {}
+    setIsPortalOpen(true);
   };
 
   // Live Global Index Tracker (NIFTY 50, SENSEX, S&P 500, NASDAQ)
@@ -582,17 +597,18 @@ export default function HomePage() {
       <div className="absolute top-0 left-1/4 w-[600px] h-[300px] bg-amber-500/5 blur-[140px] pointer-events-none rounded-full" />
       <div className="absolute top-1/4 right-1/4 w-[600px] h-[300px] bg-blue-500/5 blur-[140px] pointer-events-none rounded-full" />
 
-      {/* Mandatory Authentication Gate: If visitor is not signed in or opens auth, show Luxury Auth Portal */}
-      {(!user || isAuthOpen) && (
+      {/* Mandatory Antigravity-Style Interactive Luxury Entrance Portal */}
+      {(isPortalOpen || !user || isAuthOpen) && (
         <div className="fixed inset-0 z-[100] overflow-y-auto">
           <LuxuryAuthPortal
             onAuthSuccess={handleAuthSuccess}
             defaultTab={authInitialTab === "signup" ? "signup" : "login"}
+            currentUser={user}
+            onContinueAsCurrent={() => setIsPortalOpen(false)}
           />
         </div>
       )}
 
-      {/* Navigation Header with Broker DMA Controls */}
       {/* Navigation Header with Broker DMA Controls */}
       <Navbar
         activeTab={activeTab}
@@ -601,6 +617,7 @@ export default function HomePage() {
         onOpenAuth={(tab) => {
           setAuthInitialTab(tab || "login");
           setIsAuthOpen(true);
+          setIsPortalOpen(true);
         }}
         onLogout={handleLogout}
         onOpenBroker={() => setIsBrokerModalOpen(true)}
@@ -734,6 +751,7 @@ export default function HomePage() {
                 });
               }}
               onSelectStock={(sym) => setSelectedSymbol(sym)}
+              persona={userPersona}
             />
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">

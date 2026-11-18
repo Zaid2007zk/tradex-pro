@@ -49,6 +49,7 @@ export interface PersonalTradingMentorProps {
   volatility: number;
   availableMargin?: number;
   activePositions?: any[];
+  persona?: "beginner" | "scalper" | "quant" | "autopilot";
   onExecuteTrade?: (order: {
     symbol: string;
     side: "BUY" | "SELL";
@@ -74,6 +75,7 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
   volatility,
   availableMargin,
   activePositions,
+  persona = "beginner",
   onExecuteTrade,
   onSelectStock,
 }) => {
@@ -240,11 +242,19 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
         2
       )}. Target: ${curr}${target1}, Stop-Loss: ${curr}${stopLoss}. Target aate hi munafa book karein!`;
     } else if (currentStep === 1) {
-      msg = `Namaste! Main aapki Personal Trading Assistant "Aria" hoon. Abhi hum ${symbol} dekh rahe hain (LTP: ${curr}${price.toFixed(
-        2
-      )}). AI Decision Model ke anusar trend ${
-        isBullish ? "BULLISH (UP)" : "CONSOLIDATING"
-      } hai. Breakout trigger ${curr}${upBreakout} ke upar buy momentum tezi se banega, jabki ${curr}${downBreakdown} ke niche breakdown risk hai.`;
+      if (persona === "scalper") {
+        msg = `⚡ Scalper Momentum Mode Active: ${symbol} @ ${curr}${price.toFixed(2)}. Immediate intraday breakout: ${curr}${upBreakout} (TGT: ${curr}${target1}, SL: ${curr}${stopLoss}). Fast 1-click execution ready!`;
+      } else if (persona === "quant") {
+        msg = `📊 Quantitative Alpha Analysis for ${symbol} @ ${curr}${price.toFixed(2)}: Volatility ${(volatility || 18).toFixed(1)}%, Trend ${isBullish ? "Bullish (>20 SMA)" : "Consolidating"}. Risk-reward ratio: 1:2.5.`;
+      } else if (persona === "autopilot") {
+        msg = `🤖 Autonomous AI Bot Ready for ${symbol} @ ${curr}${price.toFixed(2)}. Bot scanning momentum triggers every 18s. Auto-trade execution is armed.`;
+      } else {
+        msg = `Namaste! Main aapki Personal Trading Assistant "Aria" hoon. Abhi hum ${symbol} dekh rahe hain (LTP: ${curr}${price.toFixed(
+          2
+        )}). AI Decision Model ke anusar trend ${
+          isBullish ? "BULLISH (UP)" : "CONSOLIDATING"
+        } hai. Breakout trigger ${curr}${upBreakout} ke upar buy momentum tezi se banega, jabki ${curr}${downBreakdown} ke niche breakdown risk hai.`;
+      }
     } else if (currentStep === 2) {
       msg = `Ab Step 2: Risk decide karein. Agar aap safe rehna chahte hain toh "Delivery (CNC)" chunein—isme koi margin risk nahi hai. Agar aap aaj hi 5x leverage ke sath profit banana chahte hain toh "Intraday (MIS)" lein, lekin Stop-Loss ${curr}${stopLoss} lagana mandatory hai!`;
     } else if (currentStep === 3) {
