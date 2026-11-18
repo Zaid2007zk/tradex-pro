@@ -155,12 +155,13 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
   };
 
   const curr = currency === "INR" || currency === "₹" ? "₹" : "$";
-  const upBreakout = (price * 1.008).toFixed(2);
-  const downBreakdown = (price * 0.992).toFixed(2);
-  const target1 = (price * 1.025).toFixed(2);
-  const target2 = (price * 1.042).toFixed(2);
-  const stopLoss = (price * 0.985).toFixed(2);
-  const isBullish = price > sma20 && macd > macdSignal;
+  const numPrice = Number(price || 100);
+  const upBreakout = (numPrice * 1.008).toFixed(2);
+  const downBreakdown = (numPrice * 0.992).toFixed(2);
+  const target1 = (numPrice * 1.025).toFixed(2);
+  const target2 = (numPrice * 1.042).toFixed(2);
+  const stopLoss = (numPrice * 0.985).toFixed(2);
+  const isBullish = numPrice > (sma20 || numPrice) && (macd || 0) > (macdSignal || 0);
 
   // Auto-Pilot Autonomous Loop
   useEffect(() => {
@@ -243,13 +244,13 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
       )}. Target: ${curr}${target1}, Stop-Loss: ${curr}${stopLoss}. Target aate hi munafa book karein!`;
     } else if (currentStep === 1) {
       if (persona === "scalper") {
-        msg = `⚡ Scalper Momentum Mode Active: ${symbol} @ ${curr}${price.toFixed(2)}. Immediate intraday breakout: ${curr}${upBreakout} (TGT: ${curr}${target1}, SL: ${curr}${stopLoss}). Fast 1-click execution ready!`;
+        msg = `⚡ Scalper Momentum Mode Active: ${symbol} @ ${curr}${numPrice.toFixed(2)}. Immediate intraday breakout: ${curr}${upBreakout} (TGT: ${curr}${target1}, SL: ${curr}${stopLoss}). Fast 1-click execution ready!`;
       } else if (persona === "quant") {
-        msg = `📊 Quantitative Alpha Analysis for ${symbol} @ ${curr}${price.toFixed(2)}: Volatility ${(volatility || 18).toFixed(1)}%, Trend ${isBullish ? "Bullish (>20 SMA)" : "Consolidating"}. Risk-reward ratio: 1:2.5.`;
+        msg = `📊 Quantitative Alpha Analysis for ${symbol} @ ${curr}${numPrice.toFixed(2)}: Volatility ${(Number(volatility) || 18).toFixed(1)}%, Trend ${isBullish ? "Bullish (>20 SMA)" : "Consolidating"}. Risk-reward ratio: 1:2.5.`;
       } else if (persona === "autopilot") {
-        msg = `🤖 Autonomous AI Bot Ready for ${symbol} @ ${curr}${price.toFixed(2)}. Bot scanning momentum triggers every 18s. Auto-trade execution is armed.`;
+        msg = `🤖 Autonomous AI Bot Ready for ${symbol} @ ${curr}${numPrice.toFixed(2)}. Bot scanning momentum triggers every 18s. Auto-trade execution is armed.`;
       } else {
-        msg = `Namaste! Main aapki Personal Trading Assistant "Aria" hoon. Abhi hum ${symbol} dekh rahe hain (LTP: ${curr}${price.toFixed(
+        msg = `Namaste! Main aapki Personal Trading Assistant "Aria" hoon. Abhi hum ${symbol} dekh rahe hain (LTP: ${curr}${numPrice.toFixed(
           2
         )}). AI Decision Model ke anusar trend ${
           isBullish ? "BULLISH (UP)" : "CONSOLIDATING"

@@ -434,7 +434,7 @@ export default function HomePage() {
     loadStockData();
   }, [loadStockData]);
 
-  const currentStock = (liveData && liveData.symbol === selectedSymbol) ? liveData : STOCK_DATABASE[selectedSymbol] || {
+  const rawStock = (liveData && liveData.symbol === selectedSymbol) ? liveData : STOCK_DATABASE[selectedSymbol] || {
     symbol: selectedSymbol,
     name: `${selectedSymbol} Equity`,
     exchange: selectedSymbol.endsWith(".NS") ? "NSE" : "US",
@@ -452,6 +452,19 @@ export default function HomePage() {
     bars: generateMockBars(selectedSymbol, 150.0, 260),
     isStale: false,
     timestamp: "Recent",
+  };
+
+  const currentStock = {
+    ...rawStock,
+    lastClose: Number(rawStock.lastClose ?? 100),
+    changePercent: Number(rawStock.changePercent ?? 0),
+    rsi14: Number(rawStock.rsi14 ?? 50),
+    macd: Number(rawStock.macd ?? 0),
+    macdSignal: Number(rawStock.macdSignal ?? 0),
+    sma20: Number(rawStock.sma20 ?? rawStock.lastClose ?? 100),
+    sma50: Number(rawStock.sma50 ?? rawStock.lastClose ?? 100),
+    volatility: Number(rawStock.volatility ?? 15),
+    sharpeRatio: Number(rawStock.sharpeRatio ?? 1),
   };
 
   const isUp = currentStock.changePercent >= 0;
@@ -642,10 +655,12 @@ export default function HomePage() {
         {/* Global Market Overview Indices (Compact Pro Strip) */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
           {globalIndices.map((idx) => {
-            const isIdxUp = idx.change_percent >= 0;
+            const priceVal = Number(idx.price || 0);
+            const chgVal = Number(idx.change_percent || 0);
+            const isIdxUp = chgVal >= 0;
             return (
               <div
-                key={idx.symbol}
+                key={idx.symbol || idx.name}
                 className="bg-[#0D111A]/90 backdrop-blur-md border border-amber-500/15 hover:border-amber-500/40 p-3.5 rounded-xl transition-all shadow-md group"
               >
                 <div className="flex items-center justify-between mb-1">
@@ -665,12 +680,12 @@ export default function HomePage() {
                     }`}
                   >
                     {isIdxUp ? "+" : ""}
-                    {idx.change_percent.toFixed(2)}%
+                    {chgVal.toFixed(2)}%
                   </span>
                 </div>
                 <div className="flex items-baseline justify-between mt-0.5">
                   <div className="text-lg font-tabular font-bold text-white tracking-tight">
-                    {idx.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {priceVal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
                   <span className="text-[10px] text-slate-500 font-medium uppercase font-mono">
                     {idx.region}

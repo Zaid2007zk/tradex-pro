@@ -57,23 +57,15 @@ export async function queryGemini(
     return generateNeuralSynthesis(prompt, context);
   }
 
-  const systemInstruction = `You are TradeX Pro AI, an elite institutional quantitative trader and financial trading mentor.
-You speak fluent Hinglish and English depending on how the user talks.
-Always provide clear, direct, structured advice using markdown, bullet points, and helpful emojis.
-When asked how to start ("me shuru kese karu", "how to start"), explain in 4 clear beginner-friendly steps:
-1. Select Stock from Watchlist & read the AI Decision Nodes on chart.
-2. Delivery (CNC) [Safe for beginners] vs Intraday (MIS) [High Risk with 5x leverage].
-3. Place Order in Order Ticket with Quantity & Stop-Loss.
-4. Practice 100% risk-free using ₹10,00,000 Virtual Paper Trading Cash!
-When analyzing a stock, strictly reference the live metrics provided:
-- Symbol: ${context.symbol}
-- Current Market Price: ${context.currency === "INR" || context.currency === "₹" ? "₹" : "$"}${context.price.toFixed(2)}${typeof context.changePercent === "number" ? ` (${context.changePercent >= 0 ? "+" : ""}${context.changePercent.toFixed(2)}%)` : ""}
-- 14-Day Wilder RSI: ${context.rsi14.toFixed(1)}
-- 20-Day SMA: ${context.currency === "INR" ? "₹" : "$"}${context.sma20.toFixed(2)}
-- 50-Day SMA: ${context.currency === "INR" ? "₹" : "$"}${context.sma50.toFixed(2)}
-- MACD: ${context.macd.toFixed(2)} vs Signal ${context.macdSignal.toFixed(2)} (Delta: ${(context.macd - context.macdSignal).toFixed(2)})
-- Annualized Volatility: ${context.volatility.toFixed(1)}%
-Never invent fake URLs. If the user asks where market will go up or down, provide exact breakout thresholds based on price and 20-SMA.`;
+  const systemInstruction = `You are TradeX Pro AI, an elite institutional quantitative financial trader and trading mentor.
+You speak fluent natural Hinglish and English.
+CRITICAL MANDATORY INSTRUCTIONS:
+- BE EXTREMELY DIRECT, CRISP, AND TO THE POINT.
+- JITNA PUCHA JAYE UTNA HI JAWAB DEIN (Answer STRICTLY what the user asks, without long generic essays, robotic intros, or unnecessary disclaimers).
+- NEVER start with "Aapne poocha: ..." or "Is sawaal ka direct aur actionable solution yeh hai:".
+- Give concise, actionable answers with exact numbers: Entry, Target, Stop-Loss, and Reason in 3-5 short bullet points.
+- If asked "isse buy karna chahiye", give a clear direct verdict (e.g. "Haan, buy kar sakte hain" OR "Abhi wait karein, thoda dip par lein") followed by 3-4 bullet points.
+- Reference live metrics: Symbol ${context.symbol}, Price ${context.currency === "INR" || context.currency === "₹" ? "₹" : "$"}${context.price.toFixed(2)}, RSI ${context.rsi14.toFixed(1)}, 20-SMA ${context.sma20.toFixed(2)}.`;
 
   const contents: any[] = [];
 
@@ -84,7 +76,7 @@ Never invent fake URLs. If the user asks where market will go up or down, provid
   });
   contents.push({
     role: "model",
-    parts: [{ text: "Understood. I am TradeX Pro AI, ready to analyze live market data and guide traders with precision." }],
+    parts: [{ text: "Understood. I will answer directly, concisely, and to the point with zero fluff or repetitive templates." }],
   });
 
   // Recent chat context
@@ -99,310 +91,187 @@ Never invent fake URLs. If the user asks where market will go up or down, provid
   // Current prompt
   contents.push({
     role: "user",
-    parts: [{ text: prompt }],
+    parts: [{
+      text: `User query: "${prompt}". Live context: Symbol: ${context.symbol}, Price: ${context.currency === "INR" || context.currency === "₹" ? "₹" : "$"}${context.price.toFixed(2)}, RSI: ${context.rsi14.toFixed(1)}, 20-SMA: ${context.sma20.toFixed(2)}. Answer directly and concisely in 3-5 crisp bullet points.`
+    }],
   });
 
-  // Try multiple live model endpoints
-  const candidateModels = ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-1.5-flash"];
-  for (const mod of candidateModels) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent?key=${apiKey}`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents }),
-      });
-      if (response.ok) {
-        const json = await response.json();
-        const candidate = json.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (candidate) return candidate;
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${DEFAULT_MODEL}:generateContent?key=${apiKey}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contents }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (generatedText && generatedText.trim()) {
+        return generatedText.trim();
       }
-    } catch {}
-  }
+    }
+  } catch {}
 
   return generateNeuralSynthesis(prompt, context);
 }
 
 /**
  * Intelligent Dynamic Neural Synthesis Engine
- * Used when no cloud key is provided so users still get high-level AI analysis
+ * Ultra-concise, direct, to-the-point expert answers with zero robotic boilerplate
  */
 export function generateNeuralSynthesis(prompt: string, context: MarketContext): string {
-  const q = prompt.toLowerCase();
+  const q = prompt.toLowerCase().trim();
   const currSym = context.currency === "INR" || context.currency === "₹" ? "₹" : "$";
   const changePct = typeof context.changePercent === "number" ? context.changePercent : 0;
   const isTrendUp = context.price > context.sma20 && context.sma20 > context.sma50;
   const isMacdCross = context.macd > context.macdSignal;
-  const isRsiOverbought = context.rsi14 > 70;
+  const isRsiOverbought = context.rsi14 > 72;
   const isRsiOversold = context.rsi14 < 35;
   const upThreshold = (Math.max(context.price, context.sma20) * 1.008).toFixed(2);
   const downThreshold = (Math.min(context.price, context.sma20) * 0.992).toFixed(2);
   const target1 = (context.price * (isTrendUp ? 1.025 : 0.98)).toFixed(2);
+  const target2 = (context.price * (isTrendUp ? 1.042 : 0.96)).toFixed(2);
   const stopLoss = (context.price * (isTrendUp ? 0.985 : 1.015)).toFixed(2);
+  const dipEntry = (context.price * 0.988).toFixed(2);
 
-  // 1. Selling, Exit & Profit Booking Timing (Highest Priority for Exit Execution)
-  if (
+  // 1. BUY / ENTRY QUERIES (Direct verdict on buy recommendations)
+  const isBuy =
+    q.includes("buy") ||
+    q.includes("khareed") ||
+    q.includes("khared") ||
+    q.includes("le lu") ||
+    q.includes("lena") ||
+    q.includes("entry") ||
+    q.includes("invest") ||
+    q.includes("le sakte");
+
+  if (isBuy) {
+    if (isRsiOverbought) {
+      return `### ⚠️ ${context.symbol}: Abhi Fresh Buy Na Karein (Wait for Dip)\n\n` +
+        `• **Reason:** RSI **${context.rsi14.toFixed(1)}** (Overbought) par hai. Price high par hai, yahan se chota pullback aane ka risk hai.\n` +
+        `• **Sahi Entry:** **${currSym}${dipEntry}** ke support dip par aane par buy karein.\n` +
+        `• **Target 1:** **${currSym}${target1}** (+2.5% move)\n` +
+        `• **Stop-Loss:** **${currSym}${stopLoss}** (-1.5% strict SL)\n` +
+        `• **Recommendation:** Safe rehne ke liye **Delivery (CNC)** chunein.`;
+    }
+
+    if (isTrendUp) {
+      return `### 🟢 Haan, ${context.symbol} Buy Kar Sakte Hain:\n\n` +
+        `• **Entry Price:** **${currSym}${context.price.toFixed(2)}** ke aas-paas le sakte hain.\n` +
+        `• **Trend Status:** Bullish (Price 20-Day SMA ${currSym}${context.sma20.toFixed(2)} ke upar hai).\n` +
+        `• **Target 1:** **${currSym}${target1}** (+2.5% gain)\n` +
+        `• **Target 2:** **${currSym}${target2}** (+4.2% runner gain)\n` +
+        `• **Strict Stop-Loss:** **${currSym}${stopLoss}** (-1.5% loss cut)\n` +
+        `• **Product:** Beginners ke liye **Delivery (CNC)** sabse safe hai.`;
+    }
+
+    return `### 🟡 ${context.symbol}: Abhi Breakout Ka Wait Karein\n\n` +
+      `• **Status:** Consolidation / Sideways mode.\n` +
+      `• **Buy Trigger:** **${currSym}${upThreshold}** ke upar 15-min candle close hone par hi buy karein.\n` +
+      `• **Target:** **${currSym}${target1}** | **Stop-Loss:** **${currSym}${stopLoss}**\n` +
+      `• **Tip:** Sideways market me jaldbazi me entry na lein.`;
+  }
+
+  // 2. SELL / EXIT / PROFIT BOOKING QUERIES
+  const isSell =
     q.includes("sell") ||
     q.includes("bech") ||
     q.includes("exit") ||
     q.includes("booking") ||
     q.includes("profit book") ||
-    q.includes("kab nikle") ||
-    q.includes("kab nikal") ||
-    (q.includes("best time") && (q.includes("sell") || q.includes("bech") || q.includes("exit") || q.includes("nikal")))
-  ) {
-    return `### 🎯 AI Guidance: Stock Kab Sell (Exit) Karein — Best Timing & Rules for **${context.symbol}**\n\n` +
-      `Trading mein munafa tabhi banta hai jab aap **sahi time par sell (exit) karein**:\n\n` +
-      `1. **⏰ Intraday (MIS) ke liye Best Selling Time:**\n` +
-      `   • **Morning Wave (9:45 AM - 10:30 AM):** Opening momentum par buyers ka first surge aate hi apna 50% profit lock karein.\n` +
-      `   • **Power Hour (2:00 PM - 3:00 PM):** European market movement aur intraday closing trend par target exit lein.\n` +
-      `   • **⚠️ 3:15 PM Hard Exit:** Intraday trades ko har haal mein 3:15 PM se pehle close karein, warna 3:20 PM par broker auto square-off karke extra charges lagata hai.\n\n` +
-      `2. **📊 ${context.symbol} ke Live Exit Targets (Aaj ke Levels):**\n` +
-      `   • **Target 1 (50% Quantity Sell):** **${currSym}${target1}** (+2.5% move). Yahan adha profit lock karein.\n` +
-      `   • **Target 2 (Runner Quantity Sell):** **${currSym}${(context.price * 1.042).toFixed(2)}** (+4.2% move).\n` +
-      `   • **Strict Stop-Loss (Sell in Loss):** **${currSym}${stopLoss}** (-1.5%). Agar price iske niche gire toh bina kisi lalach ke turant bech kar loss cut karein!\n\n` +
-      `3. **💡 Technical Signs: Kab Sell Button Dabayein?**\n` +
-      `   • **RSI Overbought:** Current RSI **${context.rsi14.toFixed(1)}** hai. Agar RSI 75-80 cross kare toh buyers thak chuke hote hain—turant sell karein.\n` +
-      `   • **Candle Breakdown:** Agar 15-minute chart par 20-Day SMA (${currSym}${context.sma20.toFixed(2)}) ke niche red candle close ho jaye.\n\n` +
-      `> 🏆 *AI Golden Rule: "Kabi top tick par bechne ka wait mat karo. Jab profit green me ho, partial quantity sell karke capital safe karo!"*`;
+    q.includes("nikal") ||
+    q.includes("nikle");
+
+  if (isSell) {
+    return `### 🔴 ${context.symbol}: Exit & Selling Strategy\n\n` +
+      `• **First Target (50% Profit Book):** **${currSym}${target1}** (+2.5% par adha munafa lock karein).\n` +
+      `• **Final Target:** **${currSym}${target2}** (+4.2%)\n` +
+      `• **Stop-Loss Exit:** **${currSym}${stopLoss}** (-1.5% ke niche turant loss cut karein).\n` +
+      `• **Best Intraday Time:** Subah 10:00 AM ya dopahar 2:30 PM. **3:15 PM** se pehle exit mandatory hai.`;
   }
 
-  // 2. Buying, Entry Timing & Opportunities
-  if (
-    (q.includes("buy") || q.includes("khareed") || q.includes("entry") || q.includes("le lu")) &&
-    (q.includes("best time") || q.includes("kab") || q.includes("sahi time") || q.includes("karein") || q.includes("kya"))
-  ) {
-    return `### 🚀 AI Guidance: Stock Kab Buy (Enter) Karein — Best Timing Rules for **${context.symbol}**\n\n` +
-      `Galat time par buy karne se loss hota hai. Sahi entry lene ke 3 golden rules:\n\n` +
-      `1. **⏰ Day Trading Entry Window:**\n` +
-      `   • **9:15 AM - 9:30 AM me trade MAT lein:** Is waqt opening trap hota hai.\n` +
-      `   • **Best Time (9:45 AM - 10:30 AM):** First 30 minutes ka high break hone par safe entry banti hai.\n` +
-      `   • **Afternoon Dip Entry (1:30 PM - 2:15 PM):** Jab pullback support se bounce kare.\n\n` +
-      `2. **📊 ${context.symbol} ke Live Entry Triggers:**\n` +
-      `   • **Breakout Entry (Bullish):** Buy above **${currSym}${upThreshold}** candle confirmation ke sath.\n` +
-      `   • **Dip Entry:** 20-Day SMA (**${currSym}${context.sma20.toFixed(2)}**) par bounce hone par buy karein.\n` +
-      `   • **Stop-Loss Mandate:** **${currSym}${stopLoss}** lagana na bhoolein.\n\n` +
-      `3. **🛡️ Safe Trading Recommendation:**\n` +
-      `   Beginners ke liye **Delivery (CNC)** sabse safe hai kyunki koi daily expiry nahi hoti!`;
+  // 3. TARGET / PREDICTION QUERIES
+  const isTarget =
+    q.includes("target") ||
+    q.includes("kaha tak") ||
+    q.includes("kahan tak") ||
+    q.includes("kitna jayega") ||
+    q.includes("predict") ||
+    q.includes("kal") ||
+    q.includes("forecast") ||
+    q.includes("future");
+
+  if (isTarget) {
+    return `### 🎯 ${context.symbol} Price Targets & Levels\n\n` +
+      `• **Current Price:** **${currSym}${context.price.toFixed(2)}**\n` +
+      `• **Target 1:** **${currSym}${target1}** (+2.5%)\n` +
+      `• **Target 2 (Extended):** **${currSym}${target2}** (+4.2%)\n` +
+      `• **Dynamic Stop-Loss:** **${currSym}${stopLoss}** (-1.5%)\n` +
+      `• **Bias:** ${isTrendUp ? "BULLISH (Upward continuation)" : "CONSOLIDATION"}.`;
   }
 
-  // 3. Stop-Loss, Capital Protection & Loss Management
-  if (
+  // 4. STOP-LOSS & RISK MANAGEMENT
+  const isSL =
     q.includes("stop loss") ||
     q.includes("stoploss") ||
-    q.includes("sl ") ||
-    q.includes("loss se") ||
-    q.includes("loss ho") ||
-    q.includes("recovery") ||
-    q.includes("ghata")
-  ) {
-    return `### 🛡️ AI Risk Management: Stop-Loss & Loss Recovery Rules\n\n` +
-      `Stock market mein kamyabi profit se nahi, balki **loss ko control karne se** milti hai:\n\n` +
-      `1. **Stop-Loss Kaise Kaam Karta Hai?**\n` +
-      `   Yeh aapka automated safety net hai. Agar price **${currSym}${stopLoss}** ke niche fisla, toh system aapko sirf 1.5% chote loss par automatically bahar nikal dega taaki aapka baki 98.5% capital safe rahe.\n\n` +
-      `2. **${context.symbol} Risk-Reward Equation:**\n` +
-      `   • **Current Price:** ${currSym}${context.price.toFixed(2)}\n` +
-      `   • **Stop-Loss (SL):** **${currSym}${stopLoss}** (-1.5%)\n` +
-      `   • **Target 1:** **${currSym}${target1}** (+2.5%)\n` +
-      `   • **Risk : Reward:** **1 : 1.7** (Institutional Grade Setup).\n\n` +
-      `3. **Loss Ho Jaye Toh Yeh 3 Galatiya Kabi Mat Karna:**\n` +
-      `   • **Revenge Trading:** Gusse me double quantity se trade na lein.\n` +
-      `   • **Averaging in Losing Trade:** Girte hue stock me aur paisa na dalein.\n` +
-      `   • **Max 2 Trades/Day:** Din me 2 Stop-Loss hit hote hi system band kar dein!`;
+    q.includes("sl") ||
+    q.includes("loss");
+
+  if (isSL) {
+    return `### 🛡️ ${context.symbol} Stop-Loss & Risk Level\n\n` +
+      `• **Strict Stop-Loss:** **${currSym}${stopLoss}** (Price se 1.5% niche).\n` +
+      `• **Kyun Lagayein?** Yeh aapka capital protect karta hai taaki bada loss na ho.\n` +
+      `• **Golden Rule:** Single trade me portfolio ka 2% se zyada risk kabhi na lein.`;
   }
 
-  // 4. Market Timings & Sessions
-  if (
-    q.includes("timing") ||
-    q.includes("open") ||
-    q.includes("close") ||
-    q.includes("kitne baje") ||
-    q.includes("kab khulta") ||
-    q.includes("kab band") ||
-    q.includes("hours")
-  ) {
-    return `### ⏱️ Indian Stock Market (NSE / BSE) Trading Timings\n\n` +
-      `* **Pre-Open Session:** 9:00 AM - 9:08 AM (Opening price discovery).\n` +
-      `* **Normal Market Hours:** **9:15 AM - 3:30 PM IST** (Continuous equity trading).\n` +
-      `* **Intraday (MIS) Square-Off:** **3:20 PM IST** (Broker auto exit time).\n` +
-      `* **Market Working Days:** Monday se Friday (Saturday, Sunday aur National Holidays par market band rehta hai).\n\n` +
-      `> 💡 *AI Pro Tip: 9:15 - 9:30 AM me beginners trade na karein. Best intraday trading 9:45 AM se 11:30 AM aur 1:45 PM se 3:00 PM tak hoti hai!*`;
+  // 5. DIRECTION & TREND (UP / DOWN)
+  const isDirection =
+    q.includes("up") ||
+    q.includes("down") ||
+    q.includes("upar") ||
+    q.includes("niche") ||
+    q.includes("trend") ||
+    q.includes("direction") ||
+    q.includes("kaisa");
+
+  if (isDirection) {
+    return `### 🧭 ${context.symbol} Trend & Direction\n\n` +
+      `• **Direction:** ${isTrendUp ? "🟢 Bullish (Upar jane ka momentum hai)" : "🟡 Sideways / Rangebound"}\n` +
+      `• **Breakout UP Trigger:** **${currSym}${upThreshold}** ke upar buy banega.\n` +
+      `• **Breakdown DOWN Risk:** **${currSym}${downThreshold}** ke niche selling aayegi.\n` +
+      `• **20-SMA Support:** **${currSym}${context.sma20.toFixed(2)}**`;
   }
 
-  // 5. Technical Indicators Explained (RSI, MACD, Moving Averages)
-  if (
-    q.includes("rsi") ||
-    q.includes("macd") ||
-    q.includes("moving average") ||
-    q.includes("sma") ||
-    q.includes("indicator") ||
-    q.includes("candle") ||
-    q.includes("chart")
-  ) {
-    return `### 📊 Technical Indicators Simplified for **${context.symbol}**\n\n` +
-      `1. **RSI (Relative Strength Index):**\n` +
-      `   • Current RSI: **${context.rsi14.toFixed(1)}**\n` +
-      `   • **Under 30 (Oversold):** Stock bohot gir chuka hai, yahan se bounce aayega (BUY signal).\n` +
-      `   • **Above 70 (Overbought):** Stock overstretched hai, selling aane ka risk hai (PROFIT BOOKING signal).\n\n` +
-      `2. **20-Day & 50-Day SMA (Simple Moving Average):**\n` +
-      `   • 20-Day SMA: **${currSym}${context.sma20.toFixed(2)}** | 50-Day SMA: **${currSym}${context.sma50.toFixed(2)}**\n` +
-      `   • Price SMA ke upar chal raha hai = **Strong Bullish Trend**.\n\n` +
-      `3. **MACD (Moving Average Convergence Divergence):**\n` +
-      `   • MACD: **${context.macd.toFixed(2)}** vs Signal: **${context.macdSignal.toFixed(2)}**\n` +
-      `   • Positive divergence indicates buyers market me aggressive hain!`;
-  }
-
-  // 6B. Options & Derivatives (Call, Put, F&O, Strike Price)
-  if (
-    q.includes("option") ||
-    q.includes("call") ||
-    q.includes("put") ||
-    q.includes("f&o") ||
-    q.includes("fno") ||
-    q.includes("strike") ||
-    q.includes("ce ") ||
-    q.includes("pe ") ||
-    q.includes("expiry")
-  ) {
-    return `### ⚡ Options & F&O Trading Guide: Call (CE) vs Put (PE)\n\n` +
-      `Options trading high-reward ke sath **high-risk** instrument hai. Iske core concepts:\n\n` +
-      `1. **Call Option (CE) — Bullish Bet:**\n` +
-      `   • Jab aapko lage stock ya index **UPAR** jayega, tab CE buy kiya jata hai.\n` +
-      `   • Agar market tezi se upar bhage toh premium tezi se badhta hai.\n\n` +
-      `2. **Put Option (PE) — Bearish Bet:**\n` +
-      `   • Jab aapko lage stock ya index **NICHE** girega, tab PE buy kiya jata hai.\n` +
-      `   • Market crash ya fall hone par Put ka premium badhta hai.\n\n` +
-      `3. **⚠️ Time Decay (Theta) Ka Khatra:**\n` +
-      `   • Options buyer ke dushman hota hai 'Time'. Agar stock wahin khada raha, toh premium har ghante melt ho kar zero ho jata hai.\n` +
-      `   • SEBI report ke mutabik 93% retail traders options buying mein paisa gawa dete hain.\n\n` +
-      `4. **AI Recommendation:**\n` +
-      `   Beginners pehle TradeX Pro ke **₹10,00,000 Virtual Paper Trading** par equity stocks (Delivery/Intraday) mein chart reading aur Stop-Loss discipline seekhein, uske baad hi options touch karein!`;
-  }
-
-  // 6C. Intraday vs Delivery Difference (MIS vs CNC)
-  if (
-    (q.includes("intraday") && q.includes("delivery")) ||
-    (q.includes("mis") && q.includes("cnc")) ||
-    q.includes("difference") ||
-    q.includes("antar") ||
-    q.includes("farq")
-  ) {
-    return `### ⚖️ Intraday (MIS) vs Delivery (CNC): Sahi Product Chunein\n\n` +
-      `1. **Delivery (CNC - Cash & Carry) [SAFE / RECOMMENDED]:**\n` +
-      `   • **Holding Period:** Lifetime (1 din, 1 mahina, ya 10 saal).\n` +
-      `   • **Leverage:** 1x (Jitna paisa wallet me hai utne ke hi share khareed sakte hain).\n` +
-      `   • **Risk:** Low. Agar aaj price gir bhi gaya, toh loss book karne ki jaldi nahi hai; bounce aane tak hold kar sakte hain.\n\n` +
-      `2. **Intraday (MIS - Margin Intraday Square-off) [HIGH RISK]:**\n` +
-      `   • **Holding Period:** Sirf aaj ka din (9:15 AM se 3:20 PM tak).\n` +
-      `   • **Leverage:** 5x (Agar aapke paas ₹10,000 hain, toh aap ₹50,000 ka trade le sakte hain).\n` +
-      `   • **Compulsory Exit:** 3:20 PM par broker auto square-off kar deta hai, chahe profit ho ya loss.\n\n` +
-      `3. **Verdict for You:**\n` +
-      `   Agar aap beginner hain toh **Delivery (CNC)** se shuru karein taaki capital safe rahe!`;
-  }
-
-  // 6D. Greetings, Introduction & Identity
-  if (
-    q === "hi" ||
-    q === "hello" ||
-    q === "hey" ||
-    q.includes("kaun ho") ||
-    q.includes("who are you") ||
-    q.includes("kya kar sakte") ||
-    q.includes("help")
-  ) {
-    return `### 🤖 Namaste! Main hoon TradeX Pro AI Assistant\n\n` +
-      `Main ek institutional quantitative trading AI hoon. Main aapko live stock market mein guidance dene ke liye trained hoon:\n\n` +
-      `* **Live Stock Analysis:** ${context.symbol} ka price (**${currSym}${context.price.toFixed(2)}**), RSI (${context.rsi14.toFixed(1)}), aur Moving Averages.\n` +
-      `* **Target & Stop-Loss:** Exit target (${currSym}${target1}) aur safe stop-loss (${currSym}${stopLoss}) calculation.\n` +
-      `* **Timing Guide:** Stock kab buy karein aur kab sell karke munafa lock karein.\n` +
-      `* **Audio Voice Guide:** Screen par upar "Aria" assistant aapko bol kar bhi guide karegi.\n\n` +
-      `Aap mujhse koi bhi sawaal Hinglish ya English mein pooch sakte hain—jaise *"Me shuru kese karu"*, *"Kab sell karein"*, ya *"Stop loss kya hota hai"*!`;
-  }
-
-  // 6. Capital, Money & Quantity
-  if (
-    q.includes("kitna paisa") ||
-    q.includes("capital") ||
-    q.includes("quantity") ||
-    q.includes("kitne share") ||
-    q.includes("budget")
-  ) {
-    return `### 💰 Capital & Position Sizing Guide for **${context.symbol}**\n\n` +
-      `1. **Virtual Practice First (Zero Cost):**\n` +
-      `   TradeX Pro par aapko **₹10,00,000 ka Virtual Paper Trading Wallet** diya gaya hai. Shuruat me bina real paise ke practice karein.\n\n` +
-      `2. **Position Size for ${context.symbol}:**\n` +
-      `   • **Beginner Batch:** 10 se 25 shares.\n` +
-      `   • **Delivery (CNC):** 25 shares ke liye ~${currSym}${(context.price * 25).toFixed(0)} full cash chahiye.\n` +
-      `   • **Intraday (MIS 5x):** Sirf ~${currSym}${((context.price * 25) / 5).toFixed(0)} margin chahiye!\n\n` +
-      `3. **Capital Rule:** Single trade me pure portfolio ka 2% se zyada risk na lein!`;
-  }
-
-  // 7. Beginner / Start queries
-  if (
+  // 6. HOW TO START / BEGINNERS
+  const isStart =
     q.includes("shuru") ||
     q.includes("start") ||
-    q.includes("kese") ||
-    q.includes("kaise") ||
+    q.includes("kaise kare") ||
+    q.includes("kese kare") ||
     q.includes("seekhna") ||
-    q.includes("guide") ||
     q.includes("beginner") ||
-    q.includes("kya karu")
-  ) {
-    return `### 🚀 TradeX Pro AI: Shuruat Kaise Karein (Step-by-Step Guide)\n\n` +
-      `Aap bina kisi real paise ke pure market ko 4 aasan steps mein master kar sakte hain:\n\n` +
-      `1. **📊 Live Stock Chunein & AI Nodes Dekhein:**\n` +
-      `   Top watchlist se **${context.symbol}** chunein. Chart ke upar **AI Visual Decision Nodes** dekhein jo batata hai market kahan UP hoga aur kahan DOWN hoga.\n\n` +
-      `2. **⚖️ Delivery (CNC) vs Intraday (MIS) Samjhein:**\n` +
-      `   • **Delivery (CNC) [SAFE / LOW RISK]:** Beginners ke liye best hai. Shares aapke wallet mein hold rehte hain, koi daily expiry nahi hoti.\n` +
-      `   • **Intraday (MIS) [HIGH RISK]:** 5x leverage milta hai par aaj hi 3:20 PM tak close karna hota hai. Strict Stop-Loss zaroori hai.\n\n` +
-      `3. **🎯 Virtual Order Place Karein (Zero Risk):**\n` +
-      `   Right side panel par **BUY** click karein, Quantity dalein (10 ya 25 shares), aur order execute karein! Aapke paas ₹10,00,000 ka virtual cash hai.\n\n` +
-      `4. **📈 Profit & Stop-Loss Plan:**\n` +
-      `   Target: **${currSym}${target1}** (+2.5%) par 50% profit lock karein. Stop-Loss: **${currSym}${stopLoss}** (-1.5%) par loss cut karein.\n\n` +
-      `> 💡 *Tip: Aap upar "Connect Gemini AI" button se apni free Google AI Studio key jod kar 100% unrestricted live conversational AI activate kar sakte hain!*`;
+    q.includes("kya karu");
+
+  if (isStart) {
+    return `### 🚀 Shuruat Kaise Karein (3 Steps):\n\n` +
+      `1. **Stock Chunein:** Watchlist me se **${context.symbol}** chunein.\n` +
+      `2. **Order Ticket:** Right side panel me **BUY** dabayein aur **Delivery (CNC)** chunein (Zero risk).\n` +
+      `3. **₹10 Lakh Virtual Cash:** TradeX Pro ke paper cash se bina real paise ke practice karein!`;
   }
 
-  // 2. Market UP / DOWN direction queries
-  if (q.includes("kaha up") || q.includes("kaha down") || q.includes("up hoga") || q.includes("down hoga") || q.includes("direction")) {
-    return `### 🧭 AI Market Direction Predictor for **${context.symbol}**\n\n` +
-      `* **🚀 UP Trajectory Trigger:** Agar price **${currSym}${upThreshold}** ke upar breakout kare, toh upward momentum confirm hoga. Target: **${currSym}${target1}** (+2.5%).\n` +
-      `* **🔻 DOWN Trajectory Trigger:** Agar price **${currSym}${downThreshold}** ke niche toota, toh breakdown risk hai.\n` +
-      `* **Current Trend Status:** Price (${currSym}${context.price.toFixed(2)}) is trading ${context.price >= context.sma20 ? "ABOVE" : "BELOW"} 20-Day SMA (${currSym}${context.sma20.toFixed(2)}). Outlook: **${isTrendUp ? "BULLISH EXPANSION" : "CONSOLIDATION"}**.\n` +
-      `* **RSI Momentum:** **${context.rsi14.toFixed(1)}** (${context.rsi14 > 60 ? "Strong buyers control" : "Balanced accumulation"}).`;
+  // 7. INTRADAY VS DELIVERY
+  if (q.includes("intraday") || q.includes("delivery") || q.includes("mis") || q.includes("cnc")) {
+    return `### ⚖️ Delivery (CNC) vs Intraday (MIS):\n\n` +
+      `• **Delivery (CNC) [SAFE]:** Jab tak chahe hold karein. Zero daily risk, beginners ke liye best.\n` +
+      `• **Intraday (MIS) [HIGH RISK]:** 5x leverage milta hai, lekin **3:15 PM** tak bechna zaroori hai.`;
   }
 
-  // 3. What to buy & Risk queries
-  if (q.includes("konsa buy") || q.includes("kisme risk") || q.includes("risk") || q.includes("difference") || q.includes("compare")) {
-    return `### ⚖️ AI Risk & Opportunity Assessment for **${context.symbol}**\n\n` +
-      `* **Buying Recommendation:** ${isTrendUp && isMacdCross ? "STRONG BUY / ACCUMULATE" : "BUY ON DIPS (PULLBACK ACCUMULATION)"}\n` +
-      `* **Risk Classification:** ${context.volatility > 25 ? "MODERATE-HIGH VOLATILITY (Use tight stops)" : "LOW-MODERATE RISK (Stable institutional backing)"}\n` +
-      `* **Safe Execution:** Delivery (CNC) mein 1-2 week swing holding sabse safe hai.\n` +
-      `* **Position Sizing:** Capital ka maximum 2-3% risk karein. Recommended quantity: **25 shares** with stop-loss at **${currSym}${stopLoss}**.`;
-  }
-
-  // 4. Price predictions & targets
-  if (q.includes("predict") || q.includes("tomorrow") || q.includes("kal") || q.includes("target")) {
-    return `### 🧠 AI Neural Model Forecast for **${context.symbol}**\n\n` +
-      `* **Expected Primary Target (T1):** **${currSym}${target1}** (+2.5%)\n` +
-      `* **Extended Target (T2):** **${currSym}${(context.price * 1.042).toFixed(2)}** (+4.2%)\n` +
-      `* **Dynamic Stop-Loss:** **${currSym}${stopLoss}** (-1.5%)\n` +
-      `* **Confluence Bias:** ${isTrendUp ? "BULLISH (Upward continuation favoured by 20/50 SMA golden alignment)" : "NEUTRAL/CONSOLIDATING"}.\n` +
-      `* **MACD Signal:** ${isMacdCross ? "Positive buyer divergence confirmed" : "Histogram converging"}.`;
-  }
-
-  // 5. Default Generative Multi-Factor LLM Response for Any Query
-  return `### 🤖 TradeX AI Analysis for **${context.symbol}**\n\n` +
-    `Aapne poocha: *"${prompt}"*\n\n` +
-    `Is sawaal ka direct aur actionable financial solution yeh hai:\n\n` +
-    `1. **Market Context & Current Status:**\n` +
-    `   • **${context.symbol}** abhi **${currSym}${context.price.toFixed(2)}** (${changePct >= 0 ? "+" : ""}${changePct.toFixed(2)}%) par trade kar raha hai.\n` +
-    `   • Technical bias **${isTrendUp ? "BULLISH (Upar jane ke aasaar zyada hain)" : "SIDEWAYS/CONSOLIDATING"}** hai kyunki price 20-Day SMA (${currSym}${context.sma20.toFixed(2)}) ke ${context.price >= context.sma20 ? "upar" : "niche"} hai.\n` +
-    `   • Momentum Indicator RSI **${context.rsi14.toFixed(1)}** par hai, jo ${isRsiOverbought ? "overbought zone me hai (profit booking alert)" : isRsiOversold ? "oversold rebound zone me hai" : "healthy balanced zone me hai"}.\n\n` +
-    `2. **Direct Action Plan for Traders:**\n` +
-    `   • **Entry Point:** ${currSym}${context.price.toFixed(2)} ke aas-paas ya dip par.\n` +
-    `   • **First Profit Target:** **${currSym}${target1}** (+2.5% move par 50% maal bech kar profit lock karein).\n` +
-    `   • **Capital Protection Stop-Loss:** **${currSym}${stopLoss}** (-1.5% par loss cut karein).\n\n` +
-    `3. **Best Practices for You:**\n` +
-    `   Agar aap beginner hain toh **Delivery (CNC)** me trade karein, aur bina Stop-Loss koi position open na karein!\n\n` +
-    `*Aap mujhse pooch sakte hain: "Kab sell karein?", "Konsa buy karein?", "Kahan UP/DOWN hoga?", ya "Loss se kaise bachein?"*`;
+  // 8. DEFAULT CLEAN CONCISE SNAPSHOT (Zero robotic fluff)
+  return `### 💡 ${context.symbol} Quick Summary\n\n` +
+    `• **Price:** **${currSym}${context.price.toFixed(2)}** (${changePct >= 0 ? "+" : ""}${changePct.toFixed(2)}%)\n` +
+    `• **Trend:** ${isTrendUp ? "🟢 Bullish Trend" : "🟡 Consolidation / Sideways"}\n` +
+    `• **Target:** **${currSym}${target1}** (+2.5%) | **Stop-Loss:** **${currSym}${stopLoss}** (-1.5%)\n` +
+    `• **RSI (14):** **${context.rsi14.toFixed(1)}** (${isRsiOverbought ? "Overbought" : isRsiOversold ? "Oversold" : "Healthy"})\n` +
+    `• **Action:** ${isRsiOverbought ? "Dip ka wait karein" : isTrendUp ? "Buy on dips" : "Breakout ka wait karein"}.`;
 }

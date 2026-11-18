@@ -60,6 +60,7 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
   currentUser,
   onContinueAsCurrent,
 }) => {
+  const [isMounted, setIsMounted] = useState(false);
   const [portalStage, setPortalStage] = useState<"auth" | "persona">("auth");
   const [activeTab, setActiveTab] = useState<"login" | "signup">(defaultTab);
   const [email, setEmail] = useState("");
@@ -78,11 +79,21 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   // Interactive Antigravity Particle Constellation Engine
   useEffect(() => {
+    if (!isMounted) return;
     const canvas = canvasRef.current;
     if (!canvas || typeof window === "undefined") return;
-    const ctx = canvas.getContext("2d");
+    let ctx: CanvasRenderingContext2D | null = null;
+    try {
+      ctx = canvas.getContext("2d");
+    } catch {
+      return;
+    }
     if (!ctx) return;
 
     let animId: number;
@@ -214,8 +225,10 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
           auth_mode: data.auth_mode,
           token: data.token,
         };
-        localStorage.setItem("marketpulse_auth", JSON.stringify(user));
-        localStorage.setItem("marketpulse_auth_user", JSON.stringify(user));
+        try {
+          localStorage.setItem("marketpulse_auth", JSON.stringify(user));
+          localStorage.setItem("marketpulse_auth_user", JSON.stringify(user));
+        } catch {}
         setPendingUser(user);
         setPortalStage("persona");
         setLoading(false);
@@ -229,8 +242,10 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
       user_id: `vip_${Math.floor(Math.random() * 900000 + 100000)}`,
       auth_mode: "demo",
     };
-    localStorage.setItem("marketpulse_auth", JSON.stringify(user));
-    localStorage.setItem("marketpulse_auth_user", JSON.stringify(user));
+    try {
+      localStorage.setItem("marketpulse_auth", JSON.stringify(user));
+      localStorage.setItem("marketpulse_auth_user", JSON.stringify(user));
+    } catch {}
     setPendingUser(user);
     setPortalStage("persona");
     setLoading(false);
@@ -263,8 +278,10 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
       user_id: `vip_${Math.floor(Math.random() * 900000 + 100000)}`,
       auth_mode: "demo",
     };
-    localStorage.setItem("marketpulse_auth", JSON.stringify(user));
-    localStorage.setItem("marketpulse_auth_user", JSON.stringify(user));
+    try {
+      localStorage.setItem("marketpulse_auth", JSON.stringify(user));
+      localStorage.setItem("marketpulse_auth_user", JSON.stringify(user));
+    } catch {}
     setPendingUser(user);
     setPortalStage("persona");
     setLoading(false);
@@ -277,8 +294,10 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
       user_id: "00000000-0000-0000-0000-000000000001",
       auth_mode: "demo",
     };
-    localStorage.setItem("marketpulse_auth", JSON.stringify(guestUser));
-    localStorage.setItem("marketpulse_auth_user", JSON.stringify(guestUser));
+    try {
+      localStorage.setItem("marketpulse_auth", JSON.stringify(guestUser));
+      localStorage.setItem("marketpulse_auth_user", JSON.stringify(guestUser));
+    } catch {}
     setPendingUser(guestUser);
     setPortalStage("persona");
   };
@@ -590,14 +609,14 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
                     </div>
 
                     {/* Returning VIP User Quick Re-Entry Card */}
-                    {currentUser && (
+                    {currentUser && currentUser.email && (
                       <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-between gap-3">
                         <div className="text-left overflow-hidden">
                           <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">
                             Active Session Detected
                           </span>
                           <span className="text-xs font-bold text-white truncate block">
-                            {currentUser.email}
+                            {currentUser.email || "VIP Member"}
                           </span>
                         </div>
                         <button
