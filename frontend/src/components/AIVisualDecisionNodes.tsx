@@ -54,7 +54,7 @@ export interface AIVisualDecisionNodesProps {
   onOpenCopilot?: (query: string) => void;
 }
 
-export type ViewMode = "nodes" | "hinglish" | "risk_screener" | "quant";
+export type ViewMode = "nodes" | "guided" | "risk_screener" | "quant";
 
 export const AIVisualDecisionNodes: React.FC<AIVisualDecisionNodesProps> = ({
   symbol,
@@ -108,14 +108,14 @@ export const AIVisualDecisionNodes: React.FC<AIVisualDecisionNodesProps> = ({
       id: "node-1",
       stepNumber: "Step 1",
       title: "Market Direction Predictor",
-      shortSummary: isTrendUp ? "BULLISH (Upwards Trajectory)" : isTrendDown ? "BEARISH (Downwards Bias)" : "SIDEWAYS CONSOLIDATION",
+      shortSummary: isTrendUp ? "BULLISH (Upward Continuation)" : isTrendDown ? "BEARISH (Downward Pressure)" : "SIDEWAYS CONSOLIDATION",
       status: isTrendUp ? "UP" : isTrendDown ? "DOWN" : "NEUTRAL",
       statusColor: isTrendUp ? "bg-emerald-500" : isTrendDown ? "bg-rose-500" : "bg-amber-500",
       instruction: isTrendUp
-        ? `Agar price ${currSym}${upThreshold} ke upar sustain kare, toh market UP hoga (+2% to +4% target).`
-        : `Agar price ${currSym}${downThreshold} ke niche break kare, toh DOWN side move aayega.`,
-      detail: `Trend analysis: Current price (${currSym}${price.toFixed(2)}) is trading ${price >= sma20 ? "above" : "below"} 20-Day SMA (${currSym}${sma20.toFixed(2)}). Bullish continuation trigger is ${currSym}${upThreshold}. Bearish breakdown level is ${currSym}${downThreshold}.`,
-      actionPrompt: "Direction verify karo: Bullish trade favour karein.",
+        ? `Sustained trade above ${currSym}${upThreshold} confirms bullish continuation (+2.0% to +4.2% projected expansion).`
+        : `A breakdown below ${currSym}${downThreshold} triggers defensive downside support tests.`,
+      detail: `Trend analysis: Current price (${currSym}${price.toFixed(2)}) trades ${price >= sma20 ? "above" : "below"} the 20-Day SMA (${currSym}${sma20.toFixed(2)}). Bullish breakout trigger is ${currSym}${upThreshold}, with structural support at ${currSym}${downThreshold}.`,
+      actionPrompt: "Verify direction: Align execution with prevailing quantitative trend.",
     },
     {
       id: "node-2",
@@ -124,42 +124,42 @@ export const AIVisualDecisionNodes: React.FC<AIVisualDecisionNodesProps> = ({
       shortSummary: isMacdCross ? "BUY Momentum Confirmed" : "Caution: Waiting for MACD Signal",
       status: isMacdCross ? "CONFIRMED" : "WAITING",
       statusColor: isMacdCross ? "bg-emerald-500" : "bg-amber-500",
-      instruction: `RSI is ${rsi14.toFixed(1)} (${isRsiBalanced ? "Healthy Buyer Strength" : isRsiOverbought ? "Overbought: Do not chase high!" : "Oversold: Rebound Zone"}). MACD histogram is ${macd > macdSignal ? "Positive (Buyers Active)" : "Negative (Sellers Active)"}.`,
-      detail: `Confirmation check: Fake breakout se bachne ke liye MACD cross aur RSI range check karein. Currently RSI is in ${isRsiBalanced ? "optimal entry zone" : "caution zone"}.`,
-      actionPrompt: isMacdCross ? "Confirmation Clear: Agle node (Risk Assessment) par jayein." : "Wait: Candle close ka wait karein.",
+      instruction: `RSI-14 is ${rsi14.toFixed(1)} (${isRsiBalanced ? "Healthy Buyer Strength" : isRsiOverbought ? "Overbought: Await mean-reversion dip" : "Oversold: Statistical rebound zone"}). MACD histogram reflects ${macd > macdSignal ? "Positive buyer accumulation" : "Bearish momentum compression"}.`,
+      detail: `Signal validation: Cross-reference MACD delta and RSI distribution to eliminate false breakouts. Currently RSI resides in ${isRsiBalanced ? "optimal entry channel" : "tactical caution zone"}.`,
+      actionPrompt: isMacdCross ? "Momentum confirmed: Advance to Risk Allocation node." : "Await confirmation: Allow 15-minute bar to close above pivot.",
     },
     {
       id: "node-3",
       stepNumber: "Step 3",
-      title: "Risk vs Buy Assessment",
+      title: "Risk & Capital Allocation",
       shortSummary: `${riskLabel} (Score ${riskScore}/10)`,
       status: riskScore <= 5 ? "BUYABLE" : "HIGH RISK",
       statusColor: riskScore <= 5 ? "bg-emerald-500" : "bg-amber-500",
-      instruction: `Konsa Buy Karein? Delivery (CNC) mein risk kam hai (${currSym}${price.toFixed(2)} holding). Intraday (MIS) mein leverage milta hai par strict Stop-Loss (${currSym}${stopLoss}) lazmi hai.`,
-      detail: `Risk breakdown: Volatility is ${volatility.toFixed(1)}%. Expected intraday deviation is ±${(price * 0.015).toFixed(2)}. Beginners should choose Delivery (CNC) or trade with 10-25 shares max to keep risk under 1% of virtual wallet.`,
-      actionPrompt: "Position size calculate karein: Capital ka max 2% risk karein.",
+      instruction: `Capital stratification: Delivery (CNC) carries zero margin call risk. Intraday (5x MIS) amplifies purchasing power with mandatory Stop-Loss at ${currSym}${stopLoss}.`,
+      detail: `Volatility metrics: Annualized volatility is ${volatility.toFixed(1)}%. Expected standard deviation is ±${(price * 0.015).toFixed(2)}. Restrict position size to 1.5% - 2.0% maximum portfolio drawdown.`,
+      actionPrompt: "Position sizing: Confirm risk limits before routing order.",
     },
     {
       id: "node-4",
       stepNumber: "Step 4",
-      title: "Exact Order Execution Plan",
+      title: "Systematic Order Execution Plan",
       shortSummary: `BUY Entry: ${currSym}${price.toFixed(2)} | Stop-Loss: ${currSym}${stopLoss}`,
       status: "ACTIONABLE",
       statusColor: "bg-blue-500",
-      instruction: `Ab yee karein: 1. Entry lein @ ${currSym}${price.toFixed(2)} | 2. Target 1 @ ${currSym}${target1} | 3. Stop-Loss @ ${currSym}${stopLoss}.`,
-      detail: `Exact Plan: 1-click 'Pre-fill AI Order' daba kar ticket auto-fill karein. Product 'MIS' intraday ke liye aur 'CNC' delivery ke liye select karein.`,
-      actionPrompt: "Order Ticket me pre-fill karke BUY press karein!",
+      instruction: `Execution blueprint: 1. Entry @ ${currSym}${price.toFixed(2)} | 2. Target 1 @ ${currSym}${target1} | 3. Stop-Loss @ ${currSym}${stopLoss}.`,
+      detail: `Execution routing: Use 1-Click 'Pre-fill AI Order' to load parameters into the Execution Dock. Select 'MIS' for leveraged intraday or 'CNC' for cash delivery.`,
+      actionPrompt: "Stage order ticket and execute via DMA gateway.",
     },
     {
       id: "node-5",
       stepNumber: "Step 5",
-      title: "Profit Booking & Exit Trigger",
+      title: "Profit Realization & Trailing Stop",
       shortSummary: `Target T1: ${currSym}${target1} (+${(((target1 - price) / price) * 100).toFixed(1)}%)`,
       status: "EXIT PLAN",
       statusColor: "bg-purple-500",
-      instruction: `Jab price ${currSym}${target1} pahuche, 50% shares bech kar profit lock karein, aur baaki shares ka stop-loss entry price par trail karein.`,
-      detail: `Disciplined exit: Greedy mat banein. T1 target (${currSym}${target1}) aate hi partial profit book karein. Agar market reverse hokar ${currSym}${stopLoss} touch kare toh bina hichkichaaye exit karein.`,
-      actionPrompt: "Greed se bachein: Rules follow karein aur targets par profit lein.",
+      instruction: `Upon reaching Target 1 (${currSym}${target1}), liquidate 50% volume to lock profits, then trail remaining stop-loss to breakeven (${currSym}${price.toFixed(2)}).`,
+      detail: `Disciplined execution: Preserve capital by systematically trimming exposure at target milestones. If market reverses below ${currSym}${stopLoss}, execute immediate protective exit.`,
+      actionPrompt: "Systematic trade management: Follow profit milestones and trail protective stops.",
     },
   ];
 
@@ -227,15 +227,15 @@ export const AIVisualDecisionNodes: React.FC<AIVisualDecisionNodesProps> = ({
           </button>
 
           <button
-            onClick={() => setActiveMode("hinglish")}
+            onClick={() => setActiveMode("guided")}
             className={`px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1.5 transition ${
-              activeMode === "hinglish"
+              activeMode === "guided"
                 ? "bg-[#2962FF] text-white shadow-md"
                 : "text-[#787B86] hover:text-white"
             }`}
           >
             <Sparkles className="w-3 h-3 text-amber-300" />
-            <span>Aasan Hinglish Guide</span>
+            <span>Guided Execution Thesis</span>
           </button>
 
           <button
@@ -247,7 +247,7 @@ export const AIVisualDecisionNodes: React.FC<AIVisualDecisionNodesProps> = ({
             }`}
           >
             <ShieldCheck className="w-3 h-3 text-emerald-400" />
-            <span>Konsa Buy Karein?</span>
+            <span>Asset Screener Matrix</span>
           </button>
 
           <button
@@ -431,86 +431,86 @@ export const AIVisualDecisionNodes: React.FC<AIVisualDecisionNodesProps> = ({
             </div>
           )}
 
-          {/* MODE 2: AASAN HINGLISH GUIDE (STORY MODE) */}
-          {activeMode === "hinglish" && (
+          {/* MODE 2: GUIDED EXECUTION THESIS */}
+          {activeMode === "guided" && (
             <div className="p-4 rounded-xl bg-[#131722] border border-[#2A2E39] space-y-4">
               <div className="flex items-center gap-2 text-amber-300 font-bold text-sm">
                 <Sparkles className="w-4 h-4" />
-                <span>Beginner ke liye Step-by-Step Aasan Bhasha mein Guide ({symbol})</span>
+                <span>Institutional Trade Execution Blueprint ({symbol})</span>
               </div>
 
               <div className="space-y-3 text-xs leading-relaxed text-[#D1D4DC]">
                 <div className="p-3 rounded-lg bg-[#1E222D] border-l-4 border-blue-500">
                   <h4 className="font-bold text-white text-xs mb-1">
-                    1️⃣ Sabse Pehle Kya Dekhein? (Market Kahan Jayega)
+                    1️⃣ Market Regime &amp; Trend Trajectory
                   </h4>
                   <p>
-                    Abhi **{symbol}** ka bhav **{currSym}{price.toFixed(2)}** par chal raha hai.
+                    Currently **{symbol}** trades at **{currSym}{price.toFixed(2)}**.
                     {isTrendUp
-                      ? ` Stock mein tezi (Uptrend) hai kyunki yeh 20-Day Moving Average (${currSym}${sma20.toFixed(2)}) ke upar trade kar raha hai. Agar yeh ${currSym}${upThreshold} ke upar nikalta hai, toh market aur upar (Bullish) jayega!`
-                      : ` Stock thoda consolidate kar raha hai. Agar yeh ${currSym}${downThreshold} ke niche toota toh market thoda niche (Down) fisal sakta hai.`}
+                      ? ` Bullish regime confirmed above 20-Day SMA (${currSym}${sma20.toFixed(2)}). A sustained push through ${currSym}${upThreshold} unlocks upside extension toward ${currSym}${target1}.`
+                      : ` Price is consolidating within horizontal support. A drop below ${currSym}${downThreshold} invalidates bullish thesis and triggers downside risk.`}
                   </p>
                 </div>
 
                 <div className="p-3 rounded-lg bg-[#1E222D] border-l-4 border-emerald-500">
                   <h4 className="font-bold text-white text-xs mb-1">
-                    2️⃣ Buy Karna Chahiye Ya Wait Karein?
+                    2️⃣ Momentum Confluence &amp; Signal Quality
                   </h4>
                   <p>
-                    RSI indicator **{rsi14.toFixed(1)}** par hai. {isRsiBalanced ? "Yeh bilkul safe range hai jahan buyers ka control hai." : isRsiOverbought ? "Stock thoda mehenga lag raha hai, halka dip aane ka wait karein." : "Stock oversold zone mein hai, yahan se rebound aa sakta hai."}
-                    MACD bhi **{macd > macdSignal ? "Positive signal de raha hai (Kharidari ka mauka)" : "Thoda slow hai, volume aane ka wait karein"}**.
+                    RSI indicator is indexed at **{rsi14.toFixed(1)}**. {isRsiBalanced ? "Asset resides in balanced equilibrium with healthy accumulation strength." : isRsiOverbought ? "Momentum is extended in overbought zone; await pullback toward 20-SMA." : "Oversold territory; statistical reversal setup developing."}
+                    MACD histogram confirms **{macd > macdSignal ? "positive buyer accumulation delta" : "bearish momentum compression"}**.
                   </p>
                 </div>
 
                 <div className="p-3 rounded-lg bg-[#1E222D] border-l-4 border-amber-500">
                   <h4 className="font-bold text-white text-xs mb-1">
-                    3️⃣ Konsa Buy Karein? Aur Risk Kisme Hai?
+                    3️⃣ Capital Allocation &amp; Risk Stratification
                   </h4>
                   <p>
-                    • **Delivery (CNC):** Isme sabse **KAM RISK** hai. Aap share khareed kar hold kar sakte hain. Loss ka dar nahi kyunki market baad mein recover kar sakta hai.<br/>
-                    • **Intraday (MIS):** Isme **HIGH RISK** hota hai kyunki 3:20 PM par trade close karna padta hai. Isme bina Stop-Loss trade na karein!<br/>
-                    • **Kitna Risk Lein?** Virtual wallet mein ₹10 Lakh hain, par hamesha sirf 15-25 shares khareed kar practice karein taaki disciplined trading seekh sakein.
+                    • **Delivery (CNC):** Zero margin risk. Asset is 100% cash funded with indefinite holding duration.<br/>
+                    • **Intraday (MIS):** 5x leverage execution. Requires strict disciplined Stop-Loss at **{currSym}{stopLoss}** and square-off before 15:15 IST.<br/>
+                    • **Risk Budget:** Deploy standard 25-share sizing to cap maximum allowable loss at &lt;1.5% of simulated portfolio equity.
                   </p>
                 </div>
 
                 <div className="p-3 rounded-lg bg-[#1E222D] border-l-4 border-purple-500">
                   <h4 className="font-bold text-white text-xs mb-1">
-                    4️⃣ Uske Baad Yee Karo: Order Lagane Ka Tarika
+                    4️⃣ Order Execution &amp; Bracket Management
                   </h4>
                   <p>
-                    Right side panel par jayein: **BUY** select karein, Quantity **25** dalein, aur **Intraday ya Delivery** chunein.<br/>
-                    Target rakhein: **{currSym}{target1}** (+{(((target1 - price) / price) * 100).toFixed(1)}%)<br/>
-                    Stop-Loss lagayein: **{currSym}{stopLoss}** (-1.5%)
+                    Stage order via Execution Dock: Select **BUY**, Quantity **25**, Product **CNC / MIS**.<br/>
+                    Primary Target: **{currSym}{target1}** (+{(((target1 - price) / price) * 100).toFixed(1)}%)<br/>
+                    Invalidation Stop-Loss: **{currSym}{stopLoss}** (-1.5%)
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2">
                 <button
-                  onClick={() => onOpenCopilot && onOpenCopilot(`Mera stock ${symbol} hai, iska trade setup Hindi mein samjhao`)}
+                  onClick={() => onOpenCopilot && onOpenCopilot(`Provide institutional thesis and risk breakdown for ${symbol}`)}
                   className="px-3 py-1.5 rounded bg-[#2A2E39] hover:bg-[#3E4452] text-xs font-semibold text-white transition flex items-center gap-1.5"
                 >
                   <Brain className="w-3.5 h-3.5 text-blue-400" />
-                  <span>AI Copilot Se Detail Poochhein</span>
+                  <span>Consult AI Copilot</span>
                 </button>
                 <button
                   onClick={handlePreFill}
                   className="px-4 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white shadow-md transition"
                 >
-                  Pre-fill Yeh Order
+                  Stage Order in Ticket
                 </button>
               </div>
             </div>
           )}
 
-          {/* MODE 3: KONSA BUY KAREIN? (RISK VS OPPORTUNITY SCREENER) */}
+          {/* MODE 3: ASSET OPPORTUNITY MATRIX (RISK VS REWARD SCREENER) */}
           {activeMode === "risk_screener" && (
             <div className="space-y-3">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-[#787B86] font-semibold">
-                  Sabhi popular stocks mein comparison: Konsa Buy karein, kisme risk kam hai, aur kahan breakout aane wala hai.
+                  Cross-asset quantitative comparison: Risk-adjusted ratings, volatility profile, and breakout confirmation triggers.
                 </span>
-                <span className="text-emerald-400 font-bold text-[11px]">Real Market Screening</span>
+                <span className="text-emerald-400 font-bold text-[11px]">Real-Time Market Screening</span>
               </div>
 
               <div className="overflow-x-auto rounded-lg border border-[#2A2E39]">
@@ -521,8 +521,8 @@ export const AIVisualDecisionNodes: React.FC<AIVisualDecisionNodesProps> = ({
                       <th className="p-2.5">Price</th>
                       <th className="p-2.5">AI Rating</th>
                       <th className="p-2.5">Risk Level</th>
-                      <th className="p-2.5">Kaha Jayega?</th>
-                      <th className="p-2.5">RTI / Reason</th>
+                      <th className="p-2.5">Direction Bias</th>
+                      <th className="p-2.5">Quantitative Catalyst</th>
                       <th className="p-2.5 text-right">Action</th>
                     </tr>
                   </thead>

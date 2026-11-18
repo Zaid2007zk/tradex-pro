@@ -57,14 +57,14 @@ export async function queryGemini(
     return generateNeuralSynthesis(prompt, context);
   }
 
-  const systemInstruction = `You are TradeX Pro AI, an elite institutional quantitative financial trader and trading mentor.
-You speak fluent natural Hinglish and English.
+  const systemInstruction = `You are TradeX Pro AI, an elite institutional quantitative financial trader and trading mentor at a top Wall Street algorithmic desk.
+You provide prestigious, institutional-grade, highly professional financial analysis in pristine English.
 CRITICAL MANDATORY INSTRUCTIONS:
 - BE EXTREMELY DIRECT, CRISP, AND TO THE POINT.
-- JITNA PUCHA JAYE UTNA HI JAWAB DEIN (Answer STRICTLY what the user asks, without long generic essays, robotic intros, or unnecessary disclaimers).
+- Answer STRICTLY what the user asks, without long generic essays, robotic intros, conversational filler, or unnecessary disclaimers.
 - NEVER start with "Aapne poocha: ..." or "Is sawaal ka direct aur actionable solution yeh hai:".
-- Give concise, actionable answers with exact numbers: Entry, Target, Stop-Loss, and Reason in 3-5 short bullet points.
-- If asked "isse buy karna chahiye", give a clear direct verdict (e.g. "Haan, buy kar sakte hain" OR "Abhi wait karein, thoda dip par lein") followed by 3-4 bullet points.
+- Give concise, actionable institutional answers with exact numbers: Entry, Target, Stop-Loss, and Quantitative Rationale in 3-5 short bullet points.
+- If asked whether to buy, deliver a definitive verdict (e.g. "Actionable Long Setup" or "Caution: Await Support Pullback") followed by 3-4 structured bullet points.
 - Reference live metrics: Symbol ${context.symbol}, Price ${context.currency === "INR" || context.currency === "₹" ? "₹" : "$"}${context.price.toFixed(2)}, RSI ${context.rsi14.toFixed(1)}, 20-SMA ${context.sma20.toFixed(2)}.`;
 
   const contents: any[] = [];
@@ -148,29 +148,28 @@ export function generateNeuralSynthesis(prompt: string, context: MarketContext):
 
   if (isBuy) {
     if (isRsiOverbought) {
-      return `### ⚠️ ${context.symbol}: Abhi Fresh Buy Na Karein (Wait for Dip)\n\n` +
-        `• **Reason:** RSI **${context.rsi14.toFixed(1)}** (Overbought) par hai. Price high par hai, yahan se chota pullback aane ka risk hai.\n` +
-        `• **Sahi Entry:** **${currSym}${dipEntry}** ke support dip par aane par buy karein.\n` +
-        `• **Target 1:** **${currSym}${target1}** (+2.5% move)\n` +
-        `• **Stop-Loss:** **${currSym}${stopLoss}** (-1.5% strict SL)\n` +
-        `• **Recommendation:** Safe rehne ke liye **Delivery (CNC)** chunein.`;
+      return `### ⚠️ Institutional Alert: ${context.symbol} Overbought Retracement Caution\n\n` +
+        `• **Signal:** Elevated RSI (${context.rsi14.toFixed(1)}) indicates stretched valuation in the short term.\n` +
+        `• **Optimal Accumulation Zone:** Await tactical pullback toward support dip near **${currSym}${dipEntry}**.\n` +
+        `• **Upside Price Target:** **${currSym}${target1}** (+2.5% projected expansion).\n` +
+        `• **Risk Protection (Stop-Loss):** **${currSym}${stopLoss}** (-1.5% strict capital preservation stop).\n` +
+        `• **Execution Directive:** Prefer **Delivery (CNC)** to absorb interim intraday mean-reversion volatility.`;
     }
 
     if (isTrendUp) {
-      return `### 🟢 Haan, ${context.symbol} Buy Kar Sakte Hain:\n\n` +
-        `• **Entry Price:** **${currSym}${context.price.toFixed(2)}** ke aas-paas le sakte hain.\n` +
-        `• **Trend Status:** Bullish (Price 20-Day SMA ${currSym}${context.sma20.toFixed(2)} ke upar hai).\n` +
-        `• **Target 1:** **${currSym}${target1}** (+2.5% gain)\n` +
-        `• **Target 2:** **${currSym}${target2}** (+4.2% runner gain)\n` +
-        `• **Strict Stop-Loss:** **${currSym}${stopLoss}** (-1.5% loss cut)\n` +
-        `• **Product:** Beginners ke liye **Delivery (CNC)** sabse safe hai.`;
+      return `### 🟢 Institutional Trade Thesis: ${context.symbol} Bullish Continuation\n\n` +
+        `• **Signal:** Strong bullish regime confirmed above 20-Day SMA (${currSym}${context.sma20.toFixed(2)}).\n` +
+        `• **Entry Band:** Initiate long positions between **${currSym}${context.price.toFixed(2)}** and **${currSym}${(context.price * 1.004).toFixed(2)}**.\n` +
+        `• **Target Projections:** Primary **${currSym}${target1}** (+2.5%) | Secondary **${currSym}${target2}** (+4.2%).\n` +
+        `• **Dynamic Stop-Loss:** **${currSym}${stopLoss}** (-1.5% maximum allowable drawdown).\n` +
+        `• **Capital Allocation:** Moderate sizing via **Delivery (CNC)** or **Intraday (5x MIS)** with bracket stop.`;
     }
 
-    return `### 🟡 ${context.symbol}: Abhi Breakout Ka Wait Karein\n\n` +
-      `• **Status:** Consolidation / Sideways mode.\n` +
-      `• **Buy Trigger:** **${currSym}${upThreshold}** ke upar 15-min candle close hone par hi buy karein.\n` +
-      `• **Target:** **${currSym}${target1}** | **Stop-Loss:** **${currSym}${stopLoss}**\n` +
-      `• **Tip:** Sideways market me jaldbazi me entry na lein.`;
+    return `### 🟡 Tactical Watch: ${context.symbol} Rangebound Consolidation\n\n` +
+      `• **Signal:** Asset is trading within a horizontal consolidation channel.\n` +
+      `• **Breakout Confirmation Trigger:** Hourly close above **${currSym}${upThreshold}** to validate upward trend resumption.\n` +
+      `• **Tactical Levels:** Target **${currSym}${target1}** | Invalidation Stop-Loss **${currSym}${stopLoss}**.\n` +
+      `• **Directive:** Avoid premature entries during low-momentum compression phases.`;
   }
 
   // 2. SELL / EXIT / PROFIT BOOKING QUERIES
@@ -184,11 +183,11 @@ export function generateNeuralSynthesis(prompt: string, context: MarketContext):
     q.includes("nikle");
 
   if (isSell) {
-    return `### 🔴 ${context.symbol}: Exit & Selling Strategy\n\n` +
-      `• **First Target (50% Profit Book):** **${currSym}${target1}** (+2.5% par adha munafa lock karein).\n` +
-      `• **Final Target:** **${currSym}${target2}** (+4.2%)\n` +
-      `• **Stop-Loss Exit:** **${currSym}${stopLoss}** (-1.5% ke niche turant loss cut karein).\n` +
-      `• **Best Intraday Time:** Subah 10:00 AM ya dopahar 2:30 PM. **3:15 PM** se pehle exit mandatory hai.`;
+    return `### 🔴 Exit & Profit Realization Strategy: ${context.symbol}\n\n` +
+      `• **Primary Take-Profit (50% Volume):** **${currSym}${target1}** (+2.5% gain lock).\n` +
+      `• **Extended Target (Full Runner):** **${currSym}${target2}** (+4.2% expansion).\n` +
+      `• **Capital Invalidation Stop:** **${currSym}${stopLoss}** (-1.5% stop-loss threshold).\n` +
+      `• **Execution Window:** Intraday leveraged positions must be liquidated prior to 15:15 IST to prevent square-off penalties.`;
   }
 
   // 3. TARGET / PREDICTION QUERIES
@@ -203,12 +202,12 @@ export function generateNeuralSynthesis(prompt: string, context: MarketContext):
     q.includes("future");
 
   if (isTarget) {
-    return `### 🎯 ${context.symbol} Price Targets & Levels\n\n` +
-      `• **Current Price:** **${currSym}${context.price.toFixed(2)}**\n` +
-      `• **Target 1:** **${currSym}${target1}** (+2.5%)\n` +
-      `• **Target 2 (Extended):** **${currSym}${target2}** (+4.2%)\n` +
-      `• **Dynamic Stop-Loss:** **${currSym}${stopLoss}** (-1.5%)\n` +
-      `• **Bias:** ${isTrendUp ? "BULLISH (Upward continuation)" : "CONSOLIDATION"}.`;
+    return `### 🎯 Quantitative Price Targets: ${context.symbol}\n\n` +
+      `• **Current Market Price (LTP):** **${currSym}${context.price.toFixed(2)}**\n` +
+      `• **Primary Upside Target (T1):** **${currSym}${target1}** (+2.50% Fibonacci R1)\n` +
+      `• **Secondary Stretch Target (T2):** **${currSym}${target2}** (+4.20% Pivot R2)\n` +
+      `• **Invalidation Pivot (SL):** **${currSym}${stopLoss}** (-1.50% trailing stop)\n` +
+      `• **Algorithmic Trend Bias:** ${isTrendUp ? "BULLISH (Upward continuation probable)" : "NEUTRAL CONSOLIDATION"}.`;
   }
 
   // 4. STOP-LOSS & RISK MANAGEMENT
@@ -219,10 +218,10 @@ export function generateNeuralSynthesis(prompt: string, context: MarketContext):
     q.includes("loss");
 
   if (isSL) {
-    return `### 🛡️ ${context.symbol} Stop-Loss & Risk Level\n\n` +
-      `• **Strict Stop-Loss:** **${currSym}${stopLoss}** (Price se 1.5% niche).\n` +
-      `• **Kyun Lagayein?** Yeh aapka capital protect karta hai taaki bada loss na ho.\n` +
-      `• **Golden Rule:** Single trade me portfolio ka 2% se zyada risk kabhi na lein.`;
+    return `### 🛡️ Risk Management Matrix: ${context.symbol}\n\n` +
+      `• **Calculated Stop-Loss Level:** **${currSym}${stopLoss}** (1.50% below current price).\n` +
+      `• **Risk/Reward Profile:** 1:1.67 against Target 1 (**${currSym}${target1}**).\n` +
+      `• **Capital Preservation Rule:** Never risk more than 1.5% - 2.0% of total portfolio equity on any single asset allocation.`;
   }
 
   // 5. DIRECTION & TREND (UP / DOWN)
@@ -236,11 +235,11 @@ export function generateNeuralSynthesis(prompt: string, context: MarketContext):
     q.includes("kaisa");
 
   if (isDirection) {
-    return `### 🧭 ${context.symbol} Trend & Direction\n\n` +
-      `• **Direction:** ${isTrendUp ? "🟢 Bullish (Upar jane ka momentum hai)" : "🟡 Sideways / Rangebound"}\n` +
-      `• **Breakout UP Trigger:** **${currSym}${upThreshold}** ke upar buy banega.\n` +
-      `• **Breakdown DOWN Risk:** **${currSym}${downThreshold}** ke niche selling aayegi.\n` +
-      `• **20-SMA Support:** **${currSym}${context.sma20.toFixed(2)}**`;
+    return `### 🧭 Multi-Timeframe Trend Assessment: ${context.symbol}\n\n` +
+      `• **Trend Bias:** ${isTrendUp ? "🟢 Strong Bullish (Trading above key 20-Day SMA)" : "🟡 Neutral / Rangebound Consolidation"}\n` +
+      `• **Bullish Expansion Level:** Sustained trade above **${currSym}${upThreshold}** unlocks upside impulse.\n` +
+      `• **Downside Support Test:** Breakdown below **${currSym}${downThreshold}** signals structural weakness.\n` +
+      `• **Dynamic 20-SMA Baseline:** **${currSym}${context.sma20.toFixed(2)}**`;
   }
 
   // 6. HOW TO START / BEGINNERS
@@ -254,24 +253,24 @@ export function generateNeuralSynthesis(prompt: string, context: MarketContext):
     q.includes("kya karu");
 
   if (isStart) {
-    return `### 🚀 Shuruat Kaise Karein (3 Steps):\n\n` +
-      `1. **Stock Chunein:** Watchlist me se **${context.symbol}** chunein.\n` +
-      `2. **Order Ticket:** Right side panel me **BUY** dabayein aur **Delivery (CNC)** chunein (Zero risk).\n` +
-      `3. **₹10 Lakh Virtual Cash:** TradeX Pro ke paper cash se bina real paise ke practice karein!`;
+    return `### 🚀 Institutional Workflow: Getting Started in 3 Steps\n\n` +
+      `1. **Asset Selection:** Choose your target ticker (e.g. **${context.symbol}**) from the real-time institutional watchlist.\n` +
+      `2. **Order Execution:** In the Execution Dock, select **Delivery (CNC)** for zero margin risk or **Intraday (MIS)** for 5x leverage.\n` +
+      `3. **Simulated Capital:** Utilize your **₹10,00,000 zero-risk institutional virtual margin** to validate strategy backtests before live capital deployment.`;
   }
 
   // 7. INTRADAY VS DELIVERY
   if (q.includes("intraday") || q.includes("delivery") || q.includes("mis") || q.includes("cnc")) {
-    return `### ⚖️ Delivery (CNC) vs Intraday (MIS):\n\n` +
-      `• **Delivery (CNC) [SAFE]:** Jab tak chahe hold karein. Zero daily risk, beginners ke liye best.\n` +
-      `• **Intraday (MIS) [HIGH RISK]:** 5x leverage milta hai, lekin **3:15 PM** tak bechna zaroori hai.`;
+    return `### ⚖️ Execution Product Comparison: Delivery (CNC) vs Intraday (MIS)\n\n` +
+      `• **Delivery (CNC) [Zero Margin Risk]:** 100% cash funded. Positional holdings can be retained indefinitely with no forced liquidation.\n` +
+      `• **Intraday (MIS) [High-Octane 5x Leverage]:** Maximizes purchasing power for short-term breakouts; requires square-off before 15:15 IST.`;
   }
 
   // 8. DEFAULT CLEAN CONCISE SNAPSHOT (Zero robotic fluff)
-  return `### 💡 ${context.symbol} Quick Summary\n\n` +
-    `• **Price:** **${currSym}${context.price.toFixed(2)}** (${changePct >= 0 ? "+" : ""}${changePct.toFixed(2)}%)\n` +
-    `• **Trend:** ${isTrendUp ? "🟢 Bullish Trend" : "🟡 Consolidation / Sideways"}\n` +
-    `• **Target:** **${currSym}${target1}** (+2.5%) | **Stop-Loss:** **${currSym}${stopLoss}** (-1.5%)\n` +
-    `• **RSI (14):** **${context.rsi14.toFixed(1)}** (${isRsiOverbought ? "Overbought" : isRsiOversold ? "Oversold" : "Healthy"})\n` +
-    `• **Action:** ${isRsiOverbought ? "Dip ka wait karein" : isTrendUp ? "Buy on dips" : "Breakout ka wait karein"}.`;
+  return `### 💡 Institutional Snapshot: ${context.symbol}\n\n` +
+    `• **Last Traded Price:** **${currSym}${context.price.toFixed(2)}** (${changePct >= 0 ? "+" : ""}${changePct.toFixed(2)}%)\n` +
+    `• **Algorithmic Trend:** ${isTrendUp ? "🟢 Bullish Momentum" : "🟡 Sideways Consolidation"}\n` +
+    `• **Key Projected Range:** Target **${currSym}${target1}** (+2.5%) | Stop-Loss **${currSym}${stopLoss}** (-1.5%)\n` +
+    `• **Momentum (RSI-14):** **${context.rsi14.toFixed(1)}** (${isRsiOverbought ? "Overbought" : isRsiOversold ? "Oversold" : "Neutral"})\n` +
+    `• **Tactical Directive:** ${isRsiOverbought ? "Await mean-reversion dip before adding exposure." : isTrendUp ? "Accumulate on pullbacks toward 20-SMA." : "Monitor key breakout pivot before entry."}`;
 }

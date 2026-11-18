@@ -78,13 +78,13 @@ export const FloatingAICopilot: React.FC<FloatingAICopilotProps> = ({
     {
       id: "welcome-1",
       sender: "ai",
-      text: `### 🤖 Hello! I am your TradeX AI Trading Copilot.\n\n` +
-        `Main **${currentSymbol}** ko live track kar raha hoon (LTP: **${currency === "INR" ? "₹" : "$"}${currentPrice.toFixed(2)}**).\n\n` +
-        `Aap mujhse kisi bhi bhasha (Hindi, Hinglish, English) mein pooch sakte hain:\n` +
-        `* *"Main shuru kaise karu trading?"*\n` +
-        `* *"Kahan market UP hoga aur kahan DOWN?"*\n` +
-        `* *"Konsa buy karein aur kisme risk hai?"*\n` +
-        `* *"Stop-loss kitna lagayein?"*`,
+      text: `### 🤖 TradeX Quantitative AI Copilot\n\n` +
+        `Live telemetry synchronized with **${currentSymbol}** (LTP: **${currency === "INR" ? "₹" : "$"}${currentPrice.toFixed(2)}**).\n\n` +
+        `Consult our institutional model on:\n` +
+        `• *"Should I buy ${currentSymbol} at current market price?"*\n` +
+        `• *"What are the critical upside breakout and downside breakdown pivots?"*\n` +
+        `• *"Calculate dynamic stop-loss and profit-taking targets"*\n` +
+        `• *"Compare Delivery CNC vs Intraday 5x MIS risk profile"*`,
       timestamp: "Just now",
     },
   ]);

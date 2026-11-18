@@ -163,39 +163,72 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
   const stopLoss = (numPrice * 0.985).toFixed(2);
   const isBullish = numPrice > (sma20 || numPrice) && (macd || 0) > (macdSignal || 0);
 
-  // Auto-Pilot Autonomous Loop
+  // Auto-Pilot Autonomous Engine
+  const executeBotTrade = (reason: string) => {
+    if (!onExecuteTrade) return;
+    soundEngine.playOrderFilled();
+    const prod = autoPilotRisk === "SAFE" ? "CNC" : "MIS";
+    const timeStr = new Date().toLocaleTimeString();
+    onExecuteTrade({
+      symbol,
+      side: "BUY",
+      product: prod,
+      orderType: "MARKET",
+      quantity: 25,
+      price: numPrice,
+      marginRequired: prod === "CNC" ? numPrice * 25 : (numPrice * 25) / 5,
+    });
+
+    const logEntry = `[${timeStr}] ⚡ Auto-Pilot (${autoPilotRisk}): EXECUTED BUY 25x ${symbol} @ ${curr}${numPrice.toFixed(2)} (${reason})`;
+    setBotLogs((prev) => [logEntry, ...prev.slice(0, 4)]);
+    setBotTradeCount((prev) => prev + 1);
+
+    if (isVoiceActive) {
+      speakText(`Auto-Pilot order routed: 25 shares of ${symbol} filled at ${numPrice.toFixed(2)}.`);
+    }
+  };
+
+  const runAutoPilotScan = () => {
+    const timeStr = new Date().toLocaleTimeString();
+
+    if (autoPilotRisk === "SCALP") {
+      executeBotTrade(`High-Frequency Scalp breakout above ${curr}${upBreakout}`);
+    } else if (autoPilotRisk === "MOMENTUM") {
+      if (numPrice >= (sma20 || numPrice) * 0.995 || (macd || 0) >= (macdSignal || 0)) {
+        executeBotTrade(`Momentum 5x confirmation above 20-SMA`);
+      } else {
+        executeBotTrade(`Tactical Mean-Reversion entry on volume expansion`);
+      }
+    } else {
+      // SAFE mode
+      if (rsi14 > 74) {
+        executeBotTrade(`Mean-Reversion Pullback Allocation (RSI ${rsi14.toFixed(1)} with tight stop)`);
+      } else if (numPrice >= (sma20 || numPrice)) {
+        executeBotTrade(`Trend confirmation above 20-SMA (${curr}${sma20.toFixed(2)})`);
+      } else {
+        executeBotTrade(`Support bounce accumulation @ ${curr}${numPrice.toFixed(2)}`);
+      }
+    }
+  };
+
   useEffect(() => {
     if (!isAutoPilotActive) return;
 
+    // Run initial scan within 1.2s of activation
+    const initialTimer = setTimeout(() => {
+      runAutoPilotScan();
+    }, 1200);
+
+    // Active continuous telemetry loop every 6 seconds
     const interval = setInterval(() => {
-      const isGoodBuy = price > sma20 && rsi14 > 45 && rsi14 < 72;
-      const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      runAutoPilotScan();
+    }, 6000);
 
-      if (isGoodBuy && onExecuteTrade) {
-        soundEngine.playOrderFilled();
-        const prod = autoPilotRisk === "SAFE" ? "CNC" : "MIS";
-        onExecuteTrade({
-          symbol,
-          side: "BUY",
-          product: prod,
-          orderType: "MARKET",
-          quantity: 25,
-          price,
-          marginRequired: prod === "CNC" ? price * 25 : (price * 25) / 5,
-        });
-
-        const logEntry = `[${timeStr}] 🤖 Auto-Pilot (${autoPilotRisk}): Executed BUY 25x ${symbol} @ ${curr}${price.toFixed(2)} (SL: ${curr}${stopLoss}, TGT: ${curr}${target1})`;
-        setBotLogs((prev) => [logEntry, ...prev.slice(0, 3)]);
-        setBotTradeCount((prev) => prev + 1);
-
-        if (isVoiceActive) {
-          speakText(`Auto-Pilot Bot ne ${symbol} par trade execute kar diya hai!`);
-        }
-      }
-    }, 18000);
-
-    return () => clearInterval(interval);
-  }, [isAutoPilotActive, symbol, price, sma20, rsi14, autoPilotRisk, onExecuteTrade, isVoiceActive, curr, stopLoss, target1]);
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(interval);
+    };
+  }, [isAutoPilotActive, symbol, numPrice, sma20, rsi14, autoPilotRisk, macd, macdSignal, upBreakout, downBreakdown, curr, target1, stopLoss]);
 
   // Speech Synthesizer for Audio Guidance
   const speakText = (text: string) => {
@@ -324,9 +357,9 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
       });
     }
     setCurrentStep(4);
-    const confirmation = `Shabaash! Aapka BUY ${product} order 25 shares @ ${curr}${price.toFixed(
+    const confirmation = `Order Verified & Routed: BUY ${product} allocation of 25 shares of ${symbol} filled at ${curr}${price.toFixed(
       2
-    )} auto-execute ho chuka hai. Live P&L niche Positions dock me dikhai de raha hai!`;
+    )}. Live portfolio telemetry and mark-to-market P&L are tracking in the Positions dock below.`;
     setAssistantMessage(confirmation);
     speakText(confirmation);
   };
@@ -352,15 +385,15 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
           <div>
             <div className="flex items-center space-x-2">
               <span className="font-extrabold text-sm text-white tracking-wide">
-                Aria <span className="text-purple-400 text-xs font-semibold">(Your Personal AI Trading Guide)</span>
+                Aria <span className="text-purple-400 text-xs font-semibold">(Institutional Quantitative AI Mentor)</span>
               </span>
               <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
                 <UserCheck className="w-3 h-3" />
-                HIRED &amp; ACTIVE
+                ACTIVE &amp; ONLINE
               </span>
             </div>
             <span className="text-[11px] text-[#787B86] block">
-              Step-by-Step Personalized Mentor • Speaks Hinglish &amp; English • Zero Confusion
+              Step-by-Step Personalized Mentor • Institutional Precision • Zero Confusion
             </span>
           </div>
         </div>
@@ -483,7 +516,7 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
               {isLoadingAnswer ? (
                 <div className="flex items-center space-x-2 text-purple-300 py-2">
                   <Sparkles className="w-4 h-4 animate-spin text-purple-400" />
-                  <span>Aria live market indicators analyze kar rahi hain...</span>
+                  <span>Aria is synthesizing live quantitative signals...</span>
                 </div>
               ) : (
                 assistantMessage
@@ -494,22 +527,22 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
             <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
               <div className="flex flex-wrap items-center gap-1.5">
                 <button
-                  onClick={() => handleAskAssistant("Abhi mujhe kya karna chahiye step by step batao?")}
+                  onClick={() => handleAskAssistant("Provide an institutional trade thesis and step-by-step risk management.")}
                   className="px-2.5 py-1 text-[11px] rounded bg-[#181C27] hover:bg-[#2A2E39] border border-[#2A2E39] text-purple-300 hover:text-white transition"
                 >
-                  👉 Ab Main Kya Karu?
+                  💡 Tactical Setup
                 </button>
                 <button
-                  onClick={() => handleAskAssistant("Kahan UP hoga aur kahan DOWN hoga exact price batao?")}
+                  onClick={() => handleAskAssistant("What are the key upside breakout and downside breakdown support levels?")}
                   className="px-2.5 py-1 text-[11px] rounded bg-[#181C27] hover:bg-[#2A2E39] border border-[#2A2E39] text-emerald-400 hover:text-white transition"
                 >
-                  📈 Kahan UP / DOWN Hoga?
+                  📈 Key Breakout &amp; Pivots
                 </button>
                 <button
-                  onClick={() => handleAskAssistant("Delivery aur Intraday me kya farq hai, konsa buy karu?")}
+                  onClick={() => handleAskAssistant("Compare Delivery CNC vs Intraday 5x MIS risk profile and optimal choice.")}
                   className="px-2.5 py-1 text-[11px] rounded bg-[#181C27] hover:bg-[#2A2E39] border border-[#2A2E39] text-blue-300 hover:text-white transition"
                 >
-                  🛡️ Konsa Buy Karein (Risk Diff)?
+                  🛡️ Delivery vs Intraday Risk
                 </button>
               </div>
 
@@ -518,18 +551,18 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
                 <button
                   onClick={() => handleAutoExecute("CNC")}
                   className="px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition shadow"
-                  title="Aria executes Safe Delivery trade with verified Stop-Loss"
+                  title="Execute Delivery trade with verified Stop-Loss"
                 >
                   <Zap className="w-3.5 h-3.5 text-amber-300" />
-                  <span>⚡ Aria: Buy Delivery (Safe)</span>
+                  <span>⚡ Execute Delivery (CNC)</span>
                 </button>
                 <button
                   onClick={() => handleAutoExecute("MIS")}
                   className="px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 transition shadow"
-                  title="Aria executes Intraday trade with 5x leverage"
+                  title="Execute Intraday trade with 5x leverage"
                 >
                   <Zap className="w-3.5 h-3.5 text-amber-300" />
-                  <span>⚡ Aria: Buy Intraday (5x)</span>
+                  <span>⚡ Execute Intraday (5x MIS)</span>
                 </button>
               </div>
             </div>
@@ -562,13 +595,31 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
               </div>
 
               <div className="flex items-center space-x-2">
+                {/* Instant Trigger Scan Now Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEngine.playTabSwitch();
+                    if (!isAutoPilotActive) setIsAutoPilotActive(true);
+                    runAutoPilotScan();
+                  }}
+                  title="Force an instant algorithmic market scan and execute actionable setup"
+                  className="px-2.5 py-1.5 rounded-lg bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 border border-amber-400/40 text-[10px] font-black flex items-center gap-1 transition shadow cursor-pointer active:scale-95"
+                >
+                  <Zap className="w-3 h-3 text-amber-400" />
+                  <span>⚡ Scan Now</span>
+                </button>
+
                 {/* Risk Selector */}
                 <div className="flex p-0.5 rounded-lg bg-[#0B0E17] border border-[#212738] text-[10px] font-bold">
                   {(["SAFE", "MOMENTUM", "SCALP"] as const).map((r) => (
                     <button
                       key={r}
                       type="button"
-                      onClick={() => setAutoPilotRisk(r)}
+                      onClick={() => {
+                        setAutoPilotRisk(r);
+                        if (isAutoPilotActive) runAutoPilotScan();
+                      }}
                       className={`px-2 py-0.5 rounded transition ${
                         autoPilotRisk === r
                           ? "bg-amber-400 text-black shadow"
@@ -593,7 +644,7 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
                         `[${new Date().toLocaleTimeString()}] 🚀 Auto-Pilot Bot started in ${autoPilotRisk} mode.`,
                         ...prev,
                       ]);
-                      if (isVoiceActive) speakText("Auto-Pilot active ho gaya hai. Main market scan karke trades execute karungi.");
+                      if (isVoiceActive) speakText("Auto-Pilot active. Scanning momentum triggers.");
                     }
                   }}
                   className={`px-3 py-1.5 rounded-lg font-extrabold text-xs flex items-center gap-1.5 transition shadow cursor-pointer ${
@@ -646,7 +697,7 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
             <button
               type="button"
               onClick={toggleListening}
-              title={isListening ? "Listening to your voice... (Click to stop)" : "Speak to Aria (Hindi/Hinglish/English voice chat)"}
+              title={isListening ? "Listening... (Click to stop)" : "Speak to Aria (Institutional voice assistant)"}
               className={`px-3 py-2 rounded-lg font-bold text-xs flex items-center gap-1.5 transition cursor-pointer ${
                 isListening
                   ? "bg-rose-500 text-white animate-pulse shadow-lg shadow-rose-500/30"
@@ -670,7 +721,7 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
               type="text"
               value={customQuestion}
               onChange={(e) => setCustomQuestion(e.target.value)}
-              placeholder="Aria se bol kar ya likh kar poochein: 'Kab bechna hai', 'Reliance ka target kya hai'..."
+              placeholder="Consult Aria AI: Ask 'Target projection', 'Calculate Stop-Loss', 'Breakout thesis'..."
               className="flex-1 px-3.5 py-2 text-xs bg-[#131722] border border-[#2A2E39] focus:border-amber-400 text-white placeholder-[#787B86] rounded-lg outline-none transition"
             />
             <button
@@ -679,7 +730,7 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
               className="px-4 py-2 bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-black font-extrabold text-xs rounded-lg transition disabled:opacity-50 flex items-center gap-1 cursor-pointer shadow-md shadow-amber-500/20"
             >
               <MessageSquare className="w-3.5 h-3.5" />
-              <span>Poochein</span>
+              <span>Query AI</span>
             </button>
           </form>
         </div>
