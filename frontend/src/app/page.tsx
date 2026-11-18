@@ -38,6 +38,7 @@ import { LuxuryAuthPortal, UserPersonaType } from "@/components/LuxuryAuthPortal
 import { SectorHeatmapModal } from "@/components/trading/SectorHeatmapModal";
 import { LiveAlertsScannerModal } from "@/components/trading/LiveAlertsScannerModal";
 import { VIPLeaderboardModal } from "@/components/trading/VIPLeaderboardModal";
+import { InstitutionalIntelligenceSuite } from "@/components/trading/InstitutionalIntelligenceSuite";
 import { soundEngine } from "@/utils/soundEngine";
 import {
   TrendingUp,
@@ -1198,6 +1199,29 @@ export default function HomePage() {
                 />
               </div>
             </div>
+
+            {/* Elite Institutional Intelligence Suite: FII/DII Smart Money, Pattern AI, Fibonacci & Stress Testing */}
+            <InstitutionalIntelligenceSuite
+              symbol={currentStock.symbol}
+              price={currentStock.lastClose}
+              currency={currentStock.currency}
+              changePercent={currentStock.changePercent}
+              rsi14={currentStock.rsi14}
+              sma20={currentStock.sma20}
+              sma50={currentStock.sma50}
+              volatility={currentStock.volatility}
+              onSetBracket={(target, stopLoss) => {
+                handleExecuteOrder({
+                  symbol: currentStock.symbol,
+                  side: "BUY",
+                  product: "MIS",
+                  orderType: "MARKET",
+                  quantity: 25,
+                  price: currentStock.lastClose,
+                  marginRequired: (currentStock.lastClose * 25) / 5,
+                });
+              }}
+            />
 
             {/* Bottom Full-Width Trading Terminal Dock (Positions & Orders) */}
             <PositionsDock
