@@ -41,6 +41,8 @@ export interface UserPersonaOption {
   badge: string;
   level: string;
   description: string;
+  includesPrior: string;
+  isPopular?: boolean;
   features: string[];
   gradient: string;
   borderHover: string;
@@ -302,20 +304,22 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
     setPortalStage("persona");
   };
 
-  // Persona options definition
+  // Persona options definition - Hierarchical Progressive SaaS Model (Level 1 -> 2 -> 3 -> 4 Max)
   const personaOptions: UserPersonaOption[] = [
     {
       id: "beginner",
       title: "Beginner & Student Trader",
       hindiTitle: "Naye Trader (Step-by-Step Learning)",
-      badge: "Level 1 • Guided",
+      badge: "LEVEL 1 • STARTER",
       level: "Zero Risk",
       description:
-        "Main trading bilkul shuru se sikhna chahta hoon. Har chart, indicator aur trade ke liye Aria AI mentor mujhe voice me guide kare.",
+        "Main trading bilkul basic se sikhna chahta hoon bina kisi paise ke risk ke. Har chart aur indicator ko Aria AI mentor mujhe voice me explain kare.",
+      includesPrior: "Base Features (Free Simulator):",
       features: [
-        "Aria AI Voice Guidance (Hindi/English)",
-        "₹10,00,000 Zero-Risk Simulator",
+        "Aria AI Voice Guidance (Hindi & English)",
+        "₹10,00,000 Zero-Risk Virtual Capital",
         "Clear Buy/Sell Explanations & Target Rules",
+        "Safe Delivery (CNC) Mode with No Margin Risk",
       ],
       gradient: "from-emerald-500/20 via-emerald-500/5 to-transparent",
       borderHover: "hover:border-emerald-400 group-hover:shadow-emerald-500/20",
@@ -324,15 +328,17 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
     {
       id: "scalper",
       title: "Active Day Trader / Scalper",
-      hindiTitle: "Intraday & F&O Momentum Pro",
-      badge: "Level 3 • Fast Execution",
-      level: "High-Octane MIS",
+      hindiTitle: "Intraday Momentum & High-Octane MIS",
+      badge: "LEVEL 2 • PRO SCALPER",
+      level: "Intraday MIS",
       description:
-        "Mujhe fast breakouts, 1-click execution, live sound alerts aur tight Stop-Loss scalping chahiye intraday market hours ke dauran.",
+        "Mujhe fast scalping, tight stop-loss, 1-click turbo execution aur real broker accounts ke sath high-speed intraday trading karni hai.",
+      includesPrior: "Includes ALL Level 1 Features, PLUS:",
       features: [
-        "1-Click Turbo Order Ticket (5x Leverage)",
-        "Live Breakout Sound Alerts & Scanner",
-        "DMA Broker Gateway (Zerodha/Upstox)",
+        "1-Click Turbo Order Execution (5x Leverage MIS)",
+        "Live Breakout Sound Alerts & Ticker Scanner",
+        "Direct DMA Broker Gateway (Zerodha, Upstox, Angel)",
+        "Dynamic Intraday Breakout & Stop-Loss Engine",
       ],
       gradient: "from-amber-500/20 via-amber-500/5 to-transparent",
       borderHover: "hover:border-amber-400 group-hover:shadow-amber-500/20",
@@ -340,16 +346,18 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
     },
     {
       id: "quant",
-      title: "Quantitative Researcher / Swing Investor",
-      hindiTitle: "Data & Strategy Analyst",
-      badge: "Level 4 • Tactical Quant",
+      title: "Quantitative Analyst / Swing Pro",
+      hindiTitle: "Data Science, Alpha & Strategy Studio",
+      badge: "LEVEL 3 • TACTICAL QUANT",
       level: "Statistical Edge",
       description:
-        "Mujhe multi-chart grid, algorithmic strategy backtester, factor alpha ratings, sector heatmaps aur options Greeks matrix chahiye.",
+        "Mujhe deep institutional analytics, factor alpha ratings, multi-chart quantitative radar, strategy backtester aur options Greeks chahiye.",
+      includesPrior: "Includes ALL Level 1 & 2 Features, PLUS:",
       features: [
-        "Multi-Factor Quantitative Alpha Radar",
-        "Algorithmic Strategy Backtesting Studio",
-        "Sector Heatmap & Options Chain Greeks",
+        "Multi-Factor Quantitative Alpha Radar (Sharpe, Volatility)",
+        "Algorithmic Strategy Backtesting Studio (MACD+SMA)",
+        "Sector Heatmap Correlation & Options Chain Greeks",
+        "Institutional Trade Journal & Performance Analytics",
       ],
       gradient: "from-blue-500/20 via-blue-500/5 to-transparent",
       borderHover: "hover:border-blue-400 group-hover:shadow-blue-500/20",
@@ -358,15 +366,18 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
     {
       id: "autopilot",
       title: "Autonomous AI Hands-Free Trader",
-      hindiTitle: "100% Autonomous Bot Mode",
-      badge: "Level 5 • Auto-Pilot",
-      level: "Hands-Free",
+      hindiTitle: "100% Autonomous Bot Mode (Max Power)",
+      badge: "LEVEL 4 • AUTONOMOUS MAX",
+      level: "Hands-Free Max",
+      isPopular: true,
       description:
-        "Aria aur AI Bot market ko automatically scan karein (20-SMA, RSI), setups pakadkar auto-trades execute karein aur mujhe voice me announce karein.",
+        "Aria aur AI Bot market ko automatically scan karein (20-SMA, RSI), setups pakadkar auto-trades execute karein aur live voice me update karein.",
+      includesPrior: "ALL FEATURES UNLOCKED (Level 1, 2, 3 + Max):",
       features: [
-        "Autonomous AI Trading Bot (Safe/Scalp)",
-        "Auto Order Execution & Trailing SL",
-        "Live Audio Trade Broadcast & Activity Stream",
+        "100% Autonomous AI Trading Bot (Auto-Scans 20-SMA & RSI)",
+        "Auto Order Execution with Dynamic Trailing Stop-Loss",
+        "Live Audio Trade Broadcast & Continuous Feed",
+        "Ultra-Low Latency Institutional Quant Engine Speed",
       ],
       gradient: "from-purple-500/20 via-purple-500/5 to-transparent",
       borderHover: "hover:border-purple-400 group-hover:shadow-purple-500/20",
@@ -384,10 +395,10 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
     } catch {}
 
     const steps = [
-      "Configuring AI Neural Engine...",
-      `Loading tailored parameters for ${personaId.toUpperCase()}...`,
-      "Allocating ₹10,00,000 Institutional Virtual Margin...",
-      "Launching TradeX ELITE Workspace...",
+      "Unlocking Tier Permissions & Neural Engine...",
+      `Applying ${personaId.toUpperCase()} Architecture (Level ${personaId === "beginner" ? "1" : personaId === "scalper" ? "2" : personaId === "quant" ? "3" : "4"})...`,
+      "Synchronizing Real-Time DMA & ₹10,00,000 Capital...",
+      "Launching TradeX ELITE Institutional Workspace...",
     ];
 
     let sIdx = 0;
@@ -853,7 +864,7 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
             </div>
 
             {/* 4 Interactive Persona Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4.5 text-left">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4.5 text-left pt-2">
               {personaOptions.map((opt) => {
                 const isSelected = selectedPersona === opt.id;
                 return (
@@ -863,9 +874,19 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
                     className={`group relative rounded-2xl p-[1.5px] transition-all duration-300 cursor-pointer ${
                       isSelected
                         ? "bg-gradient-to-b from-amber-400 via-amber-500 to-yellow-600 scale-[1.02] shadow-[0_0_35px_rgba(245,158,11,0.3)]"
+                        : opt.isPopular
+                        ? "bg-gradient-to-b from-amber-500/40 via-amber-500/10 to-[#1c2233] hover:from-amber-400/60 hover:to-amber-500/40 hover:scale-[1.01]"
                         : "bg-gradient-to-b from-white/10 via-white/5 to-[#1c2233] hover:from-amber-400/50 hover:to-amber-600/30 hover:scale-[1.01]"
                     }`}
                   >
+                    {/* Max Power Most Popular Tag */}
+                    {opt.isPopular && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-black text-[10px] font-black uppercase tracking-widest shadow-lg shadow-amber-500/40 flex items-center gap-1 whitespace-nowrap">
+                        <Crown className="w-3 h-3 text-black" />
+                        <span>MAX POWER • 100% UNLOCKED</span>
+                      </div>
+                    )}
+
                     <div className="h-full rounded-[15px] bg-[#0C1019]/95 backdrop-blur-xl p-5 flex flex-col justify-between space-y-4">
                       {/* Top Header & Badges */}
                       <div className="space-y-3">
@@ -873,7 +894,11 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
                           <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                             {opt.icon}
                           </div>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/5 text-amber-300 border border-amber-400/25 uppercase font-mono">
+                          <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border uppercase font-mono ${
+                            opt.isPopular
+                              ? "bg-amber-400/20 text-amber-300 border-amber-400/50"
+                              : "bg-white/5 text-amber-300 border-amber-400/25"
+                          }`}>
                             {opt.badge}
                           </span>
                         </div>
@@ -887,19 +912,26 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
                           </span>
                         </div>
 
-                        <p className="text-xs text-slate-400 leading-relaxed min-h-[50px]">
+                        <p className="text-xs text-slate-400 leading-relaxed min-h-[48px]">
                           {opt.description}
                         </p>
                       </div>
 
-                      {/* Feature Checklist */}
-                      <div className="space-y-2 pt-2 border-t border-white/5 text-[11px] text-slate-300 font-medium">
-                        {opt.features.map((feat, fIdx) => (
-                          <div key={fIdx} className="flex items-start space-x-1.5">
-                            <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                            <span>{feat}</span>
-                          </div>
-                        ))}
+                      {/* Progressive Tier Checklist (ChatGPT Hierarchy Model) */}
+                      <div className="space-y-2.5 pt-3 border-t border-white/5">
+                        <div className="px-2.5 py-1 rounded-lg bg-amber-400/10 border border-amber-400/25 text-[10px] font-bold text-amber-300 flex items-center gap-1.5 uppercase tracking-wide">
+                          <Sparkles className="w-3 h-3 text-amber-400 shrink-0" />
+                          <span className="truncate">{opt.includesPrior}</span>
+                        </div>
+
+                        <div className="space-y-2 text-[11px] text-slate-300 font-medium">
+                          {opt.features.map((feat, fIdx) => (
+                            <div key={fIdx} className="flex items-start space-x-1.5">
+                              <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                              <span className="leading-snug">{feat}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
 
                       {/* Select Action Button */}
