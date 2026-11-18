@@ -234,7 +234,7 @@ export const AIVisualDecisionNodes: React.FC<AIVisualDecisionNodesProps> = ({
                 : "text-[#787B86] hover:text-white"
             }`}
           >
-            <Sparkles className="w-3 h-3 text-amber-300" />
+            <Sparkles className="w-3 h-3 text-cyan-300" />
             <span>Guided Execution Thesis</span>
           </button>
 
@@ -400,8 +400,8 @@ export const AIVisualDecisionNodes: React.FC<AIVisualDecisionNodesProps> = ({
                     </p>
 
                     <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#2A2E39]">
-                      <div className="flex items-center gap-2 text-xs text-amber-300 font-medium">
-                        <Zap className="w-4 h-4 text-amber-400" />
+                      <div className="flex items-center gap-2 text-xs text-blue-300 font-medium">
+                        <Zap className="w-4 h-4 text-cyan-400" />
                         <span>Action: {activeNode.actionPrompt}</span>
                       </div>
 
@@ -434,7 +434,7 @@ export const AIVisualDecisionNodes: React.FC<AIVisualDecisionNodesProps> = ({
           {/* MODE 2: GUIDED EXECUTION THESIS */}
           {activeMode === "guided" && (
             <div className="p-4 rounded-xl bg-[#131722] border border-[#2A2E39] space-y-4">
-              <div className="flex items-center gap-2 text-amber-300 font-bold text-sm">
+              <div className="flex items-center gap-2 text-cyan-300 font-bold text-sm">
                 <Sparkles className="w-4 h-4" />
                 <span>Institutional Trade Execution Blueprint ({symbol})</span>
               </div>
@@ -462,7 +462,7 @@ export const AIVisualDecisionNodes: React.FC<AIVisualDecisionNodesProps> = ({
                   </p>
                 </div>
 
-                <div className="p-3 rounded-lg bg-[#1E222D] border-l-4 border-amber-500">
+                <div className="p-3 rounded-lg bg-[#1E222D] border-l-4 border-indigo-500">
                   <h4 className="font-bold text-white text-xs mb-1">
                     3️⃣ Capital Allocation &amp; Risk Stratification
                   </h4>

@@ -12,7 +12,6 @@ import {
   ArrowRight,
   AlertCircle,
   CheckCircle2,
-  Crown,
   Zap,
   Globe2,
   KeyRound,
@@ -126,7 +125,7 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
       vy: (Math.random() - 0.5) * 0.65,
       radius: Math.random() * 1.8 + 0.8,
       alpha: Math.random() * 0.45 + 0.25,
-      hue: Math.random() > 0.45 ? 42 : 218, // Gold (42) or Sapphire Blue (218)
+      hue: Math.random() > 0.45 ? 195 : 218, // Cyan (195) or Electric Cobalt (218)
     }));
 
     const render = () => {
@@ -157,11 +156,11 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
         ctx.beginPath();
         ctx.arc(p1.x, p1.y, p1.radius, 0, Math.PI * 2);
         ctx.fillStyle =
-          p1.hue === 42
-            ? `rgba(245, 158, 11, ${p1.alpha})`
+          p1.hue === 195
+            ? `rgba(6, 182, 212, ${p1.alpha})`
             : `rgba(96, 165, 250, ${p1.alpha})`;
         ctx.shadowBlur = 8;
-        ctx.shadowColor = p1.hue === 42 ? "#f59e0b" : "#3b82f6";
+        ctx.shadowColor = p1.hue === 195 ? "#06b6d4" : "#3b82f6";
         ctx.fill();
         ctx.shadowBlur = 0;
 
@@ -178,8 +177,8 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
             ctx.moveTo(p1.x, p1.y);
             ctx.lineTo(p2.x, p2.y);
             ctx.strokeStyle =
-              p1.hue === 42
-                ? `rgba(245, 158, 11, ${lineAlpha})`
+              p1.hue === 195
+                ? `rgba(6, 182, 212, ${lineAlpha})`
                 : `rgba(59, 130, 246, ${lineAlpha})`;
             ctx.lineWidth = 0.8;
             ctx.stroke();
@@ -340,9 +339,9 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
         "Direct Market Access (Zerodha Kite, Upstox, Angel)",
         "Dynamic Breakout Pivots & Automated Stop-Loss Engine",
       ],
-      gradient: "from-amber-500/20 via-amber-500/5 to-transparent",
-      borderHover: "hover:border-amber-400 group-hover:shadow-amber-500/20",
-      icon: <Zap className="w-5 h-5 text-amber-400" />,
+      gradient: "from-cyan-500/20 via-cyan-500/5 to-transparent",
+      borderHover: "hover:border-cyan-400 group-hover:shadow-cyan-500/20",
+      icon: <Zap className="w-5 h-5 text-cyan-400" />,
     },
     {
       id: "quant",
@@ -434,7 +433,7 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-0" />
 
       {/* Luxury Background Glows & Cyber Grid */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(245,158,11,0.08),transparent_45%),radial-gradient(circle_at_80%_80%,rgba(41,98,255,0.09),transparent_45%),radial-gradient(circle_at_50%_40%,rgba(16,185,129,0.05),transparent_50%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.08),transparent_45%),radial-gradient(circle_at_80%_80%,rgba(99,102,241,0.08),transparent_45%),radial-gradient(circle_at_50%_40%,rgba(16,185,129,0.05),transparent_50%)] pointer-events-none" />
       <div
         className="absolute inset-0 opacity-[0.035] pointer-events-none"
         style={{
@@ -444,23 +443,23 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
         }}
       />
 
-      {/* Top Luxury Header Bar */}
-      <header className="relative z-10 border-b border-amber-500/15 bg-[#090C13]/85 backdrop-blur-xl">
+      {/* Top Header Bar */}
+      <header className="relative z-10 border-b border-slate-800/80 bg-[#090C13]/90 backdrop-blur-xl">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-8 py-3.5 flex items-center justify-between">
           {/* Brand */}
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 p-[1.5px] shadow-[0_0_20px_rgba(245,158,11,0.3)]">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-cyan-500 p-[1.5px] shadow-[0_0_20px_rgba(59,130,246,0.25)]">
               <div className="w-full h-full bg-[#0B0E17] rounded-[10px] flex items-center justify-center">
-                <Crown className="w-5 h-5 text-amber-400" />
+                <TrendingUp className="w-5 h-5 text-blue-400" />
               </div>
             </div>
             <div>
               <div className="flex items-center space-x-2">
                 <span className="text-xl font-black tracking-tight text-white font-mono">
-                  TradeX <span className="bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 bg-clip-text text-transparent">ELITE</span>
+                  TradeX <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-cyan-400 bg-clip-text text-transparent">PRO</span>
                 </span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-300 border border-amber-400/30 font-bold uppercase tracking-widest">
-                  VIP TERMINAL
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/30 font-bold uppercase tracking-widest">
+                  INSTITUTIONAL
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 hidden sm:block">
@@ -469,7 +468,7 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
             </div>
           </div>
 
-          {/* Luxury Security & Encryption Badges */}
+          {/* Security & Encryption Badges */}
           <div className="flex items-center space-x-3 text-xs">
             <div className="hidden md:flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 font-semibold">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -482,11 +481,11 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
           </div>
         </div>
 
-        {/* Live Luxury Ticker Tape */}
+        {/* Live Ticker Tape */}
         <div className="border-t border-[#1C2230] bg-[#07090F]/90 px-4 py-2 overflow-x-auto">
           <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-4 text-xs font-mono">
-            <div className="flex items-center space-x-1.5 text-amber-400 font-bold text-[11px] uppercase tracking-wider shrink-0">
-              <Sparkles className="w-3 h-3" />
+            <div className="flex items-center space-x-1.5 text-blue-400 font-bold text-[11px] uppercase tracking-wider shrink-0">
+              <Sparkles className="w-3 h-3 text-cyan-400" />
               <span>Live Global Feeds</span>
             </div>
             <div className="flex items-center gap-6 overflow-x-auto no-scrollbar py-0.5">
@@ -508,7 +507,7 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
         </div>
       </header>
 
-      {/* Main Luxury Body: Stage 1 (Auth) OR Stage 2 (Interactive Persona Selection) */}
+      {/* Main Body: Stage 1 (Auth) OR Stage 2 (Interactive Persona Selection) */}
       <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-8 sm:py-12">
         {portalStage === "auth" ? (
           /* ============================================================ */
@@ -516,34 +515,34 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
           /* ============================================================ */
           <div className="w-full max-w-[1180px] grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             
-            {/* Left Side: Luxury Value Proposition & Highlights */}
+            {/* Left Side: Value Proposition & Highlights */}
             <div className="lg:col-span-7 space-y-6 text-left">
-              <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border border-amber-500/30 text-amber-300 text-xs font-bold tracking-wide">
-                <Crown className="w-3.5 h-3.5 text-amber-400" />
+              <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-500/15 via-blue-500/5 to-transparent border border-blue-500/30 text-blue-300 text-xs font-bold tracking-wide">
+                <TrendingUp className="w-3.5 h-3.5 text-blue-400" />
                 <span>WELCOME TO THE NEXT-GENERATION QUANT TERMINAL</span>
               </div>
 
               <div className="space-y-3">
                 <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white leading-[1.15]">
                   Institutional Edge. <br />
-                  <span className="bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-500 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-400 bg-clip-text text-transparent">
                     Powered by Autonomous AI.
                   </span>
                 </h1>
                 <p className="text-slate-400 text-sm sm:text-base max-w-xl leading-relaxed">
-                  Experience ultra-low latency Direct Market Access, live 60 FPS TradingView charting, and our dedicated personal voice trading mentor <strong className="text-amber-300">"Aria"</strong>. Master the markets 100% risk-free.
+                  Experience ultra-low latency Direct Market Access, live 60 FPS TradingView charting, and our dedicated personal voice trading mentor <strong className="text-blue-400">"Aria"</strong>. Master the markets 100% risk-free.
                 </p>
               </div>
 
-              {/* 4 Luxury Feature Cards */}
+              {/* 4 Feature Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
-                <div className="p-3.5 rounded-xl bg-[#0D111A]/80 border border-amber-500/20 backdrop-blur-md space-y-1 hover:border-amber-500/40 transition">
-                  <div className="flex items-center space-x-2 text-amber-400 text-xs font-bold">
+                <div className="p-3.5 rounded-xl bg-[#0D111A]/80 border border-blue-500/20 backdrop-blur-md space-y-1 hover:border-blue-500/40 transition">
+                  <div className="flex items-center space-x-2 text-blue-400 text-xs font-bold">
                     <Bot className="w-4 h-4" />
                     <span>Aria Voice Mentor</span>
                   </div>
                   <p className="text-[11px] text-slate-400 leading-normal">
-                    Step-by-step Hindi/English voice guidance, exact breakout triggers, and 1-click execution.
+                    Step-by-step institutional voice guidance, exact breakout triggers, and 1-click execution.
                   </p>
                 </div>
 
@@ -581,25 +580,25 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
               {/* Trust Badge */}
               <div className="pt-2 flex items-center space-x-3 text-xs text-slate-400">
                 <div className="flex -space-x-1.5 overflow-hidden">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 flex items-center justify-center text-[10px] font-black text-black border-2 border-[#07090E]">
-                    ZK
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-[10px] font-black text-white border-2 border-[#07090E]">
+                    TX
                   </div>
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-[10px] font-black text-white border-2 border-[#07090E]">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-500 flex items-center justify-center text-[10px] font-black text-white border-2 border-[#07090E]">
                     AI
                   </div>
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-600 flex items-center justify-center text-[10px] font-black text-black border-2 border-[#07090E]">
-                    MP
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-600 flex items-center justify-center text-[10px] font-black text-white border-2 border-[#07090E]">
+                    QT
                   </div>
                 </div>
                 <span className="font-medium text-slate-300">
-                  Over <strong>10,000+ elite traders</strong> execute institutional trades daily on TradeX.
+                  Over <strong>10,000+ traders</strong> execute institutional setups daily on TradeX.
                 </span>
               </div>
             </div>
 
-            {/* Right Side: Ultra-Luxury Glassmorphic Auth Card */}
+            {/* Right Side: Clean Glassmorphic Auth Card */}
             <div className="lg:col-span-5 w-full">
-              <div className="relative rounded-2xl p-[1.5px] bg-gradient-to-b from-amber-500/35 via-amber-500/10 to-[#202738] shadow-[0_0_50px_rgba(245,158,11,0.15)]">
+              <div className="relative rounded-2xl p-[1.5px] bg-gradient-to-b from-blue-500/30 via-slate-700/20 to-[#1A2233] shadow-[0_0_40px_rgba(37,99,235,0.12)]">
                 <div className="rounded-[15px] bg-[#0B0E17]/95 backdrop-blur-2xl p-6 sm:p-8 space-y-6">
                   
                   {/* Card Title & Tab Switcher */}
@@ -607,11 +606,11 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
                     <div className="flex items-center justify-between">
                       <div>
                         <h2 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
-                          <span>VIP Terminal Access</span>
-                          <Crown className="w-4 h-4 text-amber-400" />
+                          <span>Terminal Access</span>
+                          <TrendingUp className="w-4 h-4 text-blue-400" />
                         </h2>
                         <p className="text-xs text-slate-400">
-                          {activeTab === "login" ? "Sign in to access your portfolio" : "Create your elite account in 30 seconds"}
+                          {activeTab === "login" ? "Sign in to access your portfolio" : "Create your trading account in 30 seconds"}
                         </p>
                       </div>
                       <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
@@ -619,15 +618,15 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
                       </span>
                     </div>
 
-                    {/* Returning VIP User Quick Re-Entry Card */}
+                    {/* Returning User Quick Re-Entry Card */}
                     {currentUser && currentUser.email && (
-                      <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-between gap-3">
+                      <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-between gap-3">
                         <div className="text-left overflow-hidden">
-                          <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">
+                          <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider block">
                             Active Session Detected
                           </span>
                           <span className="text-xs font-bold text-white truncate block">
-                            {currentUser.email || "VIP Member"}
+                            {currentUser.email || "Trader"}
                           </span>
                         </div>
                         <button
@@ -637,14 +636,14 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
                             setPortalStage("persona");
                             soundEngine.playOrderFilled();
                           }}
-                          className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black font-extrabold text-xs flex items-center gap-1 transition shadow cursor-pointer shrink-0"
+                          className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs flex items-center gap-1 transition shadow cursor-pointer shrink-0"
                         >
                           <span>Re-Enter →</span>
                         </button>
                       </div>
                     )}
 
-                    {/* Luxury Tabs */}
+                    {/* Clean Tabs */}
                     <div className="grid grid-cols-2 p-1 rounded-xl bg-[#121622] border border-[#212738]">
                       <button
                         type="button"
@@ -655,7 +654,7 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
                         }}
                         className={`py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
                           activeTab === "login"
-                            ? "bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-md"
+                            ? "bg-blue-600 text-white shadow-md"
                             : "text-slate-400 hover:text-white"
                         }`}
                       >
@@ -672,7 +671,7 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
                         }}
                         className={`py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
                           activeTab === "signup"
-                            ? "bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-md"
+                            ? "bg-blue-600 text-white shadow-md"
                             : "text-slate-400 hover:text-white"
                         }`}
                       >
@@ -690,30 +689,30 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
                     </div>
                   )}
 
-                  {/* Instant VIP Demo Access Button (Prominent 1-Click Access) */}
+                  {/* Instant Demo Access Button (Prominent 1-Click Access) */}
                   <div className="space-y-2">
                     <button
                       type="button"
                       onClick={handleInstantVipGuest}
-                      className="w-full group relative overflow-hidden py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-emerald-500/20 hover:from-amber-500/30 hover:to-emerald-500/30 border border-amber-400/40 text-amber-300 font-bold text-xs sm:text-sm flex items-center justify-between transition-all duration-300 shadow-[0_0_20px_rgba(245,158,11,0.15)] active:scale-[0.98] cursor-pointer"
+                      className="w-full group relative overflow-hidden py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600/15 via-indigo-600/15 to-emerald-600/15 hover:from-blue-600/25 hover:to-emerald-600/25 border border-blue-500/30 text-white font-bold text-xs sm:text-sm flex items-center justify-between transition-all duration-300 shadow-[0_0_20px_rgba(59,130,246,0.12)] active:scale-[0.98] cursor-pointer"
                     >
                       <div className="flex items-center space-x-2.5">
-                        <div className="w-7 h-7 rounded-lg bg-amber-400/20 flex items-center justify-center text-amber-300">
-                          <Crown className="w-4 h-4" />
+                        <div className="w-7 h-7 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400">
+                          <TrendingUp className="w-4 h-4" />
                         </div>
                         <div className="text-left">
                           <div className="font-extrabold text-white text-xs sm:text-sm flex items-center gap-1.5">
-                            <span>Instant VIP Guest Pass</span>
-                            <span className="text-[10px] bg-amber-400 text-black px-1.5 py-0.2 rounded font-black uppercase">
+                            <span>Instant Simulator Access</span>
+                            <span className="text-[10px] bg-blue-600 text-white px-1.5 py-0.2 rounded font-black uppercase">
                               ₹10L
                             </span>
                           </div>
-                          <div className="text-[10px] text-amber-300/80 font-normal">
+                          <div className="text-[10px] text-slate-400 font-normal">
                             1-Click Instant Demo • Select Persona Next
                           </div>
                         </div>
                       </div>
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition text-amber-300" />
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition text-blue-400" />
                     </button>
 
                     <div className="relative flex py-1 items-center">
@@ -739,8 +738,8 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
                           type="text"
                           value={name}
                           onChange={(e) => setName(e.target.value)}
-                          placeholder="e.g. Zaid Khan"
-                          className="w-full px-3.5 py-2.5 rounded-xl bg-[#121622] border border-[#212738] focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 text-white text-xs sm:text-sm placeholder:text-slate-600 transition"
+                          placeholder="e.g. Alex Morgan"
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-[#121622] border border-[#212738] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-white text-xs sm:text-sm placeholder:text-slate-600 transition"
                         />
                       </div>
                     )}
@@ -756,8 +755,8 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
                           required
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          placeholder="investor@tradex.elite"
-                          className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#121622] border border-[#212738] focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 text-white text-xs sm:text-sm placeholder:text-slate-600 transition"
+                          placeholder="trader@tradex.pro"
+                          className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#121622] border border-[#212738] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-white text-xs sm:text-sm placeholder:text-slate-600 transition"
                         />
                       </div>
                     </div>
@@ -768,7 +767,7 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
                           Password
                         </label>
                         {activeTab === "login" && (
-                          <span className="text-[11px] text-amber-400 hover:underline cursor-pointer">
+                          <span className="text-[11px] text-blue-400 hover:underline cursor-pointer">
                             Forgot Password?
                           </span>
                         )}
@@ -781,7 +780,7 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder="••••••••••••"
-                          className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-[#121622] border border-[#212738] focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 text-white text-xs sm:text-sm placeholder:text-slate-600 transition"
+                          className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-[#121622] border border-[#212738] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-white text-xs sm:text-sm placeholder:text-slate-600 transition"
                         />
                         <button
                           type="button"
@@ -805,7 +804,7 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             placeholder="••••••••••••"
-                            className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#121622] border border-[#212738] focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 text-white text-xs sm:text-sm placeholder:text-slate-600 transition"
+                            className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#121622] border border-[#212738] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-white text-xs sm:text-sm placeholder:text-slate-600 transition"
                           />
                         </div>
                       </div>
@@ -815,14 +814,14 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-black font-extrabold text-xs sm:text-sm flex items-center justify-center space-x-2 transition shadow-lg shadow-amber-500/20 active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+                      className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center space-x-2 transition shadow-lg shadow-blue-600/25 active:scale-[0.98] disabled:opacity-50 cursor-pointer"
                     >
                       <span>
                         {loading
                           ? "Authenticating..."
                           : activeTab === "login"
                           ? "Continue to Persona Selection →"
-                          : "Create VIP Account & Claim ₹10L →"}
+                          : "Create Account & Enter Terminal →"}
                       </span>
                     </button>
                   </form>
@@ -851,8 +850,8 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
           <div className="w-full max-w-[1240px] space-y-8 text-center animate-fade-in">
             {/* Header Question */}
             <div className="space-y-3 max-w-2xl mx-auto">
-              <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-400/30 text-amber-300 text-xs font-bold uppercase tracking-wider">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-bold uppercase tracking-wider">
+                <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
                 <span>Interactive AI Customization</span>
               </div>
               <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
@@ -873,16 +872,16 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
                     onClick={() => !isConfiguring && handleSelectPersona(opt.id)}
                     className={`group relative rounded-2xl p-[1.5px] transition-all duration-300 cursor-pointer ${
                       isSelected
-                        ? "bg-gradient-to-b from-amber-400 via-amber-500 to-yellow-600 scale-[1.02] shadow-[0_0_35px_rgba(245,158,11,0.3)]"
+                        ? "bg-gradient-to-b from-blue-500 via-indigo-500 to-cyan-400 scale-[1.02] shadow-[0_0_35px_rgba(59,130,246,0.3)]"
                         : opt.isPopular
-                        ? "bg-gradient-to-b from-amber-500/40 via-amber-500/10 to-[#1c2233] hover:from-amber-400/60 hover:to-amber-500/40 hover:scale-[1.01]"
-                        : "bg-gradient-to-b from-white/10 via-white/5 to-[#1c2233] hover:from-amber-400/50 hover:to-amber-600/30 hover:scale-[1.01]"
+                        ? "bg-gradient-to-b from-blue-500/40 via-indigo-500/10 to-[#1c2233] hover:from-blue-400/60 hover:to-indigo-500/40 hover:scale-[1.01]"
+                        : "bg-gradient-to-b from-white/10 via-white/5 to-[#1c2233] hover:from-blue-500/40 hover:to-indigo-500/30 hover:scale-[1.01]"
                     }`}
                   >
                     {/* Max Power Most Popular Tag */}
                     {opt.isPopular && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-black text-[10px] font-black uppercase tracking-widest shadow-lg shadow-amber-500/40 flex items-center gap-1 whitespace-nowrap">
-                        <Crown className="w-3 h-3 text-black" />
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 px-3 py-0.5 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/40 flex items-center gap-1 whitespace-nowrap">
+                        <Sparkles className="w-3 h-3 text-cyan-300" />
                         <span>MAX POWER • 100% UNLOCKED</span>
                       </div>
                     )}
@@ -896,15 +895,15 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
                           </div>
                           <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border uppercase font-mono ${
                             opt.isPopular
-                              ? "bg-amber-400/20 text-amber-300 border-amber-400/50"
-                              : "bg-white/5 text-amber-300 border-amber-400/25"
+                              ? "bg-blue-500/20 text-blue-300 border-blue-500/50"
+                              : "bg-white/5 text-slate-300 border-white/10"
                           }`}>
                             {opt.badge}
                           </span>
                         </div>
 
                         <div>
-                          <h3 className="text-base font-extrabold text-white group-hover:text-amber-300 transition-colors">
+                          <h3 className="text-base font-extrabold text-white group-hover:text-blue-300 transition-colors">
                             {opt.title}
                           </h3>
                           <span className="text-[11px] font-semibold text-slate-400 block mt-0.5">
@@ -919,8 +918,8 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
 
                       {/* Progressive Tier Checklist (ChatGPT Hierarchy Model) */}
                       <div className="space-y-2.5 pt-3 border-t border-white/5">
-                        <div className="px-2.5 py-1 rounded-lg bg-amber-400/10 border border-amber-400/25 text-[10px] font-bold text-amber-300 flex items-center gap-1.5 uppercase tracking-wide">
-                          <Sparkles className="w-3 h-3 text-amber-400 shrink-0" />
+                        <div className="px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/25 text-[10px] font-bold text-blue-300 flex items-center gap-1.5 uppercase tracking-wide">
+                          <Sparkles className="w-3 h-3 text-blue-400 shrink-0" />
                           <span className="truncate">{opt.includesPrior}</span>
                         </div>
 
@@ -940,14 +939,14 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
                           type="button"
                           className={`w-full py-2.5 px-3 rounded-xl font-black text-xs flex items-center justify-center space-x-1.5 transition ${
                             isSelected
-                              ? "bg-amber-400 text-black shadow-lg shadow-amber-500/30"
-                              : "bg-white/5 hover:bg-amber-400 hover:text-black text-slate-300 border border-white/10"
+                              ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
+                              : "bg-white/5 hover:bg-blue-600 hover:text-white text-slate-300 border border-white/10"
                           }`}
                         >
                           {isSelected ? (
                             <>
                               <CheckCircle2 className="w-3.5 h-3.5" />
-                              <span>Persona Selected</span>
+                              <span>Profile Active</span>
                             </>
                           ) : (
                             <>
@@ -965,16 +964,16 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
 
             {/* High-Tech Progress Simulator when Persona is chosen */}
             {isConfiguring && (
-              <div className="max-w-md mx-auto p-4 rounded-xl bg-[#0B0E17]/90 border border-amber-400/40 backdrop-blur-xl shadow-2xl space-y-3">
+              <div className="max-w-md mx-auto p-4 rounded-xl bg-[#0B0E17]/90 border border-blue-500/40 backdrop-blur-xl shadow-2xl space-y-3">
                 <div className="flex items-center justify-between text-xs font-mono">
-                  <span className="text-amber-300 font-bold flex items-center gap-1.5">
-                    <Cpu className="w-4 h-4 text-amber-400 animate-spin" />
+                  <span className="text-blue-300 font-bold flex items-center gap-1.5">
+                    <Cpu className="w-4 h-4 text-blue-400 animate-spin" />
                     <span>{configStep}</span>
                   </span>
                   <span className="text-emerald-400 font-extrabold animate-pulse">ACTIVE</span>
                 </div>
                 <div className="w-full h-1.5 bg-[#1A2233] rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-amber-400 via-yellow-400 to-emerald-400 animate-[pulse_1s_infinite] w-full" />
+                  <div className="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-400 animate-[pulse_1s_infinite] w-full" />
                 </div>
               </div>
             )}
@@ -998,9 +997,9 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
       <footer className="relative z-10 border-t border-[#1A1F2E] bg-[#07090F] py-4 px-4 text-center text-xs text-slate-500">
         <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center space-x-2">
-            <Crown className="w-3.5 h-3.5 text-amber-400" />
+            <TrendingUp className="w-3.5 h-3.5 text-blue-400" />
             <span className="font-semibold text-slate-400">
-              TradeX Pro ELITE™ © 2026. Institutional Quantitative Wealth Management.
+              TradeX Pro™ © 2026. Institutional Quantitative Terminal & Precision Trading.
             </span>
           </div>
           <div className="flex items-center space-x-4 text-[11px]">

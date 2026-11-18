@@ -7,7 +7,7 @@ import {
   Zap,
   ShieldCheck,
   Sparkles,
-  Crown,
+  TrendingUp,
   CreditCard,
   Building,
   CheckCircle2,
@@ -108,7 +108,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#2A2E39] bg-[#181C27]">
           <div className="flex items-center space-x-2.5">
             <div className="w-8 h-8 rounded-lg bg-[#2962FF] flex items-center justify-center text-white font-bold">
-              <Crown className="w-4 h-4" />
+              <TrendingUp className="w-4 h-4" />
             </div>
             <div>
               <h2 className="text-base font-bold text-white">Subscription &amp; Plans</h2>

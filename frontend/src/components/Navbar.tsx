@@ -17,7 +17,6 @@ import {
   ChevronDown,
   CheckCircle2,
   Settings,
-  Crown,
   CreditCard,
   User,
   Sliders,
@@ -92,7 +91,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 bg-[#090C13]/90 backdrop-blur-xl border-b border-amber-500/15 select-none shadow-[0_4px_25px_rgba(0,0,0,0.6)]">
+    <header className="sticky top-0 z-50 bg-[#090C13]/90 backdrop-blur-xl border-b border-slate-800 select-none shadow-[0_4px_25px_rgba(0,0,0,0.6)]">
       <div className="max-w-[1720px] mx-auto px-3 sm:px-5">
         <div className="flex justify-between items-center h-13 py-2">
           {/* Left: Brand & Main Navigation */}
@@ -102,17 +101,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="flex items-center space-x-2.5 cursor-pointer group"
               onClick={() => setActiveTab("overview")}
             >
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 p-[1.5px] shadow-[0_0_15px_rgba(245,158,11,0.25)] flex items-center justify-center transition-transform group-hover:scale-105">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 via-indigo-600 to-cyan-500 p-[1.5px] shadow-[0_0_15px_rgba(59,130,246,0.25)] flex items-center justify-center transition-transform group-hover:scale-105">
                 <div className="w-full h-full bg-[#0B0E17] rounded-[7px] flex items-center justify-center">
-                  <Crown className="w-4 h-4 text-amber-400" />
+                  <TrendingUp className="w-4 h-4 text-cyan-400" />
                 </div>
               </div>
               <div className="flex items-center gap-1.5 font-mono">
                 <span className="text-base font-black tracking-tight text-white">
-                  TradeX <span className="bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 bg-clip-text text-transparent">ELITE</span>
+                  TradeX <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-cyan-400 bg-clip-text text-transparent">PRO</span>
                 </span>
-                <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/30">
-                  PRO
+                <span className="text-[10px] font-black uppercase tracking-wider text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded border border-blue-500/30">
+                  INSTITUTIONAL
                 </span>
               </div>
             </div>
@@ -157,7 +156,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     : "hover:text-[#D1D4DC] hover:bg-[#1E222D]/60"
                 }`}
               >
-                <Wallet className="w-3.5 h-3.5 text-amber-400" />
+                <Wallet className="w-3.5 h-3.5 text-blue-400" />
                 <span>Paper Trading</span>
               </button>
               <button
@@ -223,7 +222,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     : "hover:text-[#D1D4DC] hover:bg-[#1E222D]/60"
                 }`}
               >
-                <Cpu className="w-3.5 h-3.5 text-amber-400" />
+                <Cpu className="w-3.5 h-3.5 text-indigo-400" />
                 <span>Algo Studio</span>
               </button>
             </nav>
@@ -260,15 +259,15 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 onClick={onOpenAlerts}
                 title="Live AI Trade Alerts & Scanner"
-                className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-bold text-amber-300 transition cursor-pointer relative"
+                className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-xs font-bold text-blue-400 transition cursor-pointer relative"
               >
                 <div className="relative">
-                  <Bell className="w-3.5 h-3.5 text-amber-400" />
+                  <Bell className="w-3.5 h-3.5 text-blue-400" />
                   <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-rose-500 animate-ping" />
                   <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-rose-500" />
                 </div>
                 <span className="hidden sm:inline">Alerts</span>
-                <span className="text-[10px] bg-amber-400 text-black px-1.5 py-0.2 rounded-full font-black">
+                <span className="text-[10px] bg-blue-600 text-white px-1.5 py-0.2 rounded-full font-black">
                   4
                 </span>
               </button>
@@ -291,9 +290,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 onClick={onOpenLeaderboard}
                 title="VIP Trader Leaderboard & Discipline Scorecard"
-                className="hidden xl:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-[#0F1422] hover:bg-[#181F33] border border-amber-500/30 text-xs font-bold text-amber-300 transition cursor-pointer"
+                className="hidden xl:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-[#0F1422] hover:bg-[#181F33] border border-slate-800 text-xs font-bold text-slate-300 transition cursor-pointer"
               >
-                <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                <Trophy className="w-3.5 h-3.5 text-blue-400" />
                 <span>Rank #4</span>
               </button>
             )}
@@ -322,7 +321,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               title="Pricing & Subscription Plans"
               className="flex items-center space-x-1.5 px-2.5 py-1 rounded bg-[#2962FF]/10 hover:bg-[#2962FF]/20 border border-[#2962FF]/40 text-xs font-semibold text-[#2962FF] hover:text-[#5282FF] transition cursor-pointer"
             >
-              <Crown className="w-3.5 h-3.5" />
+              <Sparkles className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Pricing &amp; Plans</span>
               <span className="text-[10px] bg-[#2962FF] text-white px-1 py-0.2 rounded font-bold uppercase tracking-wider">
                 Pro
@@ -357,12 +356,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div className="relative" ref={menuRef}>
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="flex items-center space-x-2 text-xs text-slate-100 bg-[#0F1420] hover:bg-[#161D2E] px-2.5 py-1 rounded-lg border border-amber-500/25 transition cursor-pointer shadow-sm"
+                    className="flex items-center space-x-2 text-xs text-slate-100 bg-[#0F1420] hover:bg-[#161D2E] px-2.5 py-1 rounded-lg border border-slate-800 transition cursor-pointer shadow-sm"
                   >
-                    <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 text-black flex items-center justify-center font-black text-[10px]">
-                      👑
+                    <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-[10px]">
+                      P
                     </div>
-                    <span className="truncate max-w-[100px] sm:max-w-[140px] font-bold text-amber-300">
+                    <span className="truncate max-w-[100px] sm:max-w-[140px] font-bold text-slate-200">
                       {user.email}
                     </span>
                     <ChevronDown className="w-3 h-3 text-slate-400" />
@@ -370,15 +369,15 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                   {/* Dropdown Menu */}
                   {isUserMenuOpen && (
-                    <div className="absolute right-0 mt-1.5 w-64 bg-[#0E121C] border border-amber-500/20 rounded-xl shadow-2xl py-1.5 z-50 text-xs backdrop-blur-xl">
+                    <div className="absolute right-0 mt-1.5 w-64 bg-[#0E121C] border border-slate-800 rounded-xl shadow-2xl py-1.5 z-50 text-xs backdrop-blur-xl">
                       <div className="px-3 py-2 border-b border-[#202738] bg-[#07090F]/70">
                         <div className="font-bold text-white truncate flex items-center gap-1.5">
-                          <Crown className="w-3.5 h-3.5 text-amber-400" />
+                          <TrendingUp className="w-3.5 h-3.5 text-blue-400" />
                           <span>{user.email}</span>
                         </div>
                         <div className="flex items-center gap-1.5 mt-1">
-                          <span className="text-[10px] bg-amber-400/15 text-amber-300 px-1.5 py-0.5 rounded font-black border border-amber-400/30">
-                            VIP ELITE TRADER
+                          <span className="text-[10px] bg-blue-500/15 text-blue-300 px-1.5 py-0.5 rounded font-bold border border-blue-500/30">
+                            PRO TERMINAL ACCESS
                           </span>
                           <span className="text-[10px] text-slate-400">ID: MP-98421</span>
                         </div>
@@ -392,7 +391,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         }}
                         className="w-full text-left px-3 py-2 text-[#D1D4DC] hover:text-white hover:bg-[#2A2E39] flex items-center gap-2 transition"
                       >
-                        <Crown className="w-4 h-4 text-amber-400" />
+                        <Sparkles className="w-4 h-4 text-blue-400" />
                         <div>
                           <div className="font-medium">Subscription &amp; Plans</div>
                           <div className="text-[10px] text-[#787B86]">Manage billing &amp; tier upgrades</div>

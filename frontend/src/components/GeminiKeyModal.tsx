@@ -96,7 +96,7 @@ export const GeminiKeyModal: React.FC<GeminiKeyModalProps> = ({
         <div className="p-4 bg-gradient-to-r from-[#171B26] via-[#1E222D] to-[#1E222D] border-b border-[#2A2E39] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#2962FF] to-[#7B1FA2] flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <Sparkles className="w-4 h-4 text-amber-300" />
+              <Sparkles className="w-4 h-4 text-cyan-300" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
@@ -144,7 +144,7 @@ export const GeminiKeyModal: React.FC<GeminiKeyModalProps> = ({
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-[#D1D4DC] flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <Key className="w-3.5 h-3.5 text-amber-400" />
+                <Key className="w-3.5 h-3.5 text-blue-400" />
                 <span>Google Gemini API Key</span>
               </span>
               <a
@@ -223,7 +223,7 @@ export const GeminiKeyModal: React.FC<GeminiKeyModalProps> = ({
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  <Sparkles className="w-3.5 h-3.5 text-cyan-300" />
                   <span>Save &amp; Activate AI</span>
                 </>
               )}

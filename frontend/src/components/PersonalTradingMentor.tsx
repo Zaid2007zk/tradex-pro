@@ -25,7 +25,6 @@ import {
   Radio,
   PlayCircle,
   PauseCircle,
-  Crown,
 } from "lucide-react";
 import { soundEngine } from "@/utils/soundEngine";
 import {
@@ -461,7 +460,7 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
                 step: 1,
                 title: "1. Market Direction",
                 desc: isBullish ? "UP Breakout" : "Consolidation",
-                color: isBullish ? "text-emerald-400 border-emerald-500/40" : "text-amber-400 border-amber-500/40",
+                color: isBullish ? "text-emerald-400 border-emerald-500/40" : "text-blue-400 border-blue-500/40",
               },
               {
                 step: 2,
@@ -553,7 +552,7 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
                   className="px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition shadow"
                   title="Execute Delivery trade with verified Stop-Loss"
                 >
-                  <Zap className="w-3.5 h-3.5 text-amber-300" />
+                  <Zap className="w-3.5 h-3.5 text-white" />
                   <span>⚡ Execute Delivery (CNC)</span>
                 </button>
                 <button
@@ -561,7 +560,7 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
                   className="px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 transition shadow"
                   title="Execute Intraday trade with 5x leverage"
                 >
-                  <Zap className="w-3.5 h-3.5 text-amber-300" />
+                  <Zap className="w-3.5 h-3.5 text-white" />
                   <span>⚡ Execute Intraday (5x MIS)</span>
                 </button>
               </div>
@@ -569,10 +568,10 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
           </div>
 
           {/* Autonomous AI Auto-Pilot Bot Controller */}
-          <div className="p-3 rounded-xl bg-[#121624] border border-amber-500/25 space-y-2.5 shadow-md">
+          <div className="p-3 rounded-xl bg-[#121624] border border-slate-800 space-y-2.5 shadow-md">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center space-x-2.5">
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-black font-black text-xs shadow-sm">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black text-xs shadow-sm">
                   🤖
                 </div>
                 <div>
@@ -604,9 +603,9 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
                     runAutoPilotScan();
                   }}
                   title="Force an instant algorithmic market scan and execute actionable setup"
-                  className="px-2.5 py-1.5 rounded-lg bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 border border-amber-400/40 text-[10px] font-black flex items-center gap-1 transition shadow cursor-pointer active:scale-95"
+                  className="px-2.5 py-1.5 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/40 text-[10px] font-black flex items-center gap-1 transition shadow cursor-pointer active:scale-95"
                 >
-                  <Zap className="w-3 h-3 text-amber-400" />
+                  <Zap className="w-3 h-3 text-cyan-400" />
                   <span>⚡ Scan Now</span>
                 </button>
 
@@ -622,7 +621,7 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
                       }}
                       className={`px-2 py-0.5 rounded transition ${
                         autoPilotRisk === r
-                          ? "bg-amber-400 text-black shadow"
+                          ? "bg-blue-600 text-white shadow"
                           : "text-slate-400 hover:text-white"
                       }`}
                     >
@@ -650,7 +649,7 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
                   className={`px-3 py-1.5 rounded-lg font-extrabold text-xs flex items-center gap-1.5 transition shadow cursor-pointer ${
                     isAutoPilotActive
                       ? "bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30"
-                      : "bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black shadow-amber-500/20"
+                      : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-blue-500/20"
                   }`}
                 >
                   {isAutoPilotActive ? (
@@ -675,7 +674,7 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
                   <Radio className={`w-3 h-3 ${isAutoPilotActive ? "text-emerald-400 animate-pulse" : "text-slate-600"}`} />
                   <span>Live Bot Activity Feed</span>
                 </span>
-                <span className="text-amber-300 font-bold">Auto-Trades Executed: {botTradeCount}</span>
+                <span className="text-cyan-400 font-bold">Auto-Trades Executed: {botTradeCount}</span>
               </div>
               {botLogs.map((log, lIdx) => (
                 <div key={lIdx} className="text-slate-300 truncate">
@@ -701,7 +700,7 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
               className={`px-3 py-2 rounded-lg font-bold text-xs flex items-center gap-1.5 transition cursor-pointer ${
                 isListening
                   ? "bg-rose-500 text-white animate-pulse shadow-lg shadow-rose-500/30"
-                  : "bg-amber-400/15 text-amber-300 border border-amber-400/30 hover:bg-amber-400/25"
+                  : "bg-blue-600/15 text-blue-300 border border-blue-500/30 hover:bg-blue-600/25"
               }`}
             >
               {isListening ? (
@@ -711,8 +710,8 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
                 </>
               ) : (
                 <>
-                  <Mic className="w-4 h-4 text-amber-400" />
-                  <span className="hidden sm:inline">Speak</span>
+                  <Mic className="w-4 h-4 text-cyan-400" />
+                  <span className="hidden sm:inline">Voice Input</span>
                 </>
               )}
             </button>
@@ -722,12 +721,12 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
               value={customQuestion}
               onChange={(e) => setCustomQuestion(e.target.value)}
               placeholder="Consult Aria AI: Ask 'Target projection', 'Calculate Stop-Loss', 'Breakout thesis'..."
-              className="flex-1 px-3.5 py-2 text-xs bg-[#131722] border border-[#2A2E39] focus:border-amber-400 text-white placeholder-[#787B86] rounded-lg outline-none transition"
+              className="flex-1 px-3.5 py-2 text-xs bg-[#131722] border border-[#2A2E39] focus:border-blue-500 text-white placeholder-[#787B86] rounded-lg outline-none transition"
             />
             <button
               type="submit"
               disabled={!customQuestion.trim() || isLoadingAnswer}
-              className="px-4 py-2 bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-black font-extrabold text-xs rounded-lg transition disabled:opacity-50 flex items-center gap-1 cursor-pointer shadow-md shadow-amber-500/20"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-lg transition disabled:opacity-50 flex items-center gap-1 cursor-pointer shadow-md shadow-blue-600/20"
             >
               <MessageSquare className="w-3.5 h-3.5" />
               <span>Query AI</span>

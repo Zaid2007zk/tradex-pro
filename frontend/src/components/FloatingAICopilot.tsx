@@ -189,7 +189,7 @@ export const FloatingAICopilot: React.FC<FloatingAICopilotProps> = ({
           title="Open TradeX AI Copilot"
         >
           <div className="relative">
-            <Sparkles className="w-5 h-5 text-amber-300 animate-spin" style={{ animationDuration: "6s" }} />
+            <Sparkles className="w-5 h-5 text-cyan-300 animate-spin" style={{ animationDuration: "6s" }} />
             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping" />
             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full" />
           </div>
@@ -239,7 +239,7 @@ export const FloatingAICopilot: React.FC<FloatingAICopilotProps> = ({
                 }`}
                 title="Google Gemini Generative AI Configuration"
               >
-                <Sparkles className="w-3 h-3 text-amber-300" />
+                <Sparkles className="w-3 h-3 text-cyan-300" />
                 <span>{hasGeminiKey ? "Gemini LLM" : "Connect AI Key"}</span>
               </button>
 

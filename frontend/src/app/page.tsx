@@ -53,7 +53,6 @@ import {
   Bot,
   Zap,
   Sparkles,
-  Crown,
   CheckCircle2,
   Sliders,
 } from "lucide-react";
@@ -606,10 +605,10 @@ export default function HomePage() {
     );
 
   return (
-    <div className="min-h-screen bg-[#07090E] text-slate-100 flex flex-col font-sans selection:bg-amber-500/30 selection:text-amber-200 relative overflow-x-hidden">
-      {/* Luxury ambient light auras */}
-      <div className="absolute top-0 left-1/4 w-[600px] h-[300px] bg-amber-500/5 blur-[140px] pointer-events-none rounded-full" />
-      <div className="absolute top-1/4 right-1/4 w-[600px] h-[300px] bg-blue-500/5 blur-[140px] pointer-events-none rounded-full" />
+    <div className="min-h-screen bg-[#07090E] text-slate-100 flex flex-col font-sans selection:bg-blue-600/30 selection:text-blue-200 relative overflow-x-hidden">
+      {/* Sleek ambient light auras */}
+      <div className="absolute top-0 left-1/4 w-[600px] h-[300px] bg-blue-600/5 blur-[140px] pointer-events-none rounded-full" />
+      <div className="absolute top-1/4 right-1/4 w-[600px] h-[300px] bg-cyan-500/5 blur-[140px] pointer-events-none rounded-full" />
 
       {/* Mandatory Antigravity-Style Interactive Luxury Entrance Portal */}
       {(isPortalOpen || !user || isAuthOpen) && (
@@ -662,11 +661,11 @@ export default function HomePage() {
             return (
               <div
                 key={idx.symbol || idx.name}
-                className="bg-[#0D111A]/90 backdrop-blur-md border border-amber-500/15 hover:border-amber-500/40 p-3.5 rounded-xl transition-all shadow-md group"
+                className="bg-[#0D111A]/90 backdrop-blur-md border border-slate-800 hover:border-blue-500/40 p-3.5 rounded-xl transition-all shadow-md group"
               >
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors">
+                    <span className="text-xs font-bold text-white group-hover:text-blue-400 transition-colors">
                       {idx.name}
                     </span>
                     <span className="text-[10px] font-semibold text-slate-400 bg-[#07090F] px-1.5 py-0.2 rounded border border-white/5">
@@ -698,7 +697,7 @@ export default function HomePage() {
         </div>
 
         {/* Top Control Bar: Search & Quick Pick */}
-        <div className="bg-[#0D111A]/90 backdrop-blur-md border border-amber-500/15 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 shadow-md">
+        <div className="bg-[#0D111A]/90 backdrop-blur-md border border-slate-800 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 shadow-md">
           <div className="flex-1 min-w-[260px] max-w-md">
             <StockSearch
               onSelectSymbol={(sym) => setSelectedSymbol(sym)}
@@ -773,9 +772,9 @@ export default function HomePage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
               {/* Left Main Section: Chart, Indicators, Matrix (8 Cols) */}
               <div className="lg:col-span-8 space-y-4">
-                {/* Active Ticker Hero Command Header Card (Ultra-Luxury Glassmorphic) */}
-                <div className="bg-[#0D111A]/95 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-5 space-y-4 shadow-[0_4px_30px_rgba(0,0,0,0.5)] relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-64 h-32 bg-amber-500/5 blur-3xl pointer-events-none rounded-full" />
+                {/* Active Ticker Hero Command Header Card (Ultra-Sleek Glassmorphic) */}
+                <div className="bg-[#0D111A]/95 backdrop-blur-xl border border-slate-800 rounded-2xl p-5 space-y-4 shadow-[0_4px_30px_rgba(0,0,0,0.5)] relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-32 bg-blue-600/5 blur-3xl pointer-events-none rounded-full" />
                   <div className="flex flex-wrap items-start justify-between gap-3 relative z-10">
                     <div>
                       <div className="flex items-center space-x-2.5">
@@ -884,7 +883,7 @@ export default function HomePage() {
                           • <strong className="text-[#089981]">Delivery (CNC):</strong> <span className="text-[#089981]">SAFE / LOW RISK</span> (Hold shares, no margin call).
                         </div>
                         <div className="text-[11px] text-[#787B86]">
-                          • <strong className="text-amber-400">Intraday (MIS):</strong> <span className="text-amber-400">HIGH RISK (5x)</span> (Auto exit 3:20 PM + strictly SL).
+                          • <strong className="text-orange-400">Intraday (MIS):</strong> <span className="text-orange-400">HIGH RISK (5x)</span> (Auto exit 3:20 PM + strictly SL).
                         </div>
                       </div>
 
@@ -924,7 +923,7 @@ export default function HomePage() {
                           }}
                           className="px-3 py-1.5 rounded bg-[#089981] hover:bg-[#07806c] text-white font-bold text-xs flex items-center gap-1.5 transition shadow cursor-pointer"
                         >
-                          <Zap className="w-3.5 h-3.5 text-amber-300" />
+                          <Zap className="w-3.5 h-3.5 text-white" />
                           <span>⚡ 1-Click AI Buy Delivery (CNC - Safe)</span>
                         </button>
                         <button
@@ -942,7 +941,7 @@ export default function HomePage() {
                           }}
                           className="px-3 py-1.5 rounded bg-[#2962FF] hover:bg-[#1e4bd8] text-white font-bold text-xs flex items-center gap-1.5 transition shadow cursor-pointer"
                         >
-                          <Zap className="w-3.5 h-3.5 text-amber-300" />
+                          <Zap className="w-3.5 h-3.5 text-white" />
                           <span>⚡ 1-Click AI Buy Intraday (MIS - 5x)</span>
                         </button>
                       </div>
@@ -1427,11 +1426,11 @@ export default function HomePage() {
           {/* Statutory SEBI Regulatory Notice */}
           <div className="pt-3 border-t border-slate-900 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400">
             <p className="max-w-4xl">
-              <strong className="text-amber-400/90">SEBI Regulatory Notice:</strong> TradeX Pro is an independent analytical, algorithmic backtesting, and quantitative research software. It is NOT a SEBI-registered investment adviser or research analyst. Securities trading entails substantial risk of capital loss.
+              <strong className="text-blue-400">SEBI Regulatory Notice:</strong> TradeX Pro is an independent analytical, algorithmic backtesting, and quantitative research software. It is NOT a SEBI-registered investment adviser or research analyst. Securities trading entails substantial risk of capital loss.
             </p>
             <button
               onClick={() => setIsSebiModalOpen(true)}
-              className="text-amber-400 hover:text-amber-300 underline font-medium cursor-pointer"
+              className="text-blue-400 hover:text-blue-300 underline font-medium cursor-pointer"
             >
               Read SEBI Risk Disclosure
             </button>
