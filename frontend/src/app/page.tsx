@@ -182,6 +182,7 @@ export default function HomePage() {
   const [availableMargin, setAvailableMargin] = useState<number>(1000000.0);
   const [positions, setPositions] = useState<ActivePosition[]>([]);
   const [orders, setOrders] = useState<ExecutedOrder[]>([]);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Load user & trading state on mount with safe sanitization
   useEffect(() => {
@@ -493,6 +494,8 @@ export default function HomePage() {
 
     const newMargin = Math.max(0, availableMargin - orderData.marginRequired);
     setAvailableMargin(newMargin);
+    setToastMessage(`⚡ Order Executed: ${orderData.side} ${orderData.quantity}x ${orderData.symbol} (${orderData.product}) filled at ${currentStock.currency === "INR" ? "₹" : "$"}${orderData.price.toFixed(2)}`);
+    setTimeout(() => setToastMessage(null), 3800);
 
     const existingIdx = positions.findIndex(
       (p) => p.symbol === orderData.symbol && p.product === orderData.product
@@ -649,6 +652,22 @@ export default function HomePage() {
 
       {/* Live Exchange Schedule & Holiday Bar */}
       <ExchangeScheduleBar />
+
+      {/* Floating Order Execution Confirmation Toast */}
+      {toastMessage && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[200] max-w-lg w-[90%] p-3.5 rounded-xl bg-[#0B0E17]/95 border border-emerald-500/50 backdrop-blur-xl shadow-2xl flex items-center justify-between gap-3 animate-fadeIn">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+            <span className="text-xs font-bold text-emerald-300 font-mono">{toastMessage}</span>
+          </div>
+          <button
+            onClick={() => setToastMessage(null)}
+            className="text-slate-400 hover:text-white text-xs px-2 py-0.5 cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Main Container - TradingView / Webull Clean Pro Terminal Layout */}
       <main className="flex-1 max-w-[1720px] w-full mx-auto p-3 sm:p-5 space-y-4">

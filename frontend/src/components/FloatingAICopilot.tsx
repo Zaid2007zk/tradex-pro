@@ -20,9 +20,12 @@ import {
   Key,
 } from "lucide-react";
 import {
+  queryAI,
   queryGemini,
-  generateNeuralSynthesis,
+  generateNaturalConversationalSynthesis,
+  hasActiveGroqKey,
   hasActiveGeminiKey,
+  getActiveAIProvider,
   MarketContext,
 } from "@/services/geminiAiService";
 import { GeminiKeyModal } from "@/components/GeminiKeyModal";
@@ -133,40 +136,32 @@ export const FloatingAICopilot: React.FC<FloatingAICopilotProps> = ({
       volatility,
     };
 
-    // If Google Gemini key is present, use Live Generative AI
-    if (hasActiveGeminiKey()) {
-      try {
-        const geminiReply = await queryGemini(
-          query,
-          context,
-          messages.map((m) => ({ sender: m.sender, text: m.text }))
-        );
-        const aiMsg: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          sender: "ai",
-          text: geminiReply,
-          timestamp: "Just now",
-        };
-        setMessages((prev) => [...prev, aiMsg]);
-        setIsTyping(false);
-        return;
-      } catch (err: any) {
-        console.warn("Gemini call error, falling back to Neural Engine:", err);
-      }
-    }
-
-    // Dynamic Multi-Factor Neural Synthesis Fallback
-    setTimeout(() => {
-      const replyText = generateNeuralSynthesis(query, context);
+    try {
+      const reply = await queryAI(
+        query,
+        context,
+        messages.map((m) => ({ sender: m.sender, text: m.text }))
+      );
       const aiMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         sender: "ai",
-        text: replyText,
+        text: reply,
         timestamp: "Just now",
       };
       setMessages((prev) => [...prev, aiMsg]);
       setIsTyping(false);
-    }, 400);
+    } catch (err: any) {
+      console.warn("AI query fallback to natural synthesizer:", err);
+      const fallbackText = generateNaturalConversationalSynthesis(query, context);
+      const aiMsg: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        sender: "ai",
+        text: fallbackText,
+        timestamp: "Just now",
+      };
+      setMessages((prev) => [...prev, aiMsg]);
+      setIsTyping(false);
+    }
   };
 
   const quickPills = [
@@ -229,18 +224,24 @@ export const FloatingAICopilot: React.FC<FloatingAICopilotProps> = ({
             </div>
 
             <div className="flex items-center space-x-1.5">
-              {/* Connect Gemini Key Button */}
+              {/* Universal AI Engine Settings Button */}
               <button
                 onClick={() => setIsKeyModalOpen(true)}
-                className={`px-2 py-1 rounded text-[10px] font-extrabold uppercase flex items-center gap-1 border transition ${
-                  hasGeminiKey
+                className={`px-2 py-1 rounded text-[10px] font-extrabold uppercase flex items-center gap-1 border transition cursor-pointer ${
+                  hasActiveGroqKey() || hasActiveGeminiKey()
                     ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/25"
                     : "bg-blue-500/15 text-blue-400 border-blue-500/30 hover:bg-blue-500/25"
                 }`}
-                title="Google Gemini Generative AI Configuration"
+                title="Universal AI Engine Configuration (Groq / Gemini / Autonomous)"
               >
-                <Sparkles className="w-3 h-3 text-cyan-300" />
-                <span>{hasGeminiKey ? "Gemini LLM" : "Connect AI Key"}</span>
+                <Zap className="w-3 h-3 text-cyan-300" />
+                <span>
+                  {getActiveAIProvider() === "groq" && hasActiveGroqKey()
+                    ? "Groq 70B"
+                    : getActiveAIProvider() === "gemini" && hasActiveGeminiKey()
+                    ? "Gemini AI"
+                    : "AI Engine"}
+                </span>
               </button>
 
               <button

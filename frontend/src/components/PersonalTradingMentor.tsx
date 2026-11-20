@@ -28,9 +28,12 @@ import {
 } from "lucide-react";
 import { soundEngine } from "@/utils/soundEngine";
 import {
+  queryAI,
   queryGemini,
-  generateNeuralSynthesis,
+  generateNaturalConversationalSynthesis,
+  hasActiveGroqKey,
   hasActiveGeminiKey,
+  getActiveAIProvider,
   MarketContext,
 } from "@/services/geminiAiService";
 import { GeminiKeyModal } from "./GeminiKeyModal";
@@ -319,26 +322,21 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
       volatility,
     };
 
-    if (hasActiveGeminiKey()) {
-      try {
-        const answer = await queryGemini(q, marketCtx, [
-          { sender: "assistant", text: assistantMessage },
-          { sender: "user", text: q },
-        ]);
-        setAssistantMessage(answer);
-        setIsLoadingAnswer(false);
-        speakText(answer);
-        return;
-      } catch (err) {
-        console.error("Gemini Assistant error:", err);
-      }
+    try {
+      const answer = await queryAI(q, marketCtx, [
+        { sender: "assistant", text: assistantMessage },
+        { sender: "user", text: q },
+      ]);
+      setAssistantMessage(answer);
+      setIsLoadingAnswer(false);
+      speakText(answer);
+    } catch (err) {
+      console.error("AI Assistant query error:", err);
+      const fallback = generateNaturalConversationalSynthesis(q, marketCtx);
+      setAssistantMessage(fallback);
+      setIsLoadingAnswer(false);
+      speakText(fallback);
     }
-
-    // Dynamic Multi-Factor Assistant Answer
-    const answer = generateNeuralSynthesis(q, marketCtx);
-    setAssistantMessage(answer);
-    setIsLoadingAnswer(false);
-    speakText(answer);
   };
 
   // 1-Click Auto Execution from Assistant
@@ -431,14 +429,20 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
             )}
           </button>
 
-          {/* Gemini AI Key Setup */}
+          {/* Universal AI Engine Setup */}
           <button
             onClick={() => setIsKeyModalOpen(true)}
-            title="Configure Google Gemini 1.5 Flash Key"
-            className="px-2.5 py-1 rounded text-xs font-semibold bg-[#131722] hover:bg-[#2A2E39] border border-[#2A2E39] text-purple-300 hover:text-white transition flex items-center gap-1"
+            title="Configure Groq LLaMA 3.3, Google Gemini, or Autonomous AI Engine"
+            className="px-2.5 py-1 rounded text-xs font-semibold bg-[#131722] hover:bg-[#2A2E39] border border-[#2A2E39] text-cyan-300 hover:text-white transition flex items-center gap-1.5 cursor-pointer shadow-sm"
           >
-            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-            <span>{hasActiveGeminiKey() ? "Gemini Linked" : "AI Key"}</span>
+            <Zap className="w-3.5 h-3.5 text-cyan-400" />
+            <span>
+              {getActiveAIProvider() === "groq" && hasActiveGroqKey()
+                ? "Groq LLaMA 3.3"
+                : getActiveAIProvider() === "gemini" && hasActiveGeminiKey()
+                ? "Gemini AI"
+                : "TradeX AI Engine"}
+            </span>
           </button>
 
           {/* Collapse/Expand */}
@@ -526,22 +530,32 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
             <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
               <div className="flex flex-wrap items-center gap-1.5">
                 <button
-                  onClick={() => handleAskAssistant("Provide an institutional trade thesis and step-by-step risk management.")}
-                  className="px-2.5 py-1 text-[11px] rounded bg-[#181C27] hover:bg-[#2A2E39] border border-[#2A2E39] text-purple-300 hover:text-white transition"
+                  type="button"
+                  onClick={() => handleAskAssistant("Explain actionable trade setup with entry, target, and stop loss.")}
+                  className="px-2.5 py-1 text-[11px] font-semibold rounded bg-[#181C27] hover:bg-[#2A2E39] border border-[#2A2E39] text-purple-300 hover:text-white transition cursor-pointer active:scale-95"
                 >
                   💡 Tactical Setup
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleAskAssistant("What are the key upside breakout and downside breakdown support levels?")}
-                  className="px-2.5 py-1 text-[11px] rounded bg-[#181C27] hover:bg-[#2A2E39] border border-[#2A2E39] text-emerald-400 hover:text-white transition"
+                  className="px-2.5 py-1 text-[11px] font-semibold rounded bg-[#181C27] hover:bg-[#2A2E39] border border-[#2A2E39] text-emerald-400 hover:text-white transition cursor-pointer active:scale-95"
                 >
                   📈 Key Breakout &amp; Pivots
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleAskAssistant("Compare Delivery CNC vs Intraday 5x MIS risk profile and optimal choice.")}
-                  className="px-2.5 py-1 text-[11px] rounded bg-[#181C27] hover:bg-[#2A2E39] border border-[#2A2E39] text-blue-300 hover:text-white transition"
+                  className="px-2.5 py-1 text-[11px] font-semibold rounded bg-[#181C27] hover:bg-[#2A2E39] border border-[#2A2E39] text-blue-300 hover:text-white transition cursor-pointer active:scale-95"
                 >
                   🛡️ Delivery vs Intraday Risk
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAskAssistant("Aria, mujhe Hindi aur Hinglish mein pura trade setup samjhao aur batao best time konsa hai buy karne ka.")}
+                  className="px-2.5 py-1 text-[11px] font-semibold rounded bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-cyan-300 hover:text-white transition cursor-pointer active:scale-95 flex items-center gap-1"
+                >
+                  <span>🇮🇳 Hinglish Guidance</span>
                 </button>
               </div>
 
