@@ -98,8 +98,28 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const secondaryTools = [
     {
+      id: "algo",
+      label: "Algo Studio",
+      desc: "Automated Strategy Studio & Quant Bots",
+      icon: Cpu,
+      color: "text-indigo-400",
+    },
+    {
+      id: "backtest",
+      label: "Strategy Backtest",
+      desc: "Historical Momentum Backtester",
+      icon: LineChart,
+      color: "text-cyan-400",
+    },
+    {
+      id: "academy",
+      label: "TradeX Academy",
+      desc: "Interactive Curriculum & Quizzes",
+      icon: GraduationCap,
+      color: "text-purple-400",
+    },
+    {
       id: "compare",
-      type: "tab",
       label: "Stock Matrix",
       desc: "Multi-Factor Factor Radar & Correlation",
       icon: LineChart,
@@ -107,7 +127,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     },
     {
       id: "assistant",
-      type: "tab",
       label: "AI Copilot Chat",
       desc: "Institutional Research Chatbot",
       icon: Sparkles,
@@ -115,7 +134,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     },
     {
       id: "shariah",
-      type: "tab",
       label: "Shariah Screener",
       desc: "Islamic Finance AAOIFI Screening",
       icon: Scale,
@@ -123,7 +141,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     },
     {
       id: "watchlist",
-      type: "tab",
       label: "Watchlist Manager",
       desc: "Custom Sector & Portfolio Tracking",
       icon: Bookmark,
@@ -131,7 +148,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     },
     {
       id: "multichart",
-      type: "tab",
       label: "Multi-Chart Grid",
       desc: "4-Pane Simultaneous Timeframe Grid",
       icon: Grid,
@@ -141,11 +157,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-[#090C13]/95 backdrop-blur-xl border-b border-slate-800 select-none shadow-[0_4px_25px_rgba(0,0,0,0.6)]">
+      <header className="sticky top-0 z-50 bg-[#090C13] border-b border-slate-800 select-none shadow-[0_4px_25px_rgba(0,0,0,0.6)]">
         <div className="max-w-[1720px] mx-auto px-3 sm:px-5">
-          <div className="flex justify-between items-center h-14 py-2 gap-2">
-            {/* Left: Brand & Primary Navigation Tabs */}
-            <div className="flex items-center space-x-3 lg:space-x-5 min-w-0">
+          <div className="flex items-center justify-between h-14 py-2 gap-3 w-full">
+            {/* Left: Brand & Primary Core Tabs */}
+            <div className="flex items-center space-x-3 lg:space-x-4 shrink-0">
               {/* Brand Logo */}
               <div
                 className="flex items-center space-x-2.5 cursor-pointer group shrink-0"
@@ -166,22 +182,22 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
               </div>
 
-              {/* Primary Navigation Tabs (High-Priority Core Views - Fit without overflow) */}
-              <nav className="hidden md:flex items-center space-x-1 text-xs font-semibold">
+              {/* Primary Core Tabs (Compact - Zero Overlap Guaranteed) */}
+              <nav className="hidden xl:flex items-center space-x-1.5 text-xs font-semibold">
                 <button
                   onClick={() => setActiveTab("overview")}
-                  className={`px-2.5 py-1.5 rounded-lg transition-colors whitespace-nowrap ${
+                  className={`px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ${
                     activeTab === "overview"
                       ? "text-white bg-[#1E222D] font-bold border border-slate-700 shadow-sm"
                       : "text-slate-400 hover:text-white hover:bg-[#1E222D]/60"
                   }`}
                 >
-                  Chart &amp; Terminal
+                  Terminal
                 </button>
 
                 <button
                   onClick={() => setActiveTab("paper")}
-                  className={`px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap ${
+                  className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap ${
                     activeTab === "paper"
                       ? "text-white bg-[#1E222D] font-bold border border-slate-700 shadow-sm"
                       : "text-slate-400 hover:text-white hover:bg-[#1E222D]/60"
@@ -191,48 +207,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span>Paper Trading</span>
                 </button>
 
-                <button
-                  onClick={() => setActiveTab("algo")}
-                  className={`px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap ${
-                    activeTab === "algo"
-                      ? "text-white bg-[#1E222D] font-bold border border-slate-700 shadow-sm"
-                      : "text-slate-400 hover:text-white hover:bg-[#1E222D]/60"
-                  }`}
-                >
-                  <Cpu className="w-3.5 h-3.5 text-indigo-400" />
-                  <span>Algo Studio</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("backtest")}
-                  className={`hidden lg:flex px-2.5 py-1.5 rounded-lg transition-colors items-center gap-1.5 whitespace-nowrap ${
-                    activeTab === "backtest"
-                      ? "text-white bg-[#1E222D] font-bold border border-slate-700 shadow-sm"
-                      : "text-slate-400 hover:text-white hover:bg-[#1E222D]/60"
-                  }`}
-                >
-                  <span>Backtest</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab("academy")}
-                  className={`hidden xl:flex px-2.5 py-1.5 rounded-lg transition-colors items-center gap-1.5 whitespace-nowrap ${
-                    activeTab === "academy"
-                      ? "text-white bg-[#1E222D] font-bold border border-slate-700 shadow-sm"
-                      : "text-slate-400 hover:text-white hover:bg-[#1E222D]/60"
-                  }`}
-                >
-                  <GraduationCap className="w-3.5 h-3.5 text-purple-400" />
-                  <span>Academy</span>
-                </button>
-
                 {/* More Tools Dropdown Menu */}
                 <div className="relative" ref={moreToolsRef}>
                   <button
                     onClick={() => setIsMoreToolsOpen(!isMoreToolsOpen)}
-                    className={`px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1 text-xs whitespace-nowrap cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 text-xs whitespace-nowrap cursor-pointer ${
                       isMoreToolsOpen ||
-                      ["compare", "assistant", "shariah", "watchlist", "multichart"].includes(activeTab)
+                      ["algo", "backtest", "academy", "compare", "assistant", "shariah", "watchlist", "multichart"].includes(activeTab)
                         ? "text-cyan-300 bg-[#1E222D] font-bold border border-cyan-500/30"
                         : "text-slate-400 hover:text-white hover:bg-[#1E222D]/60"
                     }`}
@@ -242,7 +223,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </button>
 
                   {isMoreToolsOpen && (
-                    <div className="absolute left-0 mt-2 w-64 bg-[#0E121C] border border-slate-700/80 rounded-xl shadow-2xl py-2 z-[100] backdrop-blur-2xl ring-1 ring-sky-500/20">
+                    <div
+                      style={{ backgroundColor: "#0A0D15", opacity: 1 }}
+                      className="absolute left-0 mt-2 w-64 border-2 border-slate-700 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,1)] py-2 z-[100] ring-1 ring-sky-500/20"
+                    >
                       <div className="px-3 py-1.5 text-[10px] font-bold uppercase text-slate-500 tracking-wider border-b border-slate-800">
                         Trading Workspaces
                       </div>
@@ -257,10 +241,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                                 setActiveTab(tool.id as NavTabType);
                                 setIsMoreToolsOpen(false);
                               }}
+                              style={{ backgroundColor: isCur ? "#16233B" : "#0A0D15" }}
                               className={`w-full text-left px-3 py-2 flex items-center gap-2.5 transition text-xs ${
                                 isCur
-                                  ? "bg-blue-600/20 text-white font-bold border-l-2 border-blue-400"
-                                  : "text-slate-300 hover:bg-slate-800/70 hover:text-white"
+                                  ? "text-white font-bold border-l-2 border-blue-400"
+                                  : "text-slate-300 hover:bg-[#131A29] hover:text-white"
                               }`}
                             >
                               <IconComp className={`w-4 h-4 ${tool.color}`} />
@@ -283,7 +268,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                               onOpenOptionsChain();
                               setIsMoreToolsOpen(false);
                             }}
-                            className="w-full text-left px-3 py-1.5 flex items-center gap-2.5 text-xs text-slate-300 hover:bg-slate-800/70 hover:text-white transition"
+                            className="w-full text-left px-3 py-1.5 flex items-center gap-2.5 text-xs text-slate-300 hover:bg-[#131A29] hover:text-white transition"
                           >
                             <Layers className="w-4 h-4 text-emerald-400" />
                             <span>Options Chain &amp; Greeks</span>
@@ -295,7 +280,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                               onOpenTradeJournal();
                               setIsMoreToolsOpen(false);
                             }}
-                            className="w-full text-left px-3 py-1.5 flex items-center gap-2.5 text-xs text-slate-300 hover:bg-slate-800/70 hover:text-white transition"
+                            className="w-full text-left px-3 py-1.5 flex items-center gap-2.5 text-xs text-slate-300 hover:bg-[#131A29] hover:text-white transition"
                           >
                             <BookOpen className="w-4 h-4 text-purple-400" />
                             <span>Trade Performance Journal</span>
@@ -307,7 +292,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                               onOpenHeatmap();
                               setIsMoreToolsOpen(false);
                             }}
-                            className="w-full text-left px-3 py-1.5 flex items-center gap-2.5 text-xs text-slate-300 hover:bg-slate-800/70 hover:text-white transition"
+                            className="w-full text-left px-3 py-1.5 flex items-center gap-2.5 text-xs text-slate-300 hover:bg-[#131A29] hover:text-white transition"
                           >
                             <Flame className="w-4 h-4 text-amber-400" />
                             <span>Sector Heatmap &amp; Sentiment</span>
@@ -319,7 +304,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                               onOpenLeaderboard();
                               setIsMoreToolsOpen(false);
                             }}
-                            className="w-full text-left px-3 py-1.5 flex items-center gap-2.5 text-xs text-slate-300 hover:bg-slate-800/70 hover:text-white transition"
+                            className="w-full text-left px-3 py-1.5 flex items-center gap-2.5 text-xs text-slate-300 hover:bg-[#131A29] hover:text-white transition"
                           >
                             <Trophy className="w-4 h-4 text-cyan-400" />
                             <span>VIP Trader Leaderboard</span>
@@ -332,14 +317,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               </nav>
             </div>
 
-            {/* Right: Actions, AI Engine, Alerts & User Account */}
-            <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+            {/* Right: Actions, AI Engine, Alerts & User Account (Locked Right) */}
+            <div className="flex items-center space-x-2 shrink-0 ml-auto">
               {/* Live Alerts Button */}
               {onOpenAlerts && (
                 <button
                   onClick={onOpenAlerts}
                   title="Live AI Trade Alerts & Scanner"
-                  className="flex items-center space-x-1.5 px-2 sm:px-2.5 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-xs font-bold text-blue-400 transition cursor-pointer relative"
+                  className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-xs font-bold text-blue-400 transition cursor-pointer relative shrink-0"
                 >
                   <div className="relative">
                     <Bell className="w-3.5 h-3.5 text-blue-400" />
@@ -361,7 +346,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }
                 }}
                 title="TradeX AI Engine (Groq / Gemini / Autonomous)"
-                className="flex items-center space-x-1.5 px-2 sm:px-2.5 py-1 rounded-lg bg-gradient-to-r from-purple-900/40 via-blue-900/40 to-emerald-900/30 border border-purple-500/50 text-xs font-bold text-white hover:border-purple-400 transition cursor-pointer shadow-sm"
+                className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-gradient-to-r from-purple-900/40 via-blue-900/40 to-emerald-900/30 border border-purple-500/50 text-xs font-bold text-white hover:border-purple-400 transition cursor-pointer shadow-sm shrink-0"
               >
                 <Zap className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
                 <span className="hidden md:inline bg-gradient-to-r from-purple-300 to-blue-200 bg-clip-text text-transparent">
@@ -377,7 +362,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   onClick={onOpenSubscription}
                   title="Pricing & Subscription Plans"
-                  className="hidden sm:flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-[#2962FF]/10 hover:bg-[#2962FF]/20 border border-[#2962FF]/40 text-xs font-semibold text-[#2962FF] hover:text-[#5282FF] transition cursor-pointer"
+                  className="hidden sm:flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-[#2962FF]/10 hover:bg-[#2962FF]/20 border border-[#2962FF]/40 text-xs font-semibold text-[#2962FF] hover:text-[#5282FF] transition cursor-pointer shrink-0"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span className="text-[10px] bg-[#2962FF] text-white px-1 py-0.2 rounded font-bold uppercase tracking-wider">
@@ -388,10 +373,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               {/* User Account / Profile */}
               {user ? (
-                <div className="relative" ref={menuRef}>
+                <div className="relative shrink-0" ref={menuRef}>
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="flex items-center space-x-1.5 text-xs text-slate-100 bg-[#0F1420] hover:bg-[#161D2E] px-2 sm:px-2.5 py-1 rounded-lg border border-slate-800 transition cursor-pointer shadow-sm"
+                    className="flex items-center space-x-1.5 text-xs text-slate-100 bg-[#0F1420] hover:bg-[#161D2E] px-2.5 py-1 rounded-lg border border-slate-800 transition cursor-pointer shadow-sm"
                   >
                     <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-[10px]">
                       P
@@ -404,7 +389,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                   {/* Dropdown Menu */}
                   {isUserMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-64 bg-[#0E121C] border border-slate-800 rounded-xl shadow-2xl py-1.5 z-[100] text-xs backdrop-blur-xl">
+                    <div
+                      style={{ backgroundColor: "#0A0D15", opacity: 1 }}
+                      className="absolute right-0 mt-2 w-64 border-2 border-slate-800 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,1)] py-1.5 z-[100] text-xs"
+                    >
                       <div className="px-3 py-2 border-b border-[#202738] bg-[#07090F]/70">
                         <div className="font-bold text-white truncate flex items-center gap-1.5">
                           <TrendingUp className="w-3.5 h-3.5 text-blue-400" />
@@ -483,7 +471,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   )}
                 </div>
               ) : (
-                <div className="flex items-center space-x-1.5">
+                <div className="flex items-center space-x-1.5 shrink-0">
                   <button
                     onClick={() => onOpenAuth("login")}
                     className="px-2.5 py-1 rounded text-xs font-semibold text-[#D1D4DC] hover:text-white hover:bg-[#1E222D] border border-[#2A2E39] transition cursor-pointer"
@@ -503,7 +491,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 onClick={() => setIsMobileDrawerOpen(true)}
                 title="All Features & Navigation Drawer"
-                className="md:hidden p-1.5 rounded-lg bg-[#1E222D] border border-slate-700 text-slate-300 hover:text-white transition cursor-pointer"
+                className="xl:hidden p-1.5 rounded-lg bg-[#1E222D] border border-slate-700 text-slate-300 hover:text-white transition cursor-pointer shrink-0"
               >
                 <Menu className="w-4 h-4" />
               </button>
@@ -515,7 +503,10 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Mobile & Small Screen Full Feature Drawer Modal */}
       {isMobileDrawerOpen && (
         <div className="fixed inset-0 z-[200] flex justify-end bg-black/80 backdrop-blur-md animate-fadeIn">
-          <div className="w-full max-w-sm bg-[#0A0D15] border-l border-slate-800 h-full p-4 overflow-y-auto space-y-4 shadow-2xl">
+          <div
+            style={{ backgroundColor: "#0A0D15", opacity: 1 }}
+            className="w-full max-w-sm border-l border-slate-800 h-full p-4 overflow-y-auto space-y-4 shadow-2xl"
+          >
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-cyan-400" />

@@ -234,11 +234,12 @@ export const StockSearch: React.FC<StockSearchProps> = ({
         ) : null}
       </div>
 
-      {/* Autocomplete Dropdown - Elevated z-[100] with crisp glowing border */}
+      {/* Autocomplete Dropdown - 100% Solid Opaque Background (Zero Transparency) */}
       {isOpen && (
         <div
           ref={listRef}
-          className="absolute left-0 right-0 top-full z-[100] mt-2 bg-slate-900/98 backdrop-blur-xl border-2 border-sky-500/60 rounded-xl shadow-[0_25px_60px_rgba(0,0,0,0.95)] overflow-hidden max-h-80 overflow-y-auto divide-y divide-slate-800/80 ring-2 ring-sky-500/20"
+          style={{ backgroundColor: "#0A0D15", opacity: 1 }}
+          className="absolute left-0 right-0 top-full z-[100] mt-2 border-2 border-sky-500 rounded-xl shadow-[0_25px_60px_rgba(0,0,0,1)] overflow-hidden max-h-80 overflow-y-auto divide-y divide-slate-800 ring-2 ring-sky-500/30"
         >
           {results.length > 0 ? (
             results.map((item, idx) => {
@@ -248,10 +249,11 @@ export const StockSearch: React.FC<StockSearchProps> = ({
                   key={item.symbol}
                   onClick={() => handleSelect(item.symbol)}
                   onMouseEnter={() => setSelectedIndex(idx)}
+                  style={{ backgroundColor: isSelected ? "#16233B" : "#0A0D15" }}
                   className={`w-full text-left px-4 py-2.5 flex items-center justify-between transition-colors ${
                     isSelected
-                      ? "bg-sky-950/80 text-white border-l-2 border-sky-400"
-                      : "hover:bg-slate-800/70 text-slate-200"
+                      ? "text-white border-l-2 border-sky-400"
+                      : "hover:bg-[#131A29] text-slate-200"
                   }`}
                 >
                   <div className="min-w-0 pr-2">
