@@ -653,6 +653,69 @@ export default function HomePage() {
       {/* Live Exchange Schedule & Holiday Bar */}
       <ExchangeScheduleBar />
 
+      {/* 🚀 All Features Quick Workspace Dock - Always Visible at 100% Normal Zoom (No Minimize / Zoom Out Required!) */}
+      <div className="bg-[#0A0D16] border-b border-slate-800/80 px-3 sm:px-5 py-2 sticky top-14 z-30 backdrop-blur-md shadow-sm">
+        <div className="max-w-[1720px] mx-auto flex items-center justify-between gap-3">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 scroll-smooth w-full">
+            <span className="text-[11px] font-extrabold text-blue-400 uppercase tracking-wider px-2 shrink-0 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+              Workspaces:
+            </span>
+            {[
+              { id: "overview", label: "📊 Chart & Terminal" },
+              { id: "paper", label: "💼 Paper Trading (₹10L)" },
+              { id: "algo", label: "🤖 Algo Studio" },
+              { id: "backtest", label: "⚡ Strategy Backtest" },
+              { id: "compare", label: "🔍 Stock Matrix" },
+              { id: "multichart", label: "▦ Multi-Chart" },
+              { id: "academy", label: "🎓 Academy" },
+              { id: "assistant", label: "✨ AI Copilot" },
+              { id: "shariah", label: "☪️ Shariah" },
+              { id: "watchlist", label: "🔖 Watchlist" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as NavTabType)}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                  activeTab === tab.id
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-900/30 font-bold border border-blue-400/40"
+                    : "bg-[#131722] hover:bg-[#1E222D] text-slate-300 hover:text-white border border-slate-800"
+                }`}
+              >
+                <span>{tab.label}</span>
+              </button>
+            ))}
+
+            <div className="h-4 w-[1px] bg-slate-800 mx-1 shrink-0" />
+
+            <button
+              onClick={() => setIsOptionsChainOpen(true)}
+              className="px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap bg-[#131722] hover:bg-[#1E222D] text-emerald-400 border border-emerald-500/30 transition flex items-center gap-1 shrink-0 cursor-pointer"
+            >
+              📜 Options Chain
+            </button>
+            <button
+              onClick={() => setIsHeatmapOpen(true)}
+              className="px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap bg-[#131722] hover:bg-[#1E222D] text-amber-400 border border-amber-500/30 transition flex items-center gap-1 shrink-0 cursor-pointer"
+            >
+              🗺️ Heatmap
+            </button>
+            <button
+              onClick={() => setIsTradeJournalOpen(true)}
+              className="px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap bg-[#131722] hover:bg-[#1E222D] text-purple-400 border border-purple-500/30 transition flex items-center gap-1 shrink-0 cursor-pointer"
+            >
+              📓 Journal
+            </button>
+            <button
+              onClick={() => setIsAlertsOpen(true)}
+              className="px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap bg-[#131722] hover:bg-[#1E222D] text-blue-400 border border-blue-500/30 transition flex items-center gap-1 shrink-0 cursor-pointer"
+            >
+              🔔 Alerts (4)
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Floating Order Execution Confirmation Toast */}
       {toastMessage && (
         <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[200] max-w-lg w-[90%] p-3.5 rounded-xl bg-[#0B0E17]/95 border border-emerald-500/50 backdrop-blur-xl shadow-2xl flex items-center justify-between gap-3 animate-fadeIn">
