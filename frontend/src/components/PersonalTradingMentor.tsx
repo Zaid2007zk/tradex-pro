@@ -438,7 +438,7 @@ export const PersonalTradingMentor: React.FC<PersonalTradingMentorProps> = ({
             <Zap className="w-3.5 h-3.5 text-cyan-400" />
             <span>
               {getActiveAIProvider() === "groq" && hasActiveGroqKey()
-                ? "Groq LLaMA 3.3"
+                ? "Groq LLaMA"
                 : getActiveAIProvider() === "gemini" && hasActiveGeminiKey()
                 ? "Gemini AI"
                 : "TradeX AI Engine"}

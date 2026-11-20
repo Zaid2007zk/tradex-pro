@@ -716,8 +716,8 @@ export default function HomePage() {
         </div>
 
         {/* Top Control Bar: Search & Quick Pick */}
-        <div className="bg-[#0D111A]/90 backdrop-blur-md border border-slate-800 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 shadow-md">
-          <div className="flex-1 min-w-[260px] max-w-md">
+        <div className="relative z-50 bg-[#0D111A]/90 backdrop-blur-md border border-slate-800 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 shadow-md">
+          <div className="flex-1 min-w-[260px] max-w-md relative z-50">
             <StockSearch
               onSelectSymbol={(sym) => setSelectedSymbol(sym)}
               activeSymbol={selectedSymbol}

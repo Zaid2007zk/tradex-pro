@@ -30,9 +30,12 @@ const GROQ_MODEL_STORAGE = "tradex_groq_active_model";
 const ACTIVE_PROVIDER_STORAGE = "tradex_active_ai_provider";
 
 export const GROQ_MODELS = [
-  { id: "llama-3.3-70b-versatile", name: "LLaMA 3.3 70B Versatile (Recommended - Deep Financial Reasoning)" },
-  { id: "llama-3.1-8b-instant", name: "LLaMA 3.1 8B Instant (Ultra Fast, 800+ tokens/sec)" },
-  { id: "mixtral-8x7b-32768", name: "Mixtral 8x7B (32k Context Window)" },
+  { id: "llama-3.1-8b-instant", name: "LLaMA 3.1 8B Instant (Recommended - Universal Free Access, Ultra-Fast)" },
+  { id: "llama-3.3-70b-versatile", name: "LLaMA 3.3 70B Versatile (Deep Financial Reasoning)" },
+  { id: "llama-3.1-70b-versatile", name: "LLaMA 3.1 70B Versatile" },
+  { id: "llama3-70b-8192", name: "LLaMA 3 70B (8k Context)" },
+  { id: "llama3-8b-8192", name: "LLaMA 3 8B (8k Context)" },
+  { id: "mixtral-8x7b-32768", name: "Mixtral 8x7B (32k Context)" },
 ];
 
 export const FALLBACK_GEMINI_MODELS = [
@@ -91,8 +94,8 @@ export const setStoredGroqKey = (key: string): void => {
 };
 
 export const getStoredGroqModel = (): string => {
-  if (typeof window === "undefined") return "llama-3.3-70b-versatile";
-  return localStorage.getItem(GROQ_MODEL_STORAGE) || "llama-3.3-70b-versatile";
+  if (typeof window === "undefined") return "llama-3.1-8b-instant";
+  return localStorage.getItem(GROQ_MODEL_STORAGE) || "llama-3.1-8b-instant";
 };
 
 export const setStoredGroqModel = (model: string): void => {
@@ -105,56 +108,94 @@ export const hasActiveGroqKey = (): boolean => {
 };
 
 /**
- * Validate Groq API Key and verify model support
+ * Validate Groq API Key and verify model support with automatic discovery & fallback
  */
 export async function verifyAndTestGroqModel(
   apiKey: string,
-  modelName: string = "llama-3.3-70b-versatile"
+  modelName: string = "llama-3.1-8b-instant"
 ): Promise<{ success: boolean; model: string; message: string }> {
   const cleanKey = apiKey.trim();
   if (!cleanKey) {
     return { success: false, model: "", message: "Groq API key cannot be empty." };
   }
 
-  try {
-    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${cleanKey}`,
-      },
-      body: JSON.stringify({
-        model: modelName,
-        messages: [
-          { role: "system", content: "You are an institutional trading assistant." },
-          { role: "user", content: "Respond with single word: OK" },
-        ],
-        max_tokens: 5,
-        temperature: 0.1,
-      }),
-    });
+  // Candidate models to test in priority order
+  const candidates: string[] = [
+    modelName,
+    "llama-3.1-8b-instant",
+    "llama-3.3-70b-versatile",
+    "llama-3.1-70b-versatile",
+    "llama3-70b-8192",
+    "llama3-8b-8192",
+    "mixtral-8x7b-32768",
+  ];
 
-    if (res.ok) {
-      setStoredGroqKey(cleanKey);
-      setStoredGroqModel(modelName);
-      setActiveAIProvider("groq");
-      return {
-        success: true,
-        model: modelName,
-        message: `Connected successfully to Groq Cloud (${modelName}) with ultra-low latency.`,
-      };
-    } else {
-      const errJson = await res.json().catch(() => ({}));
-      const errMsg = errJson?.error?.message || `Groq returned HTTP ${res.status}`;
-      return { success: false, model: modelName, message: errMsg };
+  // Discover what models this key actually has access to via Groq models API
+  try {
+    const listRes = await fetch("https://api.groq.com/openai/v1/models", {
+      headers: { Authorization: `Bearer ${cleanKey}` },
+    });
+    if (listRes.ok) {
+      const listData = await listRes.json();
+      const availableIds: string[] = (listData.data || []).map((m: any) => m.id);
+      if (availableIds.length > 0) {
+        for (const availId of availableIds) {
+          if (!candidates.includes(availId) && (availId.includes("llama") || availId.includes("mixtral"))) {
+            candidates.push(availId);
+          }
+        }
+      }
     }
-  } catch (err: any) {
-    return {
-      success: false,
-      model: modelName,
-      message: err.message || "Network error connecting to Groq API.",
-    };
+  } catch {}
+
+  const uniqueCandidates = Array.from(new Set(candidates.filter(Boolean)));
+  let lastErrorMsg = "";
+
+  for (const candidate of uniqueCandidates) {
+    try {
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${cleanKey}`,
+        },
+        body: JSON.stringify({
+          model: candidate,
+          messages: [
+            { role: "system", content: "You are an institutional trading assistant." },
+            { role: "user", content: "Respond with single word: OK" },
+          ],
+          max_tokens: 5,
+          temperature: 0.1,
+        }),
+      });
+
+      if (res.ok) {
+        setStoredGroqKey(cleanKey);
+        setStoredGroqModel(candidate);
+        setActiveAIProvider("groq");
+        return {
+          success: true,
+          model: candidate,
+          message: `Connected successfully to Groq Cloud (${candidate}) with ultra-low latency.`,
+        };
+      } else {
+        const errJson = await res.json().catch(() => ({}));
+        lastErrorMsg = errJson?.error?.message || `Groq returned HTTP ${res.status}`;
+        if (res.status === 401 || lastErrorMsg.toLowerCase().includes("invalid api key")) {
+          return { success: false, model: candidate, message: "Invalid Groq API Key. Please verify your key on console.groq.com." };
+        }
+      }
+    } catch (err: any) {
+      lastErrorMsg = err.message || "Network error connecting to Groq API.";
+    }
   }
+
+  return {
+    success: false,
+    model: modelName,
+    message: lastErrorMsg || "Could not connect to Groq with provided key.",
+  };
 }
 
 // ==============================================================================

@@ -98,6 +98,7 @@ export const GeminiKeyModal: React.FC<GeminiKeyModalProps> = ({
 
     const res = await verifyAndTestGroqModel(groqKey.trim(), groqModel);
     if (res.success) {
+      setGroqModel(res.model);
       setStatus("success");
       setStatusMsg(res.message);
       setActiveAIProvider("groq");

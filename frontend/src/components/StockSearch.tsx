@@ -127,7 +127,7 @@ export const StockSearch: React.FC<StockSearchProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Fetch search results on debounce
+  // Fetch search results instantly
   useEffect(() => {
     const trimmed = query.trim();
     if (!trimmed || trimmed.length < 1) {
@@ -137,43 +137,36 @@ export const StockSearch: React.FC<StockSearchProps> = ({
       return;
     }
 
-    const timer = setTimeout(async () => {
-      setLoading(true);
-      try {
-        const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
-        const res = await fetch(`${apiBase}/api/v1/market/search?q=${encodeURIComponent(trimmed)}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            setResults(data);
-          } else {
-            // Local fallback filter
-            const filtered = EXTENDED_CATALOGUE.filter(
-              (s) =>
-                s.symbol.toLowerCase().includes(trimmed.toLowerCase()) ||
-                s.name.toLowerCase().includes(trimmed.toLowerCase())
-            );
-            setResults(filtered);
-          }
-        } else {
-          throw new Error("Search API non-200");
-        }
-      } catch {
-        // High-availability client catalogue match
-        const localMatches = EXTENDED_CATALOGUE.filter(
-          (s) =>
-            s.symbol.toLowerCase().includes(trimmed.toLowerCase()) ||
-            s.name.toLowerCase().includes(trimmed.toLowerCase())
-        );
-        setResults(localMatches);
-      } finally {
-        setLoading(false);
-        setSelectedIndex(-1);
-        setIsOpen(true);
-      }
-    }, 150);
+    // Instant zero-delay local catalogue match
+    const qLower = trimmed.toLowerCase();
+    const localMatches = EXTENDED_CATALOGUE.filter(
+      (s) =>
+        s.symbol.toLowerCase().includes(qLower) ||
+        s.name.toLowerCase().includes(qLower)
+    );
+    setResults(localMatches);
+    setSelectedIndex(-1);
+    setIsOpen(true);
 
-    return () => clearTimeout(timer);
+    // If local backend is available (only when running on localhost)
+    const isLocal =
+      typeof window !== "undefined" &&
+      (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+
+    if (isLocal) {
+      const timer = setTimeout(async () => {
+        try {
+          const res = await fetch(`http://localhost:8000/api/v1/market/search?q=${encodeURIComponent(trimmed)}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data) && data.length > 0) {
+              setResults(data);
+            }
+          }
+        } catch {}
+      }, 100);
+      return () => clearTimeout(timer);
+    }
   }, [query]);
 
   // Keyboard navigation handler
@@ -211,7 +204,7 @@ export const StockSearch: React.FC<StockSearchProps> = ({
   };
 
   return (
-    <div ref={containerRef} className="relative w-full max-w-md">
+    <div ref={containerRef} className="relative w-full max-w-md z-50">
       <div className="relative flex items-center">
         <Search className="absolute left-3 w-4 h-4 text-slate-400" />
         <input
@@ -223,7 +216,7 @@ export const StockSearch: React.FC<StockSearchProps> = ({
             if (results.length > 0) setIsOpen(true);
           }}
           placeholder="Search any stock or enter ticker (e.g. RELIANCE, SUZLON, HAL, AAPL, NVDA)..."
-          className="w-full pl-9 pr-8 py-2 text-xs bg-slate-900 border border-slate-800 text-slate-100 rounded-xl placeholder:text-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition shadow-inner"
+          className="w-full pl-9 pr-8 py-2 text-xs bg-slate-900 border border-slate-700 text-slate-100 rounded-xl placeholder:text-slate-500 focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/40 transition shadow-inner"
         />
         {loading ? (
           <Loader2 className="absolute right-3 w-4 h-4 text-slate-400 animate-spin" />
@@ -241,11 +234,11 @@ export const StockSearch: React.FC<StockSearchProps> = ({
         ) : null}
       </div>
 
-      {/* Autocomplete Dropdown */}
+      {/* Autocomplete Dropdown - Elevated z-[100] with crisp glowing border */}
       {isOpen && (
         <div
           ref={listRef}
-          className="absolute z-50 w-full mt-1.5 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl overflow-hidden max-h-72 overflow-y-auto divide-y divide-slate-800/60"
+          className="absolute left-0 right-0 top-full z-[100] mt-2 bg-slate-900/98 backdrop-blur-xl border-2 border-sky-500/60 rounded-xl shadow-[0_25px_60px_rgba(0,0,0,0.95)] overflow-hidden max-h-80 overflow-y-auto divide-y divide-slate-800/80 ring-2 ring-sky-500/20"
         >
           {results.length > 0 ? (
             results.map((item, idx) => {
