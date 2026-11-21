@@ -203,33 +203,33 @@ function generateAutonomousResponse(
     if (isHindi) {
       if (/buy|kharid|entry|best time/i.test(question)) {
         if (isOverbought) {
-          return `### ⚠️ Institutional Alert: ${targetStock.symbol} Overbought Retracement Caution\n\n` +
-            `• **Signal:** Elevated RSI (${sig.rsi.toFixed(1)}) indicates stretched valuation in the short term.\n` +
-            `• **Optimal Accumulation Zone:** Await tactical pullback toward support dip near **₹${pullbackEntry}**.\n` +
-            `• **Upside Price Target:** **₹${target1}** (+2.5% projected expansion).\n` +
-            `• **Risk Protection (Stop-Loss):** **₹${stopLoss}** (-1.5% strict capital preservation stop).\n\n` +
-            `*Bhai, current level par FOMO buy mat karein. ₹${pullbackEntry} ke support retest ka wait karein with tight stop loss.*`;
+          return `### ⚠️ Institutional Alert: ${targetStock.symbol} Overbought (Thoda Wait Karein)\n\n` +
+            `• **Signal:** RSI (${sig.rsi.toFixed(1)}) overbought zone mein hai, short-term dip aane ki sambhavna hai.\n` +
+            `• **Best Buying Zone (Entry Dip):** Abhi jaldbazi na karein, **₹${pullbackEntry}** ke support pullback par buy karna best rahega.\n` +
+            `• **Upside Target:** **₹${target1}** (+2.5% projected target).\n` +
+            `• **Strict Stop-Loss:** **₹${stopLoss}** (Capital preservation ke liye strict SL lagayein).\n\n` +
+            `💡 *Advice: Current price par buy na karein. ₹${pullbackEntry} ke support retest ka wait karein aur disciplined risk ke sath trade karein.*`;
         } else if (isOversold) {
-          return `### ⚡ Bullish Mean Reversion: ${targetStock.symbol} Prime Accumulation\n\n` +
-            `• **Signal:** Oversold RSI (${sig.rsi.toFixed(1)}) suggests severe downside exhaustion.\n` +
-            `• **Immediate Tactical Entry:** Current zone **₹${px.toFixed(2)}** to **₹${pullbackEntry}**.\n` +
-            `• **Upside Targets:** Target 1: **₹${target1}** | Target 2: **₹${target2}**.\n` +
+          return `### ⚡ Bullish Opportunity: ${targetStock.symbol} Prime Buying Zone\n\n` +
+            `• **Signal:** RSI (${sig.rsi.toFixed(1)}) oversold hai, downside exhaust ho chuki hai aur bounce-back expected hai.\n` +
+            `• **Best Entry Point:** Current zone **₹${px.toFixed(2)}** se **₹${pullbackEntry}** par buy karne ka ideal time hai.\n` +
+            `• **Target Levels:** Target 1: **₹${target1}** | Target 2: **₹${target2}**.\n` +
             `• **Stop-Loss Protection:** **₹${stopLoss}**.\n\n` +
-            `*Setup high-conviction hai. Partial quantity enter karke trailing stop-loss use karein.*`;
+            `💡 *Advice: Setup high-conviction hai. Partial quantity enter karke trailing stop-loss use karein.*`;
         } else {
-          return `### 📊 Trend Continuation Setup: ${targetStock.symbol}\n\n` +
-            `• **Current LTP:** ₹${px.toFixed(2)} (${chgPct >= 0 ? "+" : ""}${chgPct.toFixed(2)}% today).\n` +
-            `• **Momentum Indicator:** RSI ${sig.rsi.toFixed(1)} | MACD is **${sig.macdBull ? "Bullish" : "Neutral/Bearish"}**.\n` +
-            `• **Suggested Entry:** **₹${px.toFixed(2)}** with target **₹${target1}** and strict stop at **₹${stopLoss}**.\n\n` +
-            `*Risk-to-reward ratio 1:2.3 favorable hai. MIS ya CNC paper trade execute kar sakte hain.*`;
+          return `### 📊 Trend Analysis: ${targetStock.symbol} Entry Setup\n\n` +
+            `• **Current Market Price (LTP):** ₹${px.toFixed(2)} (${chgPct >= 0 ? "+" : ""}${chgPct.toFixed(2)}% aaj).\n` +
+            `• **Momentum Telemetry:** RSI ${sig.rsi.toFixed(1)} hai, aur MACD **${sig.macdBull ? "Bullish trend mein" : "Consolidation mein"}** hai.\n` +
+            `• **Suggested Entry:** **₹${px.toFixed(2)}** par accumulate karein, Target **₹${target1}** aur Stop-loss **₹${stopLoss}**.\n\n` +
+            `💡 *Risk-to-reward ratio 1:2.3 favorable hai. Order ticket se 1-Click execution kar sakte hain.*`;
         }
       }
 
-      return `### 🤖 ARIA Quant Telemetry for ${targetStock.symbol}\n\n` +
-        `• **Price & Trend:** Trading at ₹${px.toFixed(2)} (${sig.aboveMa50 ? "Above" : "Below"} 50-SMA).\n` +
-        `• **Technical Confluence:** RSI ${sig.rsi.toFixed(1)} · Verdict: **${sig.verdict.toUpperCase()}**.\n` +
+      return `### 🤖 ARIA Quant Telemetry: ${targetStock.symbol}\n\n` +
+        `• **Price & Trend:** Current LTP ₹${px.toFixed(2)} (${sig.aboveMa50 ? "50-SMA ke upar" : "50-SMA ke niche"}).\n` +
+        `• **Technical Confluence:** RSI ${sig.rsi.toFixed(1)} · Technical Verdict: **${sig.verdict.toUpperCase()}**.\n` +
         `• **Key Resistance:** ₹${target1} | **Key Support:** ₹${pullbackEntry}.\n\n` +
-        `*Aap direct Order Ticket se 1-Click Buy/Sell execute kar sakte hain ya AI Autopilot on kar sakte hain.*`;
+        `💡 *Aap direct Order Ticket se 1-Click Buy/Sell execute kar sakte hain ya AI Autopilot on kar sakte hain.*`;
     }
 
     // English
@@ -391,7 +391,7 @@ export async function POST(req: Request) {
   const baseSys = `You are ARIA CORE — the fully-AI brain of TradeX PRO, an institutional paper-trading terminal for the Indian market (NSE, INR). You reason like a sharp quant analyst.
 Rules:
 - Ground every claim in the LIVE MARKET CONTEXT below; never invent prices that contradict it.
-- If the user asks in Hindi or Hinglish, reply naturally in clear financial Hinglish/Hindi with exact prices and levels.
+- Language Protocol: If the user writes in Hindi or Hinglish (e.g. 'konsa', 'kya', 'buy krne ka', 'batao', 'kab lena hai', 'sahi time'), YOU MUST ALWAYS REPLY IN NATURAL FINANCIAL HINGLISH/HINDI with exact levels (LTP, Entry, Target, Stop Loss). Never reply in pure English if the user asked in Hinglish!
 - Keep answers tight (max ~180 words) unless a report is requested. Use bullets for clarity.
 - This is a simulated feed — mention risk discipline and levels.
 

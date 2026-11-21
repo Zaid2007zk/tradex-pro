@@ -22,26 +22,26 @@ export type StockDef = {
 };
 
 export const STOCKS: StockDef[] = [
-  { symbol: "RELIANCE", name: "Reliance Industries", sector: "Energy", base: 1418.5, volatility: 0.9, capCr: 1920000, lot: 1 },
-  { symbol: "TCS", name: "Tata Consultancy Svcs", sector: "IT", base: 3452.0, volatility: 0.8, capCr: 1248000, lot: 1 },
-  { symbol: "HDFCBANK", name: "HDFC Bank", sector: "Banking", base: 1884.6, volatility: 0.85, capCr: 1440000, lot: 1 },
-  { symbol: "ICICIBANK", name: "ICICI Bank", sector: "Banking", base: 1368.2, volatility: 0.9, capCr: 961000, lot: 1 },
-  { symbol: "INFY", name: "Infosys", sector: "IT", base: 1523.4, volatility: 0.95, capCr: 632000, lot: 1 },
-  { symbol: "BHARTIARTL", name: "Bharti Airtel", sector: "Telecom", base: 1626.9, volatility: 0.9, capCr: 957000, lot: 1 },
-  { symbol: "SBIN", name: "State Bank of India", sector: "Banking", base: 872.3, volatility: 1.05, capCr: 778000, lot: 1 },
-  { symbol: "ITC", name: "ITC Ltd", sector: "FMCG", base: 417.8, volatility: 0.6, capCr: 522000, lot: 1 },
-  { symbol: "LT", name: "Larsen & Toubro", sector: "Infra", base: 3538.0, volatility: 1.0, capCr: 486000, lot: 1 },
-  { symbol: "HINDUNILVR", name: "Hindustan Unilever", sector: "FMCG", base: 2384.0, volatility: 0.6, capCr: 560000, lot: 1 },
+  { symbol: "RELIANCE", name: "Reliance Industries", sector: "Energy", base: 1377.5, volatility: 0.9, capCr: 1864000, lot: 1 },
+  { symbol: "TCS", name: "Tata Consultancy Svcs", sector: "IT", base: 2376.2, volatility: 0.8, capCr: 860000, lot: 1 },
+  { symbol: "HDFCBANK", name: "HDFC Bank", sector: "Banking", base: 846.0, volatility: 0.85, capCr: 1290000, lot: 1 },
+  { symbol: "ICICIBANK", name: "ICICI Bank", sector: "Banking", base: 1640.0, volatility: 0.9, capCr: 1150000, lot: 1 },
+  { symbol: "INFY", name: "Infosys", sector: "IT", base: 1098.0, volatility: 0.95, capCr: 456000, lot: 1 },
+  { symbol: "BHARTIARTL", name: "Bharti Airtel", sector: "Telecom", base: 2161.7, volatility: 0.9, capCr: 1270000, lot: 1 },
+  { symbol: "SBIN", name: "State Bank of India", sector: "Banking", base: 1165.1, volatility: 1.05, capCr: 1040000, lot: 1 },
+  { symbol: "ITC", name: "ITC Ltd", sector: "FMCG", base: 299.1, volatility: 0.6, capCr: 374000, lot: 1 },
+  { symbol: "LT", name: "Larsen & Toubro", sector: "Infra", base: 4209.1, volatility: 1.0, capCr: 579000, lot: 1 },
+  { symbol: "HINDUNILVR", name: "Hindustan Unilever", sector: "FMCG", base: 2052.5, volatility: 0.6, capCr: 482000, lot: 1 },
   { symbol: "KOTAKBANK", name: "Kotak Mahindra Bank", sector: "Banking", base: 1788.5, volatility: 0.9, capCr: 355000, lot: 1 },
-  { symbol: "AXISBANK", name: "Axis Bank", sector: "Banking", base: 1142.7, volatility: 1.0, capCr: 353000, lot: 1 },
-  { symbol: "MARUTI", name: "Maruti Suzuki", sector: "Auto", base: 12842.0, volatility: 1.0, capCr: 403000, lot: 1 },
-  { symbol: "SUNPHARMA", name: "Sun Pharma", sector: "Pharma", base: 1739.5, volatility: 0.8, capCr: 522000, lot: 1 },
-  { symbol: "HCLTECH", name: "HCL Technologies", sector: "IT", base: 1826.3, volatility: 0.95, capCr: 496000, lot: 1 },
+  { symbol: "AXISBANK", name: "Axis Bank", sector: "Banking", base: 1446.0, volatility: 1.0, capCr: 446000, lot: 1 },
+  { symbol: "MARUTI", name: "Maruti Suzuki", sector: "Auto", base: 14011.0, volatility: 1.0, capCr: 440000, lot: 1 },
+  { symbol: "SUNPHARMA", name: "Sun Pharma", sector: "Pharma", base: 1884.9, volatility: 0.8, capCr: 452000, lot: 1 },
+  { symbol: "HCLTECH", name: "HCL Technologies", sector: "IT", base: 1344.4, volatility: 0.95, capCr: 365000, lot: 1 },
   { symbol: "TATAMOTORS", name: "Tata Motors", sector: "Auto", base: 788.4, volatility: 1.3, capCr: 290000, lot: 1 },
-  { symbol: "ADANIENT", name: "Adani Enterprises", sector: "Conglomerate", base: 2376.0, volatility: 1.6, capCr: 272000, lot: 1 },
-  { symbol: "TITAN", name: "Titan Company", sector: "Consumer", base: 3421.0, volatility: 0.9, capCr: 303000, lot: 1 },
-  { symbol: "WIPRO", name: "Wipro", sector: "IT", base: 291.6, volatility: 1.0, capCr: 303000, lot: 1 },
-  { symbol: "ETERNAL", name: "Eternal (Zomato)", sector: "Internet", base: 264.9, volatility: 1.7, capCr: 232000, lot: 1 },
+  { symbol: "ADANIENT", name: "Adani Enterprises", sector: "Conglomerate", base: 2709.0, volatility: 1.6, capCr: 308000, lot: 1 },
+  { symbol: "TITAN", name: "Titan Company", sector: "Consumer", base: 4620.0, volatility: 0.9, capCr: 410000, lot: 1 },
+  { symbol: "WIPRO", name: "Wipro", sector: "IT", base: 185.7, volatility: 1.0, capCr: 194000, lot: 1 },
+  { symbol: "ETERNAL", name: "Eternal (Zomato)", sector: "Internet", base: 268.0, volatility: 1.7, capCr: 236000, lot: 1 },
 ];
 
 export const SECTORS = Array.from(new Set(STOCKS.map((s) => s.sector)));
@@ -288,11 +288,11 @@ export function fmtINR(n: number): string {
 export type IndexDef = { symbol: string; name: string; base: number; weight: number; exchange: string };
 
 export const INDICES: IndexDef[] = [
-  { symbol: "NIFTY50", name: "NIFTY 50", base: 24380.45, weight: 1, exchange: "NSE" },
-  { symbol: "BANKNIFTY", name: "BANK NIFTY", base: 52146.3, weight: 0.6, exchange: "NSE" },
-  { symbol: "SENSEX", name: "SENSEX", base: 80114.2, weight: 0.8, exchange: "BSE" },
-  { symbol: "NIFTYIT", name: "NIFTY IT", base: 37218.6, weight: 0.4, exchange: "NSE" },
-  { symbol: "NIFTYMID", name: "MIDCAP 150", base: 15930.8, weight: 0.5, exchange: "NSE" },
+  { symbol: "NIFTY50", name: "NIFTY 50", base: 25800.6, weight: 1, exchange: "NSE" },
+  { symbol: "BANKNIFTY", name: "BANK NIFTY", base: 64635.2, weight: 0.6, exchange: "NSE" },
+  { symbol: "SENSEX", name: "SENSEX", base: 83919.7, weight: 0.8, exchange: "BSE" },
+  { symbol: "NIFTYIT", name: "NIFTY IT", base: 38240.0, weight: 0.4, exchange: "NSE" },
+  { symbol: "NIFTYMID", name: "MIDCAP 150", base: 16450.0, weight: 0.5, exchange: "NSE" },
 ];
 
 export function computeIndexValue(idx: IndexDef, quotes: Record<string, number>): { value: number; chgPct: number } {

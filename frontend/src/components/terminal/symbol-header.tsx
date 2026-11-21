@@ -28,6 +28,10 @@ export default function SymbolHeader({ symbol, quote }: { symbol: string; quote:
             <span className="rounded border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-emerald-300">
               EQ
             </span>
+            <span className="flex items-center gap-1 rounded border border-emerald-500/30 bg-emerald-950/40 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-emerald-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              LIVE NSE
+            </span>
             {isHalal ? (
               <span className="rounded border border-emerald-500/35 bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-emerald-300">
                 ✓ HALAL
