@@ -35,7 +35,6 @@ import AlgoStudio from "./algo-studio";
 import Backtest from "./backtest";
 import Journal from "./journal";
 import Academy from "./academy";
-import AiCopilot from "./ai-copilot";
 import AiCore from "./ai-core";
 import Autopilot from "./autopilot";
 import ShariahScreenerView from "./shariah-screener-view";
@@ -524,8 +523,7 @@ export default function Terminal() {
       {/* 6. Status Bar at Bottom */}
       <StatusBar fps={fps} />
 
-      {/* 7. Floating Intelligent Copilots */}
-      <AiCopilot quotes={quotes} />
+      {/* 7. Institutional ARIA Neural AI Core */}
       <AiCore quotes={quotes} symbol={symbol} positions={livePositions} onSelect={handleSelectSymbol} onExecute={onExecute} />
     </div>
   );

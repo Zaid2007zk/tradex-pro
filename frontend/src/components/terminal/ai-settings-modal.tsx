@@ -64,10 +64,15 @@ export default function AiSettingsModal({ open, onClose, onSaved }: Props) {
 
       if (data.ok) {
         localStorage.setItem("tradex_ai_provider", provider);
+        localStorage.setItem("tradex_active_ai_provider", provider);
         if (provider === "groq") {
           localStorage.setItem("tradex_groq_key", key);
+          localStorage.setItem("tradex_groq_api_key", key);
+          if (data.model) localStorage.setItem("tradex_groq_active_model", data.model);
         } else {
           localStorage.setItem("tradex_gemini_key", key);
+          localStorage.setItem("tradex_gemini_api_key", key);
+          if (data.model) localStorage.setItem("tradex_gemini_active_model", data.model);
         }
         setStatus({
           type: "success",

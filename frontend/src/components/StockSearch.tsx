@@ -204,7 +204,7 @@ export const StockSearch: React.FC<StockSearchProps> = ({
   };
 
   return (
-    <div ref={containerRef} className="relative w-full max-w-md z-50">
+    <div ref={containerRef} className="relative w-full max-w-md z-[9999]">
       <div className="relative flex items-center">
         <Search className="absolute left-3 w-4 h-4 text-slate-400" />
         <input
@@ -239,7 +239,7 @@ export const StockSearch: React.FC<StockSearchProps> = ({
         <div
           ref={listRef}
           style={{ backgroundColor: "#0A0D15", opacity: 1 }}
-          className="absolute left-0 right-0 top-full z-[100] mt-2 border-2 border-sky-500 rounded-xl shadow-[0_25px_60px_rgba(0,0,0,1)] overflow-hidden max-h-80 overflow-y-auto divide-y divide-slate-800 ring-2 ring-sky-500/30"
+          className="absolute left-0 right-0 top-full z-[9999] mt-2 border-2 border-sky-500 rounded-xl shadow-[0_25px_60px_rgba(0,0,0,1)] overflow-hidden max-h-80 overflow-y-auto divide-y divide-slate-800 ring-2 ring-sky-500/30"
         >
           {results.length > 0 ? (
             results.map((item, idx) => {

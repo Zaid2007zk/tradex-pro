@@ -103,7 +103,7 @@ export default function TopBar({ quotes, onSelect, balance }: Props) {
               </kbd>
             </button>
           </PopoverTrigger>
-          <PopoverContent align="start" className="w-80 border-white/12 bg-[#0a0d15] p-2 shadow-2xl z-50">
+          <PopoverContent align="start" className="w-80 border-slate-700/70 bg-[#0a0d15] p-2 shadow-[0_20px_50px_rgba(0,0,0,0.95)] z-[9999] ring-1 ring-white/10">
             <input
               autoFocus
               value={q}
@@ -242,7 +242,7 @@ export default function TopBar({ quotes, onSelect, balance }: Props) {
               </span>
             </button>
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-80 border-white/12 bg-[#0a0d15] p-2 shadow-2xl z-50">
+          <PopoverContent align="end" className="w-80 border-slate-700/70 bg-[#0a0d15] p-2 shadow-[0_20px_50px_rgba(0,0,0,0.95)] z-[9999] ring-1 ring-white/10">
             <div className="px-2.5 py-2 text-[12.5px] font-semibold text-white">Price & System Alerts</div>
             <div className="tx-scroll max-h-72 overflow-y-auto">
               {[
@@ -280,7 +280,7 @@ export default function TopBar({ quotes, onSelect, balance }: Props) {
               P
             </button>
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-64 border-white/12 bg-[#0a0d15] p-3 text-white shadow-2xl z-50">
+          <PopoverContent align="end" className="w-64 border-slate-700/70 bg-[#0a0d15] p-3 text-white shadow-[0_20px_50px_rgba(0,0,0,0.95)] z-[9999] ring-1 ring-white/10">
             <div className="border-b border-white/8 pb-2.5">
               <div className="font-bold text-[13px] text-white">zaid@gmail.com</div>
               <span className="inline-block mt-1 rounded bg-amber-500/20 border border-amber-500/30 px-2 py-0.5 text-[9px] font-bold text-amber-300">

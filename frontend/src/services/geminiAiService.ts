@@ -30,11 +30,10 @@ const GROQ_MODEL_STORAGE = "tradex_groq_active_model";
 const ACTIVE_PROVIDER_STORAGE = "tradex_active_ai_provider";
 
 export const GROQ_MODELS = [
-  { id: "llama-3.1-8b-instant", name: "LLaMA 3.1 8B Instant (Recommended - Universal Free Access, Ultra-Fast)" },
-  { id: "llama-3.3-70b-versatile", name: "LLaMA 3.3 70B Versatile (Deep Financial Reasoning)" },
-  { id: "llama-3.1-70b-versatile", name: "LLaMA 3.1 70B Versatile" },
-  { id: "llama3-70b-8192", name: "LLaMA 3 70B (8k Context)" },
-  { id: "llama3-8b-8192", name: "LLaMA 3 8B (8k Context)" },
+  { id: "llama-3.1-8b-instant", name: "LLaMA 3.1 8B Instant (Universal Free Tier - Recommended & Lightning Fast)" },
+  { id: "llama-3.3-70b-versatile", name: "LLaMA 3.3 70B Versatile (Deep Quant Reasoning)" },
+  { id: "llama3-70b-8192", name: "LLaMA 3 70B (High Accuracy)" },
+  { id: "llama3-8b-8192", name: "LLaMA 3 8B (Fast)" },
   { id: "mixtral-8x7b-32768", name: "Mixtral 8x7B (32k Context)" },
 ];
 
@@ -119,39 +118,48 @@ export async function verifyAndTestGroqModel(
     return { success: false, model: "", message: "Groq API key cannot be empty." };
   }
 
-  // Candidate models to test in priority order
-  const candidates: string[] = [
-    modelName,
-    "llama-3.1-8b-instant",
-    "llama-3.3-70b-versatile",
-    "llama-3.1-70b-versatile",
-    "llama3-70b-8192",
-    "llama3-8b-8192",
-    "mixtral-8x7b-32768",
-  ];
-
-  // Discover what models this key actually has access to via Groq models API
+  // 1. First test via Next.js server proxy (/api/ai-core) - immune to browser CORS and network blocks
   try {
-    const listRes = await fetch("https://api.groq.com/openai/v1/models", {
-      headers: { Authorization: `Bearer ${cleanKey}` },
+    const res = await fetch("/api/ai-core", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        task: "test-key",
+        provider: "groq",
+        apiKey: cleanKey,
+        model: modelName,
+      }),
     });
-    if (listRes.ok) {
-      const listData = await listRes.json();
-      const availableIds: string[] = (listData.data || []).map((m: any) => m.id);
-      if (availableIds.length > 0) {
-        for (const availId of availableIds) {
-          if (!candidates.includes(availId) && (availId.includes("llama") || availId.includes("mixtral"))) {
-            candidates.push(availId);
-          }
-        }
-      }
+    const data = await res.json();
+    if (res.ok && data.ok) {
+      setStoredGroqKey(cleanKey);
+      setStoredGroqModel(data.model || modelName);
+      setActiveAIProvider("groq");
+      return {
+        success: true,
+        model: data.model || modelName,
+        message: data.message || `Connected successfully to Groq Cloud (${data.model || modelName})!`,
+      };
+    } else if (data.error && (data.error.toLowerCase().includes("invalid") || data.error.includes("401"))) {
+      return {
+        success: false,
+        model: modelName,
+        message: "Invalid Groq API Key. Please verify your key on console.groq.com.",
+      };
     }
   } catch {}
 
-  const uniqueCandidates = Array.from(new Set(candidates.filter(Boolean)));
-  let lastErrorMsg = "";
+  // 2. Direct client fallback testing
+  const candidates: string[] = [
+    modelName,
+    "llama-3.1-8b-instant",
+    "llama3-70b-8192",
+    "llama3-8b-8192",
+    "llama-3.3-70b-versatile",
+  ].filter(Boolean);
 
-  for (const candidate of uniqueCandidates) {
+  let lastErrorMsg = "";
+  for (const candidate of Array.from(new Set(candidates))) {
     try {
       const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
@@ -163,7 +171,7 @@ export async function verifyAndTestGroqModel(
           model: candidate,
           messages: [
             { role: "system", content: "You are an institutional trading assistant." },
-            { role: "user", content: "Respond with single word: OK" },
+            { role: "user", content: "Reply OK" },
           ],
           max_tokens: 5,
           temperature: 0.1,

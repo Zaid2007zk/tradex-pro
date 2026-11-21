@@ -47,7 +47,7 @@ export const GeminiKeyModal: React.FC<GeminiKeyModalProps> = ({
   
   // Groq State
   const [groqKey, setGroqKey] = useState("");
-  const [groqModel, setGroqModel] = useState("llama-3.3-70b-versatile");
+  const [groqModel, setGroqModel] = useState("llama-3.1-8b-instant");
   
   // Gemini State
   const [geminiKey, setGeminiKey] = useState("");

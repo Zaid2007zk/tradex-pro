@@ -111,14 +111,16 @@ function extractJson(text: string): unknown | null {
 // -----------------------------------------------------------------------------
 // GROQ API CALLER
 // -----------------------------------------------------------------------------
-async function callGroq(messages: ChatMsg[], apiKey: string, modelName?: string): Promise<string> {
+async function callGroq(messages: ChatMsg[], apiKey: string, modelName?: string): Promise<{ text: string; model: string }> {
   const cleanKey = apiKey.trim();
   if (!cleanKey) throw new Error("Missing Groq API Key");
 
+  // Universal models priority: test llama-3.1-8b-instant first if no custom model, or custom model then universal fallbacks
   const candidates: string[] = [
     modelName || "",
     "llama-3.1-8b-instant",
     "llama3-70b-8192",
+    "llama3-8b-8192",
     "mixtral-8x7b-32768",
     "llama-3.3-70b-versatile",
   ].filter(Boolean);
@@ -146,7 +148,7 @@ async function callGroq(messages: ChatMsg[], apiKey: string, modelName?: string)
       if (res.ok) {
         const data = await res.json();
         const text = data.choices?.[0]?.message?.content;
-        if (text && text.trim()) return text.trim();
+        if (text && text.trim()) return { text: text.trim(), model };
       } else {
         const errData = await res.json().catch(() => ({}));
         lastError = errData?.error?.message || `Groq error status ${res.status}`;
@@ -319,45 +321,46 @@ function generateAutonomousResponse(
     }
 
     // 4. Intent: Buy / Entry timing specifically
-    if (/buy|kharid|entry|best time|kab lena|lena chahiye/i.test(qLower)) {
+    if (/buy|kharid|entry|best time|kab lena|lena chahiye|timing|kab buy|kab enter/i.test(qLower)) {
       if (isHindi) {
         if (isOverbought) {
           return (
-            `### ⚠️ Institutional Alert: ${targetStock.symbol} Overbought (Thoda Wait Karein)\n\n` +
-            `• **Signal:** ${targetStock.symbol} ka RSI (${sig.rsi.toFixed(1)}) overbought zone mein hai, isliye short-term dip aane ki sambhavna hai.\n` +
-            `• **Best Buying Zone (Entry Dip):** Abhi CMP ₹${px.toFixed(2)} par chase na karein, **₹${pullbackEntry}** ke support pullback par buy karna sabse best rahega.\n` +
-            `• **Upside Target:** **₹${target1}** (+2.5% projected target).\n` +
-            `• **Strict Stop-Loss:** **₹${stopLoss}** (Capital preservation ke liye strict SL lagayein).\n\n` +
-            `💡 *Advice: Current price par buy na karein. ₹${pullbackEntry} ke support retest ka wait karein aur disciplined risk ke sath trade karein.*`
+            `### ⏰ Buy Timing & Price Action: ${targetStock.symbol} (${targetStock.name})\n\n` +
+            `• **1. Market Session Timing:** Intraday me enter karne ka sabse best time **09:45 AM - 10:45 AM** (opening volatility subside hone ke baad) aur **01:30 PM - 02:45 PM** (afternoon institutional wave) hota hai. Shuruat ke 09:15 - 09:30 AM me trade avoid karein.\n` +
+            `• **2. Current Price Status (Alert):** ${targetStock.symbol} ka RSI (**${sig.rsi.toFixed(1)}**) abhi overbought zone me hai. Isliye current CMP **₹${px.toFixed(2)}** par jaldbazi me FOMO buy na karein.\n` +
+            `• **3. Optimal Entry Dip:** Pullback ka wait karein, support zone **₹${pullbackEntry}** ke paas aane par buy karna sabse low-risk entry rahegi.\n` +
+            `• **4. Targets & Stop-Loss:** Target 1: **₹${target1}** (+2.5%) | Target 2: **₹${target2}** (+4.5%) | Strict SL: **₹${stopLoss}** (-1.5%).\n\n` +
+            `💡 *Pro Tip: Order Ticket se CNC (Delivery) ya 5x MIS select karke Limit order ₹${pullbackEntry} par place kar sakte hain.*`
           );
         } else if (isOversold) {
           return (
-            `### ⚡ Bullish Opportunity: ${targetStock.symbol} Prime Buying Zone\n\n` +
-            `• **Signal:** ${targetStock.symbol} ka RSI (${sig.rsi.toFixed(1)}) oversold hai, downside exhaust ho chuki hai aur bounce-back expected hai.\n` +
-            `• **Best Entry Point:** Current zone **₹${px.toFixed(2)}** se **₹${pullbackEntry}** par buy karne ka ideal time hai.\n` +
-            `• **Target Levels:** Target 1: **₹${target1}** | Target 2: **₹${target2}**.\n` +
-            `• **Stop-Loss Protection:** **₹${stopLoss}**.\n\n` +
-            `💡 *Advice: Setup high-conviction hai. Partial quantity enter karke trailing stop-loss use karein.*`
+            `### ⚡ Prime Buying Opportunity: ${targetStock.symbol} (${targetStock.name})\n\n` +
+            `• **1. Market Session Timing:** Abhi accumulation zone active hai! Best entry window **10:00 AM - 11:30 AM** ya afternoon dip me **01:45 PM** par best rehta hai.\n` +
+            `• **2. Technical Setup:** RSI (**${sig.rsi.toFixed(1)}**) oversold hai, selling exhaust ho chuki hai aur strong bounce-back expected hai.\n` +
+            `• **3. Entry Levels:** Current CMP **₹${px.toFixed(2)}** se lekar **₹${pullbackEntry}** tak buy karne ka golden time hai.\n` +
+            `• **4. Target & Stop-Loss:** Target 1: **₹${target1}** | Target 2: **₹${target2}** | Strict SL: **₹${stopLoss}**.\n\n` +
+            `💡 *Verdict: High-probability long setup. 1-Click execution ticket se buy order trigger karein.*`
           );
         } else {
           return (
-            `### 📊 Trend Analysis: ${targetStock.symbol} Entry Setup\n\n` +
-            `• **Current Market Price (LTP):** ₹${px.toFixed(2)} (${chgPct >= 0 ? "+" : ""}${chgPct.toFixed(2)}% aaj).\n` +
-            `• **Momentum Telemetry:** RSI ${sig.rsi.toFixed(1)} hai, aur MACD **${sig.macdBull ? "Bullish trend mein" : "Consolidation mein"}** hai.\n` +
-            `• **Suggested Entry:** **₹${px.toFixed(2)}** par accumulate karein, Target **₹${target1}** aur Stop-loss **₹${stopLoss}**.\n\n` +
-            `💡 *Risk-to-reward ratio 1:2.3 favorable hai. Order ticket se 1-Click execution kar sakte hain.*`
+            `### ⏰ Tactical Buy Timing & Execution: ${targetStock.symbol} (${targetStock.name})\n\n` +
+            `• **1. Best Time to Enter:** Intraday me entries ke 2 best windows hain: **09:45 AM - 10:45 AM** (ORH breakout confirmation) aur **01:30 PM - 02:45 PM** (afternoon institutional wave).\n` +
+            `• **2. Current CMP & Trend:** CMP **₹${px.toFixed(2)}** (${chgPct >= 0 ? "+" : ""}${chgPct.toFixed(2)}%) · RSI **${sig.rsi.toFixed(1)}** (Balanced/Healthy Momentum) · MACD is **${sig.macdBull ? "Bullish" : "Consolidation"}**.\n` +
+            `• **3. Ideal Accumulation Zone:** Current CMP **₹${px.toFixed(2)}** se support dip **₹${pullbackEntry}** ke beech accumulate karein.\n` +
+            `• **4. Execution Plan:** Upside Target: **₹${target1}** (+2.5%) | Capital Protection Stop-Loss: **₹${stopLoss}** (-1.5%).\n\n` +
+            `💡 *Risk-Reward 1:2.3 favorable hai. Discipline ke sath predefined SL maintain karein.*`
           );
         }
       }
 
       // English Buy Timing
       return (
-        `### Institutional Brief: ${targetStock.symbol} (${targetStock.sector})\n\n` +
-        `• **Current Price (LTP):** ₹${px.toFixed(2)} (${chgPct >= 0 ? "+" : ""}${chgPct.toFixed(2)}%)\n` +
-        `• **Momentum Telemetry:** RSI at ${sig.rsi.toFixed(1)} (${isOverbought ? "Overbought Caution" : isOversold ? "Oversold Opportunity" : "Equilibrium"}), MACD ${sig.macdBull ? "Bullish Divergence" : "Consolidation"}.\n` +
-        `• **Recommended Execution:** ${sig.verdict === "buy" ? "Long Accumulation" : sig.verdict === "sell" ? "Short Tactical Setup" : "Range Trade"} around ₹${pullbackEntry}.\n` +
-        `• **Price Target:** ₹${target1} (+2.5%) | **Stop-Loss:** ₹${stopLoss} (-1.5%).\n\n` +
-        `Trade with disciplined position sizing. Fully paper simulated on NSE execution ladder.`
+        `### ⏰ Tactical Entry & Execution Window: ${targetStock.symbol} (${targetStock.sector})\n\n` +
+        `• **1. Optimal Execution Timing:** Prime liquidity windows are **09:45 - 10:45 AM IST** (post-opening range price discovery) and **01:30 - 02:45 PM IST** (institutional flow expansion). Avoid opening noise (09:15 - 09:30 AM).\n` +
+        `• **2. Current Price (LTP):** ₹${px.toFixed(2)} (${chgPct >= 0 ? "+" : ""}${chgPct.toFixed(2)}% today) · RSI at ${sig.rsi.toFixed(1)} (${isOverbought ? "Overbought Warning" : isOversold ? "Oversold Opportunity" : "Equilibrium"}).\n` +
+        `• **3. Recommended Entry Zone:** ${isOverbought ? `Await tactical pullback to support dip at **₹${pullbackEntry}**` : `Accumulate between **₹${pullbackEntry}** and **₹${px.toFixed(2)}**`}.\n` +
+        `• **4. Key Target & Risk Level:** Target 1: **₹${target1}** (+2.5%) | Stop-Loss: **₹${stopLoss}** (-1.5% strict capital protection stop).\n\n` +
+        `Tactical Verdict: **${sig.verdict.toUpperCase()}**. Available for immediate 1-Click execution on the Order Ticket.`
       );
     }
 
@@ -522,11 +525,11 @@ export async function POST(req: Request) {
   if (task === "test-key") {
     if (provider === "groq") {
       try {
-        const text = await callGroq([{ role: "user", content: "Reply 'OK'" }], apiKey, model);
+        const result = await callGroq([{ role: "user", content: "Reply 'OK'" }], apiKey, model);
         return NextResponse.json({
           ok: true,
-          message: "Connected successfully to Groq Cloud API!",
-          model: model || "llama-3.1-8b-instant",
+          message: `Connected successfully to Groq Cloud API (${result.model})!`,
+          model: result.model,
         });
       } catch (err) {
         return NextResponse.json(
@@ -569,7 +572,8 @@ ${context}`;
     // 1. If explicit Groq key
     if ((provider === "groq" && apiKey) || process.env.GROQ_API_KEY) {
       try {
-        return await callGroq(messages, apiKey || process.env.GROQ_API_KEY!, model);
+        const res = await callGroq(messages, apiKey || process.env.GROQ_API_KEY!, model);
+        return res.text;
       } catch {}
     }
 
