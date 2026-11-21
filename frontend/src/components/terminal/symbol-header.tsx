@@ -68,7 +68,7 @@ export default function SymbolHeader({ symbol, quote }: { symbol: string; quote:
       </div>
 
       {/* day range */}
-      <div className="min-w-52 flex-1">
+      <div className="w-full sm:w-auto sm:min-w-44 sm:flex-1">
         <div className="mb-1 flex items-center justify-between font-mono text-[10px] text-white/40">
           <span>L {fmtPrice(quote.dayLow)}</span>
           <span className="uppercase tracking-wider">Day Range</span>

@@ -1,8 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { LayoutDashboard, LineChart, Flame } from "lucide-react";
-import { generateCandles, liveCandle, fmtINR, type Timeframe } from "@/lib/market/engine";
+import {
+  LayoutDashboard,
+  LineChart,
+  Flame,
+  Layers,
+  Zap,
+  Wallet,
+  BarChart2,
+  ChevronLeft,
+  ChevronRight,
+  Maximize2,
+  Minimize2,
+} from "lucide-react";
+import { generateCandles, liveCandle, fmtINR, fmtPrice, type Timeframe } from "@/lib/market/engine";
 import { useMarket } from "@/hooks/use-market";
 import { TIMEFRAMES } from "@/lib/market/engine";
 import TopBar from "./top-bar";
@@ -30,6 +42,8 @@ import ShariahScreenerView from "./shariah-screener-view";
 
 const START_BALANCE = 1_000_000;
 
+export type MobileTab = "chart" | "watchlist" | "trade" | "positions" | "depth";
+
 export default function Terminal() {
   const quotes = useMarket();
   const [symbol, setSymbol] = useState("RELIANCE");
@@ -41,9 +55,15 @@ export default function Terminal() {
   const [fps, setFps] = useState(60);
   const rafCount = useRef(0);
 
+  // Responsive Layout States
+  const [mobileTab, setMobileTab] = useState<MobileTab>("chart");
+  const [orderSide, setOrderSide] = useState<"BUY" | "SELL">("BUY");
+  const [leftRailCollapsed, setLeftRailCollapsed] = useState(false);
+  const [rightRailCollapsed, setRightRailCollapsed] = useState(false);
+
   const quote = quotes[symbol];
 
-  // fps meter (proves the feed is live & smooth)
+  // FPS meter
   useEffect(() => {
     let raf = 0;
     const loop = () => {
@@ -64,32 +84,34 @@ export default function Terminal() {
   const baseCandles = useMemo(() => generateCandles(symbol, timeframe), [symbol, timeframe]);
   const candles = useMemo(() => liveCandle(baseCandles, quote.price), [baseCandles, quote.price]);
 
-  const marginUsed = positions.reduce((a, p) => a + (p.price * p.qty) / (p.product === "MIS" ? 5 : p.product === "MTF" ? 4 : 1), 0);
+  const marginUsed = positions.reduce(
+    (a, p) => a + (p.price * p.qty) / (p.product === "MIS" ? 5 : p.product === "MTF" ? 4 : 1),
+    0
+  );
   const balance = START_BALANCE - marginUsed;
 
-  const onExecute = useCallback(
-    (o: Omit<Order, "id" | "ts">) => {
-      const order: Order = { ...o, id: `ord-${Date.now()}-${Math.floor(Math.random() * 999)}`, ts: Date.now() };
-      setOrders((prev) => [order, ...prev].slice(0, 60));
-      setPositions((prev) => {
-        const existing = prev.find((p) => p.symbol === o.symbol && p.side === o.side);
-        if (existing) {
-          const newQty = existing.qty + o.qty;
-          const avg = (existing.price * existing.qty + o.price * o.qty) / newQty;
-          return prev.map((p) => (p.id === existing.id ? { ...p, qty: newQty, price: Math.round(avg * 100) / 100, ltp: o.price } : p));
-        }
-        const opp = prev.find((p) => p.symbol === o.symbol && p.side !== o.side);
-        if (opp && opp.qty === o.qty) {
-          return prev.filter((p) => p.id !== opp.id);
-        }
-        if (opp && opp.qty > o.qty) {
-          return prev.map((p) => (p.id === opp.id ? { ...p, qty: p.qty - o.qty, ltp: o.price } : p));
-        }
-        return [...prev, { ...order, ltp: o.price }];
-      });
-    },
-    []
-  );
+  const onExecute = useCallback((o: Omit<Order, "id" | "ts">) => {
+    const order: Order = { ...o, id: `ord-${Date.now()}-${Math.floor(Math.random() * 999)}`, ts: Date.now() };
+    setOrders((prev) => [order, ...prev].slice(0, 60));
+    setPositions((prev) => {
+      const existing = prev.find((p) => p.symbol === o.symbol && p.side === o.side);
+      if (existing) {
+        const newQty = existing.qty + o.qty;
+        const avg = (existing.price * existing.qty + o.price * o.qty) / newQty;
+        return prev.map((p) =>
+          p.id === existing.id ? { ...p, qty: newQty, price: Math.round(avg * 100) / 100, ltp: o.price } : p
+        );
+      }
+      const opp = prev.find((p) => p.symbol === o.symbol && p.side !== o.side);
+      if (opp && opp.qty === o.qty) {
+        return prev.filter((p) => p.id !== opp.id);
+      }
+      if (opp && opp.qty > o.qty) {
+        return prev.map((p) => (p.id === opp.id ? { ...p, qty: p.qty - o.qty, ltp: o.price } : p));
+      }
+      return [...prev, { ...order, ltp: o.price }];
+    });
+  }, []);
 
   const livePositions = useMemo(
     () => positions.map((p) => ({ ...p, ltp: quotes[p.symbol]?.price ?? p.ltp })),
@@ -101,120 +123,410 @@ export default function Terminal() {
     return a + pnl;
   }, 0);
 
+  // When a stock is selected from Watchlist on mobile, auto-switch to chart
+  const handleSelectSymbol = useCallback((sym: string) => {
+    setSymbol(sym);
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      setMobileTab("chart");
+    }
+  }, []);
+
   return (
-    <div className="tx-terminal flex min-h-screen flex-col lg:h-screen lg:overflow-hidden">
-      <TopBar quotes={quotes} onSelect={setSymbol} balance={balance} />
-      <TickerTape quotes={quotes} onSelect={setSymbol} />
-      <div className="mx-2 mt-2">
+    <div className="tx-terminal flex min-h-screen flex-col lg:h-screen lg:overflow-hidden select-none">
+      {/* 1. Global Header Bar */}
+      <TopBar quotes={quotes} onSelect={handleSelectSymbol} balance={balance} />
+
+      {/* 2. Ticker Tape */}
+      <TickerTape quotes={quotes} onSelect={handleSelectSymbol} />
+
+      {/* 3. Workspace Selector Tabs */}
+      <div className="mx-2 mt-1.5 shrink-0">
         <WorkspaceTabs active={workspace} onChange={setWorkspace} />
       </div>
 
-      <main className="flex min-h-0 flex-1 flex-col gap-2 p-2 lg:flex-row">
-        {/* left rail */}
-        <div className="h-96 shrink-0 lg:h-auto lg:w-64 xl:w-72">
-          <Watchlist quotes={quotes} selected={symbol} onSelect={setSymbol} />
-        </div>
+      {/* 4. Mobile Segmented Tab Switcher (Visible on Phones & Tablets < 1024px) */}
+      <div className="flex lg:hidden items-center justify-between rounded-xl border border-white/10 bg-[#0e121a]/90 p-1 mx-2 mt-1.5 shrink-0 backdrop-blur">
+        <button
+          onClick={() => setMobileTab("chart")}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11.5px] font-semibold transition ${
+            mobileTab === "chart"
+              ? "bg-amber-500/20 text-amber-300 shadow-[inset_0_0_0_1px_rgba(240,185,11,0.3)]"
+              : "text-white/50 hover:text-white"
+          }`}
+        >
+          <LineChart className="h-3.5 w-3.5" />
+          <span>Chart</span>
+        </button>
+        <button
+          onClick={() => setMobileTab("watchlist")}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11.5px] font-semibold transition ${
+            mobileTab === "watchlist"
+              ? "bg-amber-500/20 text-amber-300 shadow-[inset_0_0_0_1px_rgba(240,185,11,0.3)]"
+              : "text-white/50 hover:text-white"
+          }`}
+        >
+          <Layers className="h-3.5 w-3.5" />
+          <span>Watchlist</span>
+        </button>
+        <button
+          onClick={() => setMobileTab("trade")}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11.5px] font-semibold transition ${
+            mobileTab === "trade"
+              ? "bg-emerald-500/20 text-emerald-300 shadow-[inset_0_0_0_1px_rgba(14,203,129,0.3)]"
+              : "text-white/50 hover:text-white"
+          }`}
+        >
+          <Zap className="h-3.5 w-3.5" />
+          <span>Trade</span>
+        </button>
+        <button
+          onClick={() => setMobileTab("positions")}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11.5px] font-semibold transition ${
+            mobileTab === "positions"
+              ? "bg-cyan-500/20 text-cyan-300 shadow-[inset_0_0_0_1px_rgba(6,182,212,0.3)]"
+              : "text-white/50 hover:text-white"
+          }`}
+        >
+          <Wallet className="h-3.5 w-3.5" />
+          <span>Orders ({orders.length})</span>
+        </button>
+        <button
+          onClick={() => setMobileTab("depth")}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11.5px] font-semibold transition ${
+            mobileTab === "depth"
+              ? "bg-purple-500/20 text-purple-300 shadow-[inset_0_0_0_1px_rgba(168,85,247,0.3)]"
+              : "text-white/50 hover:text-white"
+          }`}
+        >
+          <BarChart2 className="h-3.5 w-3.5" />
+          <span>Depth</span>
+        </button>
+      </div>
 
-        {/* center column */}
-        <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
-          {workspace === "terminal" ? (
-            <>
-              <div className="tx-panel">
-                <SymbolHeader symbol={symbol} quote={quote} />
+      {/* 5. Main Content Area */}
+      <main className="flex min-h-0 flex-1 flex-col gap-2 p-2 lg:flex-row overflow-hidden">
+        {/* ========================================================================= */}
+        {/* A. DESKTOP / LAPTOP LAYOUT (Width >= 1024px)                                */}
+        {/* ========================================================================= */}
+        <div className="hidden lg:contents">
+          {/* Left Rail (Watchlist) with Smooth Collapse / Expand */}
+          <div
+            className={`transition-all duration-300 ease-in-out shrink-0 flex flex-col ${
+              leftRailCollapsed ? "w-11 items-center" : "w-60 xl:w-72 2xl:w-80"
+            }`}
+          >
+            {leftRailCollapsed ? (
+              <div className="tx-panel flex h-full w-full flex-col items-center py-3 gap-3">
+                <button
+                  onClick={() => setLeftRailCollapsed(false)}
+                  title="Expand Watchlist"
+                  className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/60 hover:bg-white/15 hover:text-white transition"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+                <div className="[writing-mode:vertical-rl] rotate-180 font-mono text-[11px] font-bold tracking-wider text-white/40">
+                  WATCHLIST · {quotes[symbol]?.symbol}
+                </div>
               </div>
+            ) : (
+              <div className="relative h-full flex flex-col">
+                <button
+                  onClick={() => setLeftRailCollapsed(true)}
+                  title="Collapse Watchlist"
+                  className="absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded border border-white/10 bg-white/5 text-white/50 hover:bg-white/15 hover:text-white transition"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </button>
+                <Watchlist quotes={quotes} selected={symbol} onSelect={handleSelectSymbol} />
+              </div>
+            )}
+          </div>
 
-              {/* chart / heatmap panel */}
-              <div className="tx-panel flex min-h-104 flex-1 flex-col overflow-hidden">
-            <div className="tx-panel-head flex items-center justify-between px-3 py-2">
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setView("chart")}
-                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition ${
-                    view === "chart" ? "bg-amber-500/15 text-amber-300" : "text-white/45 hover:bg-white/5 hover:text-white/75"
-                  }`}
-                >
-                  <LineChart className="h-3.5 w-3.5" /> Chart
-                </button>
-                <button
-                  onClick={() => setView("heatmap")}
-                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition ${
-                    view === "heatmap" ? "bg-amber-500/15 text-amber-300" : "text-white/45 hover:bg-white/5 hover:text-white/75"
-                  }`}
-                >
-                  <Flame className="h-3.5 w-3.5" /> Heatmap
-                </button>
-                {view === "chart" && (
-                  <div className="ml-3 flex items-center gap-0.5 rounded-md border border-white/10 bg-white/4 p-0.5">
-                    {TIMEFRAMES.map((t) => (
+          {/* Center Column (Chart & Bottom Tabs OR Specialized Workspace) */}
+          <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 overflow-hidden">
+            {workspace === "terminal" ? (
+              <>
+                <div className="tx-panel shrink-0">
+                  <SymbolHeader symbol={symbol} quote={quote} />
+                </div>
+
+                {/* Chart / Heatmap panel */}
+                <div className="tx-panel flex flex-1 min-h-[280px] sm:min-h-[320px] flex-col overflow-hidden">
+                  <div className="tx-panel-head flex items-center justify-between px-3 py-2 shrink-0">
+                    <div className="flex items-center gap-1">
                       <button
-                        key={t.key}
-                        onClick={() => setTimeframe(t.key)}
-                        className={`rounded px-2.5 py-1 font-mono text-[11px] font-semibold transition ${
-                          timeframe === t.key ? "bg-white/14 text-white" : "text-white/45 hover:text-white/80"
+                        onClick={() => setView("chart")}
+                        className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition ${
+                          view === "chart"
+                            ? "bg-amber-500/15 text-amber-300"
+                            : "text-white/45 hover:bg-white/5 hover:text-white/75"
                         }`}
                       >
-                        {t.label}
+                        <LineChart className="h-3.5 w-3.5" /> Chart
                       </button>
-                    ))}
+                      <button
+                        onClick={() => setView("heatmap")}
+                        className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition ${
+                          view === "heatmap"
+                            ? "bg-amber-500/15 text-amber-300"
+                            : "text-white/45 hover:bg-white/5 hover:text-white/75"
+                        }`}
+                      >
+                        <Flame className="h-3.5 w-3.5" /> Heatmap
+                      </button>
+                      {view === "chart" && (
+                        <div className="ml-3 flex items-center gap-0.5 rounded-md border border-white/10 bg-white/4 p-0.5">
+                          {TIMEFRAMES.map((t) => (
+                            <button
+                              key={t.key}
+                              onClick={() => setTimeframe(t.key)}
+                              className={`rounded px-2.5 py-1 font-mono text-[11px] font-semibold transition ${
+                                timeframe === t.key
+                                  ? "bg-white/14 text-white"
+                                  : "text-white/45 hover:text-white/80"
+                              }`}
+                            >
+                              {t.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="flex items-center gap-1.5 font-mono text-[10px] text-white/40">
+                        <span className="tx-live-dot h-1.5 w-1.5 rounded-full bg-emerald-400" /> LIVE NSE FEED
+                      </span>
+                      <span className="rounded-md border border-white/10 bg-white/4 px-2 py-1 font-mono text-[10px] text-white/55">
+                        P&amp;L{" "}
+                        <span className={totalPnl >= 0 ? "text-emerald-400" : "text-rose-400"}>
+                          {totalPnl >= 0 ? "+" : "−"}
+                          {fmtINR(Math.abs(totalPnl))}
+                        </span>
+                      </span>
+                    </div>
                   </div>
-                )}
-              </div>
-              <div className="hidden items-center gap-3 sm:flex">
-                <span className="flex items-center gap-1.5 font-mono text-[10px] text-white/40">
-                  <span className="tx-live-dot h-1.5 w-1.5 rounded-full bg-emerald-400" /> LIVE FEED
-                </span>
-                <span className="rounded-md border border-white/10 bg-white/4 px-2 py-1 font-mono text-[10px] text-white/55">
-                  P&amp;L{" "}
-                  <span className={totalPnl >= 0 ? "text-emerald-400" : "text-rose-400"}>
-                    {totalPnl >= 0 ? "+" : "−"}
-                    {fmtINR(Math.abs(totalPnl))}
-                  </span>
-                </span>
-              </div>
-            </div>
-            <div className="min-h-0 flex-1">
-                {view === "chart" ? (
-                  <CandleChart symbol={symbol} candles={candles} timeframe={timeframe} price={quote.price} />
-                ) : (
-                  <Heatmap quotes={quotes} onSelect={setSymbol} />
-                )}
-              </div>
-            </div>
+                  <div className="min-h-0 flex-1 relative">
+                    {view === "chart" ? (
+                      <CandleChart symbol={symbol} candles={candles} timeframe={timeframe} price={quote.price} />
+                    ) : (
+                      <Heatmap quotes={quotes} onSelect={handleSelectSymbol} />
+                    )}
+                  </div>
+                </div>
 
-            {/* positions / orders */}
-            <div className="h-64 shrink-0 lg:h-56">
-              <BottomTabs positions={livePositions} orders={orders} />
-            </div>
-          </>
-          ) : (
-            <div className="tx-panel flex min-h-104 flex-1 flex-col overflow-hidden">
+                {/* Bottom Tabs (Positions & Orders) */}
+                <div className="h-56 xl:h-60 shrink-0">
+                  <BottomTabs positions={livePositions} orders={orders} />
+                </div>
+              </>
+            ) : (
+              <div className="tx-panel flex min-h-0 flex-1 flex-col overflow-hidden">
+                {workspace === "options" && <OptionsChain symbol={symbol} quote={quote} />}
+                {workspace === "multi" && <MultiChart symbol={symbol} quotes={quotes} onSelect={handleSelectSymbol} />}
+                {workspace === "algo" && <AlgoStudio symbol={symbol} quotes={quotes} onSelect={handleSelectSymbol} />}
+                {workspace === "backtest" && <Backtest symbol={symbol} quotes={quotes} />}
+                {workspace === "journal" && <Journal orders={orders} />}
+                {workspace === "academy" && <Academy />}
+                {workspace === "autopilot" && (
+                  <Autopilot quotes={quotes} positions={livePositions} onExecute={onExecute} />
+                )}
+                {workspace === "shariah" && <ShariahScreenerView onSelectSymbol={handleSelectSymbol} />}
+              </div>
+            )}
+          </section>
+
+          {/* Right Rail (Order Ticket, Depth, AI) with Collapse Toggle */}
+          <div
+            className={`transition-all duration-300 ease-in-out shrink-0 flex flex-col ${
+              rightRailCollapsed ? "w-11 items-center" : "w-72 xl:w-80 2xl:w-88"
+            }`}
+          >
+            {rightRailCollapsed ? (
+              <div className="tx-panel flex h-full w-full flex-col items-center py-3 gap-3">
+                <button
+                  onClick={() => setRightRailCollapsed(false)}
+                  title="Expand Trade Panel"
+                  className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/60 hover:bg-white/15 hover:text-white transition"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <div className="[writing-mode:vertical-rl] font-mono text-[11px] font-bold tracking-wider text-emerald-400">
+                  TRADE & ORDER BOOK
+                </div>
+              </div>
+            ) : (
+              <aside className="tx-scroll relative flex h-full w-full flex-col gap-2 overflow-y-auto">
+                <div className="relative">
+                  <button
+                    onClick={() => setRightRailCollapsed(true)}
+                    title="Collapse Trade Panel"
+                    className="absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded border border-white/10 bg-white/5 text-white/50 hover:bg-white/15 hover:text-white transition"
+                  >
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </button>
+                  <OrderTicket
+                    symbol={symbol}
+                    quote={quote}
+                    balance={balance}
+                    onExecute={onExecute}
+                    defaultSide={orderSide}
+                  />
+                </div>
+                <MarketDepth price={quote.price} />
+                <AiPanel symbol={symbol} candles={candles} />
+              </aside>
+            )}
+          </div>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* B. MOBILE & TABLET ADAPTIVE LAYOUT (Width < 1024px)                       */}
+        {/* ========================================================================= */}
+        <div className="flex flex-col flex-1 min-h-0 lg:hidden overflow-y-auto tx-scroll">
+          {workspace !== "terminal" ? (
+            <div className="tx-panel flex-1 flex flex-col min-h-[500px] overflow-hidden">
               {workspace === "options" && <OptionsChain symbol={symbol} quote={quote} />}
-              {workspace === "multi" && <MultiChart symbol={symbol} quotes={quotes} onSelect={setSymbol} />}
-              {workspace === "algo" && <AlgoStudio symbol={symbol} quotes={quotes} onSelect={setSymbol} />}
+              {workspace === "multi" && <MultiChart symbol={symbol} quotes={quotes} onSelect={handleSelectSymbol} />}
+              {workspace === "algo" && <AlgoStudio symbol={symbol} quotes={quotes} onSelect={handleSelectSymbol} />}
               {workspace === "backtest" && <Backtest symbol={symbol} quotes={quotes} />}
               {workspace === "journal" && <Journal orders={orders} />}
               {workspace === "academy" && <Academy />}
               {workspace === "autopilot" && (
                 <Autopilot quotes={quotes} positions={livePositions} onExecute={onExecute} />
               )}
-              {workspace === "shariah" && (
-                <ShariahScreenerView onSelectSymbol={setSymbol} />
-              )}
+              {workspace === "shariah" && <ShariahScreenerView onSelectSymbol={handleSelectSymbol} />}
             </div>
-          )}
-        </section>
+          ) : (
+            <>
+              {/* Tab 1: Live Chart View */}
+              {mobileTab === "chart" && (
+                <div className="flex flex-col gap-2 flex-1 min-h-0">
+                  <div className="tx-panel shrink-0">
+                    <SymbolHeader symbol={symbol} quote={quote} />
+                  </div>
 
-        {/* right rail */}
-        <aside className="tx-scroll flex w-full shrink-0 flex-col gap-2 overflow-y-auto xl:w-84">
-          <OrderTicket symbol={symbol} quote={quote} balance={balance} onExecute={onExecute} />
-          <MarketDepth price={quote.price} />
-          <AiPanel symbol={symbol} candles={candles} />
-        </aside>
+                  <div className="tx-panel flex flex-col h-[400px] sm:h-[480px] overflow-hidden shrink-0">
+                    <div className="tx-panel-head flex items-center justify-between px-3 py-2">
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => setView("chart")}
+                          className={`rounded px-2 py-1 text-[11px] font-semibold ${
+                            view === "chart" ? "bg-amber-500/15 text-amber-300" : "text-white/45"
+                          }`}
+                        >
+                          Chart
+                        </button>
+                        <button
+                          onClick={() => setView("heatmap")}
+                          className={`rounded px-2 py-1 text-[11px] font-semibold ${
+                            view === "heatmap" ? "bg-amber-500/15 text-amber-300" : "text-white/45"
+                          }`}
+                        >
+                          Heatmap
+                        </button>
+                        {view === "chart" && (
+                          <div className="flex items-center gap-0.5 ml-2">
+                            {TIMEFRAMES.map((t) => (
+                              <button
+                                key={t.key}
+                                onClick={() => setTimeframe(t.key)}
+                                className={`rounded px-1.5 py-0.5 font-mono text-[10px] ${
+                                  timeframe === t.key ? "bg-white/14 text-white font-bold" : "text-white/45"
+                                }`}
+                              >
+                                {t.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <span className="font-mono text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        LIVE
+                      </span>
+                    </div>
+
+                    <div className="flex-1 min-h-0 relative">
+                      {view === "chart" ? (
+                        <CandleChart symbol={symbol} candles={candles} timeframe={timeframe} price={quote.price} />
+                      ) : (
+                        <Heatmap quotes={quotes} onSelect={handleSelectSymbol} />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Mobile 1-Tap Execution Bar */}
+                  <div className="flex items-center gap-2 p-1.5 rounded-xl border border-white/10 bg-[#0e121a] shrink-0">
+                    <button
+                      onClick={() => {
+                        setOrderSide("BUY");
+                        setMobileTab("trade");
+                      }}
+                      className="flex-1 py-3 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-1.5 transition active:scale-95"
+                    >
+                      <span>BUY {symbol}</span>
+                      <span className="font-mono font-bold">₹{fmtPrice(quote.price)}</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setOrderSide("SELL");
+                        setMobileTab("trade");
+                      }}
+                      className="flex-1 py-3 rounded-lg bg-rose-500 hover:bg-rose-400 text-black font-bold text-xs shadow-lg shadow-rose-500/20 flex items-center justify-center gap-1.5 transition active:scale-95"
+                    >
+                      <span>SELL {symbol}</span>
+                      <span className="font-mono font-bold">₹{fmtPrice(quote.price)}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Tab 2: Watchlist View */}
+              {mobileTab === "watchlist" && (
+                <div className="h-[600px] flex flex-col">
+                  <Watchlist quotes={quotes} selected={symbol} onSelect={handleSelectSymbol} />
+                </div>
+              )}
+
+              {/* Tab 3: Order Execution Ticket View */}
+              {mobileTab === "trade" && (
+                <div className="flex flex-col gap-2 pb-6">
+                  <OrderTicket
+                    symbol={symbol}
+                    quote={quote}
+                    balance={balance}
+                    onExecute={onExecute}
+                    defaultSide={orderSide}
+                  />
+                  <MarketDepth price={quote.price} />
+                </div>
+              )}
+
+              {/* Tab 4: Positions & Orders View */}
+              {mobileTab === "positions" && (
+                <div className="h-[520px] flex flex-col">
+                  <BottomTabs positions={livePositions} orders={orders} />
+                </div>
+              )}
+
+              {/* Tab 5: Market Depth & AI Telemetry View */}
+              {mobileTab === "depth" && (
+                <div className="flex flex-col gap-2 pb-6">
+                  <MarketDepth price={quote.price} />
+                  <AiPanel symbol={symbol} candles={candles} />
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </main>
 
+      {/* 6. Status Bar at Bottom */}
       <StatusBar fps={fps} />
+
+      {/* 7. Floating Intelligent Copilots */}
       <AiCopilot quotes={quotes} />
-      <AiCore quotes={quotes} symbol={symbol} positions={livePositions} onSelect={setSymbol} onExecute={onExecute} />
+      <AiCore quotes={quotes} symbol={symbol} positions={livePositions} onSelect={handleSelectSymbol} onExecute={onExecute} />
     </div>
   );
 }

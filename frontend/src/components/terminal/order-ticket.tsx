@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Minus, Plus, Zap } from "lucide-react";
 import { STOCKS, fmtINR, fmtPrice, r2 } from "@/lib/market/engine";
 import type { Quote } from "@/hooks/use-market";
@@ -28,6 +28,7 @@ type Props = {
   quote: Quote;
   balance: number;
   onExecute: (o: Omit<Order, "id" | "ts">) => void;
+  defaultSide?: "BUY" | "SELL";
 };
 
 const PRODUCTS: { key: ProductType; hint: string }[] = [
@@ -36,8 +37,13 @@ const PRODUCTS: { key: ProductType; hint: string }[] = [
   { key: "MTF", hint: "Margin · 4x" },
 ];
 
-export default function OrderTicket({ symbol, quote, balance, onExecute }: Props) {
-  const [side, setSide] = useState<"BUY" | "SELL">("BUY");
+export default function OrderTicket({ symbol, quote, balance, onExecute, defaultSide = "BUY" }: Props) {
+  const [side, setSide] = useState<"BUY" | "SELL">(defaultSide);
+
+  // Sync side if defaultSide changes externally (e.g. from mobile quick action)
+  useEffect(() => {
+    if (defaultSide) setSide(defaultSide);
+  }, [defaultSide]);
   const [product, setProduct] = useState<ProductType>("MIS");
   const [orderType, setOrderType] = useState<OrderType>("MARKET");
   const [qty, setQty] = useState(10);

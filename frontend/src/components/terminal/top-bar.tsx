@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Bell, CandlestickChart, Command, Search, Wallet, Sparkles, Zap, Scale, User, ShieldCheck } from "lucide-react";
+import { Bell, CandlestickChart, Command, Search, Wallet, Sparkles, Zap, Scale, User, ShieldCheck, SlidersHorizontal } from "lucide-react";
 import { INDICES, STOCKS, computeIndexValue, fmtPct, fmtPrice, fmtINR } from "@/lib/market/engine";
 import type { Quote } from "@/hooks/use-market";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -155,6 +155,42 @@ export default function TopBar({ quotes, onSelect, balance }: Props) {
             </span>
           </button>
 
+          {/* Mobile Tools Popover (Visible on mobile screens) */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                className="flex sm:hidden h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/70 transition hover:bg-white/10"
+                aria-label="Terminal Tools"
+              >
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-56 border-white/12 bg-[#0e121a] p-2 shadow-2xl z-50">
+              <div className="px-2 py-1.5 text-[11px] font-semibold text-white/50 uppercase tracking-wider">Terminal Features</div>
+              <button
+                onClick={() => setAiModalOpen(true)}
+                className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-semibold text-purple-300 hover:bg-purple-500/10 transition"
+              >
+                <Sparkles className="h-4 w-4 text-purple-400" />
+                <span>AI Neural Engine</span>
+              </button>
+              <button
+                onClick={() => setBrokerModalOpen(true)}
+                className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-semibold text-cyan-300 hover:bg-cyan-500/10 transition"
+              >
+                <Zap className="h-4 w-4 text-cyan-400" />
+                <span>Broker DMA</span>
+              </button>
+              <button
+                onClick={() => setShariahModalOpen(true)}
+                className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-semibold text-emerald-300 hover:bg-emerald-500/10 transition"
+              >
+                <Scale className="h-4 w-4 text-emerald-400" />
+                <span>Halal Screener</span>
+              </button>
+            </PopoverContent>
+          </Popover>
+
           {/* Broker DMA Button */}
           <button
             onClick={() => setBrokerModalOpen(true)}
@@ -176,7 +212,7 @@ export default function TopBar({ quotes, onSelect, balance }: Props) {
 
         <div className="flex-1" />
 
-        {/* Paper trading balance */}
+        {/* Paper trading balance (Desktop & Tablet) */}
         <div className="hidden items-center gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/8 px-3 py-1.5 sm:flex">
           <Wallet className="h-3.5 w-3.5 text-emerald-400" />
           <div className="leading-none">
@@ -185,6 +221,12 @@ export default function TopBar({ quotes, onSelect, balance }: Props) {
               {fmtINR(balance)}
             </div>
           </div>
+        </div>
+
+        {/* Paper trading balance (Mobile compact) */}
+        <div className="flex items-center gap-1.5 rounded-lg border border-emerald-500/25 bg-emerald-500/8 px-2 py-1 text-emerald-300 font-mono text-[11px] font-bold sm:hidden">
+          <Wallet className="h-3 w-3 text-emerald-400" />
+          <span>₹{(balance / 100000).toFixed(1)}L</span>
         </div>
 
         {/* Alerts */}
