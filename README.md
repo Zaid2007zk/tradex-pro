@@ -1,76 +1,39 @@
-# Stock Market Next-Day Prediction
+# TradeX PRO — Quantum Trading Terminal
 
-## Project Overview
+NSE/BSE-style dark trading terminal with a full AI layer. Next.js 16 + TypeScript + Tailwind v4 + shadcn/ui + Bun.
 
-This project uses machine learning to predict the next-day movement of stock prices based on historical market data.
+## Quick start
 
-The main objective is to classify whether a stock is likely to move significantly upward on the next trading day.
+```bash
+bun install
+bun run dev
+# open http://localhost:3000
+```
 
-## Target Definition
+(Or with npm: `npm install && npm run dev`)
 
-The target was created using the next-day return.
+## What's inside
 
-A day was classified as:
+- **Terminal**: live candlestick chart (1D/1W/1M/3M), heatmap, watchlist (20 NSE stocks), market depth, order ticket (MIS 5x / CNC / MTF 4x), positions & orders with live P&L
+- **Workspaces**: Options Chain, Multi-Chart, Algo Studio, Strategy Backtest, Journal, Academy
+- **AI Copilot** (rules-based, bottom-right): instant technical signals
+- **AI CORE** (bottom-left, LLM-powered): real-LLM chat over the live tape, Alpha Ideas (one-click paper execution), AI NewsWire, Deep Reports, voice (TTS)
+- **AI Autopilot** (workspace tab): LLM auto-scans every 75s and deploys paper trades by itself — with kill switch, confidence threshold, max-open-positions guardrails and an auto-deployment log
+- Paper trading account: ₹10,00,000 simulated funds
 
-- `1` → Next-day return > 0.25%
-- `0` → Next-day return <= 0.25%
+## Important notes
 
-## Dataset
+1. **Market data is a deterministic simulation** (seeded PRNG engine in `src/lib/market/engine.ts`). It is NOT real exchange data. Everything is clearly labeled "Fully simulated · Paper trading".
+2. **AI features** (`/api/ai-core`, `/api/ai-tts`) use the `z-ai-web-dev-sdk` (server-side). In a hosting environment where this SDK is unavailable, the AI panels will show a graceful error — the rest of the terminal runs fully offline. To swap in another LLM provider, edit `src/app/api/ai-core/route.ts` (the prompt + market-context builder is all there).
+3. No database required — all state (orders/positions) is client-side in memory.
 
-The dataset contains historical stock market data from 2016 to 2026.
+## Structure
 
-The data was organized year-wise and processed before model development.
-
-## Feature Engineering
-
-Several technical features were created, including:
-
-- Daily Return
-- Moving Average
-- Price vs Moving Average
-- High-Low Range
-- Volume Ratio
-- Rolling Volatility
-- Lagged Returns
-- Return Momentum
-- Rolling Returns
-
-## Machine Learning
-
-Different experiments were performed using Random Forest based approaches.
-
-The experiments included:
-
-- Original Random Forest
-- K-Means + Random Forest
-- 0.25% Target Experiment
-- Balanced Random Forest
-- Momentum-based Features
-
-## Final Evaluation
-
-The final model was evaluated on an unseen 2025 test period.
-
-### Final Test Results
-
-| Metric | Score |
-|---|---:|
-| Accuracy | 42.35% |
-| ROC-AUC | 0.5215 |
-
-The results show that predicting short-term stock movements is a difficult problem and the current model has limited predictive power.
-
-## Project Structure
-
-```text
-NIFTY-50-Stock-Market-Data-main/
-│
-├── data/
-│   ├── 2016.csv
-│   ├── 2017.csv
-│   ├── ...
-│   └── 2026.csv
-│
-├── Stock_market.ipynb
-├── README.md
-└── .gitignores
+```
+src/
+  app/api/ai-core/route.ts    # LLM brain: chat / ideas / news / report tasks
+  app/api/ai-tts/route.ts     # text-to-speech for AI CORE voice
+  lib/market/engine.ts        # price simulation + indicators (RSI/MACD/SMA/EMA)
+  hooks/use-market.ts         # live tick feed (1.4s)
+  components/terminal/        # all UI panels (23 components)
+```
