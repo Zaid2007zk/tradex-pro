@@ -4,13 +4,65 @@ import { STOCKS, INDICES, generateCandles, liveCandle, computeSignals, computeIn
 export const maxDuration = 60;
 
 type Task = "chat" | "ideas" | "news" | "report" | "test-key";
-type ChatMsg = { role: "user" | "assistant"; content: string };
+type ChatMsg = { role: "user" | "assistant" | "system"; content: string };
+
+// -----------------------------------------------------------------------------
+// INTELLIGENT SYMBOL PARSER (Extracts exact stock from user's question)
+// -----------------------------------------------------------------------------
+export function extractTargetStock(question: string, defaultSymbol: string) {
+  const q = question.toLowerCase();
+
+  // 1. Direct symbol word-boundary match
+  for (const s of STOCKS) {
+    const symLower = s.symbol.toLowerCase();
+    const pattern = new RegExp(`\\b${symLower}\\b`, "i");
+    if (pattern.test(q)) {
+      return s;
+    }
+  }
+
+  // 2. Company name match
+  for (const s of STOCKS) {
+    const firstWord = s.name.toLowerCase().split(/\s+/)[0];
+    if (firstWord.length > 2 && new RegExp(`\\b${firstWord}\\b`, "i").test(q)) {
+      return s;
+    }
+  }
+
+  // 3. Common Indian market aliases
+  if (/\b(tcs|tata consultancy)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "TCS")!;
+  if (/\b(reliance|ril|ambani)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "RELIANCE")!;
+  if (/\b(hdfc|hdfcbank|hdfc bank)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "HDFCBANK")!;
+  if (/\b(icici|icicibank)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "ICICIBANK")!;
+  if (/\b(infy|infosys)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "INFY")!;
+  if (/\b(airtel|bharti)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "BHARTIARTL")!;
+  if (/\b(sbi|sbin|state bank)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "SBIN")!;
+  if (/\b(itc)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "ITC")!;
+  if (/\b(l&t|lt|larsen)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "LT")!;
+  if (/\b(hul|unilever|hindustan unilever)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "HINDUNILVR")!;
+  if (/\b(kotak|kotakbank)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "KOTAKBANK")!;
+  if (/\b(axis|axisbank)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "AXISBANK")!;
+  if (/\b(maruti|suzuki)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "MARUTI")!;
+  if (/\b(sun pharma|sunpharma)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "SUNPHARMA")!;
+  if (/\b(hcl|hcltech)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "HCLTECH")!;
+  if (/\b(tata motors|tatamotors)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "TATAMOTORS")!;
+  if (/\b(adani|adanient)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "ADANIENT")!;
+  if (/\b(titan)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "TITAN")!;
+  if (/\b(wipro)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "WIPRO")!;
+  if (/\b(zomato|eternal)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "ETERNAL")!;
+
+  // 4. Fallback to active terminal symbol
+  return STOCKS.find((s) => s.symbol.toUpperCase() === defaultSymbol.toUpperCase()) || STOCKS[0];
+}
 
 function buildContext(prices: Record<string, number>, focus?: string): string {
   const lines: string[] = [];
   try {
     const idxParts = INDICES.slice(0, 3).map((idx) => {
-      const { value, chgPct } = computeIndexValue(idx, prices);
+      const { value, chgPct } = computeIndexValue(
+        idx,
+        Object.fromEntries(STOCKS.map((s) => [s.symbol, prices[s.symbol] ?? s.base]))
+      );
       return `${idx.name} ${Math.round(value).toLocaleString("en-IN")} (${fmtPct(chgPct)})`;
     });
     lines.push(`INDICES: ${idxParts.join(" | ")}`);
@@ -20,8 +72,7 @@ function buildContext(prices: Record<string, number>, focus?: string): string {
 
   const rows: string[] = [];
   for (const s of STOCKS) {
-    const px = prices[s.symbol];
-    if (!px) continue;
+    const px = prices[s.symbol] ?? s.base;
     try {
       const base = generateCandles(s.symbol, "1D");
       const candles = liveCandle(base, px);
@@ -38,7 +89,7 @@ function buildContext(prices: Record<string, number>, focus?: string): string {
   const adv = rows.filter((r) => r.includes("+")).length;
   lines.push(`UNIVERSE: top-20 NSE stocks, ~${adv} up / ${rows.length - adv} down today.`);
   lines.push(rows.join("\n"));
-  if (focus) lines.push(`USER IS CURRENTLY VIEWING: ${focus}`);
+  if (focus) lines.push(`USER IS SPECIFICALLY ASKING ABOUT: ${focus}`);
   return lines.join("\n\n");
 }
 
@@ -68,7 +119,6 @@ async function callGroq(messages: ChatMsg[], apiKey: string, modelName?: string)
     modelName || "",
     "llama-3.1-8b-instant",
     "llama3-70b-8192",
-    "llama3-8b-8192",
     "mixtral-8x7b-32768",
     "llama-3.3-70b-versatile",
   ].filter(Boolean);
@@ -85,10 +135,10 @@ async function callGroq(messages: ChatMsg[], apiKey: string, modelName?: string)
         body: JSON.stringify({
           model,
           messages: messages.map((m) => ({
-            role: m.role === "assistant" ? "assistant" : "user",
+            role: m.role === "system" ? "system" : m.role === "assistant" ? "assistant" : "user",
             content: m.content,
           })),
-          temperature: 0.6,
+          temperature: 0.5,
           max_tokens: 800,
         }),
       });
@@ -123,10 +173,12 @@ async function callGemini(messages: ChatMsg[], apiKey: string, modelName?: strin
     "gemini-1.5-flash-latest",
     "gemini-1.5-pro",
     "gemini-1.5-flash",
-    "gemini-pro",
   ].filter(Boolean);
 
-  const contents = messages.map((m) => ({
+  const systemMsg = messages.find((m) => m.role === "system");
+  const chatMessages = messages.filter((m) => m.role !== "system");
+
+  const contents = chatMessages.map((m) => ({
     role: m.role === "assistant" ? "model" : "user",
     parts: [{ text: m.content }],
   }));
@@ -136,10 +188,15 @@ async function callGemini(messages: ChatMsg[], apiKey: string, modelName?: strin
     for (const ver of ["v1beta", "v1"]) {
       try {
         const url = `https://generativelanguage.googleapis.com/${ver}/models/${model}:generateContent?key=${cleanKey}`;
+        const body: Record<string, any> = { contents };
+        if (systemMsg) {
+          body.systemInstruction = { parts: [{ text: systemMsg.content }] };
+        }
+
         const res = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ contents }),
+          body: JSON.stringify(body),
         });
 
         if (res.ok) {
@@ -160,20 +217,6 @@ async function callGemini(messages: ChatMsg[], apiKey: string, modelName?: strin
 }
 
 // -----------------------------------------------------------------------------
-// ZAI SDK FALLBACK
-// -----------------------------------------------------------------------------
-async function callZai(messages: ChatMsg[]): Promise<string> {
-  try {
-    const ZAI = (await import("z-ai-web-dev-sdk")).default;
-    const zai = await ZAI.create();
-    const out = await zai.chat.completions.create({ messages, thinking: { type: "disabled" } });
-    const text = out.choices[0]?.message?.content ?? "";
-    if (text.trim()) return text;
-  } catch {}
-  throw new Error("ZAI unavailable");
-}
-
-// -----------------------------------------------------------------------------
 // AUTONOMOUS TRADEX NEURAL ENGINE (Zero-Key Guaranteed Intelligence)
 // -----------------------------------------------------------------------------
 function generateAutonomousResponse(
@@ -182,7 +225,7 @@ function generateAutonomousResponse(
   symbol: string,
   prices: Record<string, number>
 ) {
-  const targetStock = STOCKS.find((s) => s.symbol.toUpperCase() === symbol.toUpperCase()) || STOCKS[0];
+  const targetStock = extractTargetStock(question, symbol);
   const px = prices[targetStock.symbol] || targetStock.base;
   const base = generateCandles(targetStock.symbol, "1D");
   const candles = liveCandle(base, px);
@@ -190,7 +233,7 @@ function generateAutonomousResponse(
   const chgPct = ((px - prevClose) / prevClose) * 100;
   const sig = computeSignals(candles);
 
-  const isHindi = /[क-ह]|bhai|kya|kare|konsa|sahi|hai|nhi|chahiye|bataye|kharidu|bechu|rok/i.test(question);
+  const isHindi = /[क-ह]|bhai|kya|kare|karu|krne|karna|konsa|sahi|hai|nhi|chahiye|bataye|batao|kharidu|bechu|rok|kaisa|kesa|rahega|lena|lu|milega|kitna|accha|acha/i.test(question);
   const isOverbought = sig.rsi > 68;
   const isOversold = sig.rsi < 35;
 
@@ -200,45 +243,147 @@ function generateAutonomousResponse(
   const pullbackEntry = (px * 0.992).toFixed(2);
 
   if (task === "chat") {
-    if (isHindi) {
-      if (/buy|kharid|entry|best time/i.test(question)) {
+    const qLower = question.toLowerCase();
+
+    // 1. Intent: Full market brief in 5 bullets
+    if (/market brief|brief in 5|overall market|nifty kaisa|aaj ka market/i.test(qLower)) {
+      const nifty = INDICES[0];
+      const sensex = INDICES[2];
+      const bankNifty = INDICES[1];
+      const advCount = STOCKS.filter((s) => (prices[s.symbol] ?? s.base) >= s.base).length;
+      const decCount = STOCKS.length - advCount;
+
+      if (isHindi) {
+        return (
+          `### 📊 TradeX Institutional Market Brief (5 Key Bullets)\n\n` +
+          `• **1. Benchmark Indices:** NIFTY 50 abhi **${Math.round(nifty.base).toLocaleString("en-IN")}** par trade kar raha hai aur SENSEX **${Math.round(sensex.base).toLocaleString("en-IN")}** ke near sustain kar raha hai.\n` +
+          `• **2. Market Breadth:** Top 20 NSE large-caps mein **${advCount} Advancing / ${decCount} Declining** hain, jo steady institutional participation indicate karta hai.\n` +
+          `• **3. Sector Leadership:** Banking (${bankNifty.name} at **${Math.round(bankNifty.base).toLocaleString("en-IN")}**) aur Large-Cap IT morning turnover ko lead kar rahe hain.\n` +
+          `• **4. Key Pivots:** NIFTY ka immediate resistance **${Math.round(nifty.base * 1.008)}** par hai, aur strong support **${Math.round(nifty.base * 0.992)}** par placed hai.\n` +
+          `• **5. Quant Verdict:** Overall trend **Buy-on-Dips** hai. Strength dikhane wale stocks me trailing stop-loss ke sath trade karein.`
+        );
+      }
+
+      return (
+        `### 📊 TradeX Institutional Market Brief (5 Key Bullets)\n\n` +
+        `• **1. Benchmark Indices:** NIFTY 50 holds at **${Math.round(nifty.base).toLocaleString("en-IN")}** while SENSEX trades near **${Math.round(sensex.base).toLocaleString("en-IN")}** with healthy liquidity.\n` +
+        `• **2. Market Breadth:** Universe breadth stands at **${advCount} Advancing / ${decCount} Declining** stocks with institutional volume absorption.\n` +
+        `• **3. Sector Drivers:** Heavyweight Banking (${bankNifty.name} at **${Math.round(bankNifty.base).toLocaleString("en-IN")}**) and Technology counters are driving index direction.\n` +
+        `• **4. Key Range:** Immediate NIFTY resistance stands at **${Math.round(nifty.base * 1.008)}**, with pivotal support at **${Math.round(nifty.base * 0.992)}**.\n` +
+        `• **5. Strategy Outlook:** Momentum supports a **Buy-on-Dips** approach. Focus on high-relative-strength leaders with disciplined risk controls.`
+      );
+    }
+
+    // 2. Intent: Riskiest stock today
+    if (/riskiest|most risky|high risk|volatil/i.test(qLower)) {
+      const sorted = [...STOCKS].sort((a, b) => b.volatility - a.volatility);
+      const topRisky = sorted[0];
+      const secondRisky = sorted[1];
+
+      if (isHindi) {
+        return (
+          `### ⚠️ High-Beta Volatility Telemetry: Riskiest Stocks Today\n\n` +
+          `• **#1 Sabse Risky Stock:** **${topRisky.symbol}** (${topRisky.name}) — iska volatility index **${topRisky.volatility.toFixed(1)}x** hai, jisme tezi se swings aate hain.\n` +
+          `• **#2 Runner-Up:** **${secondRisky.symbol}** (${secondRisky.name}) with **${secondRisky.volatility.toFixed(1)}x** volatility.\n\n` +
+          `💡 *Risk Advisory: High-beta counters me position size choti rakhein (capital ka max 1-2%) aur bina stop-loss ke kabhi enter na karein.*`
+        );
+      }
+
+      return (
+        `### ⚠️ High-Beta Volatility Telemetry: Riskiest Stocks Today\n\n` +
+        `• **#1 Highest Risk:** **${topRisky.symbol}** (${topRisky.name}) carries a volatility factor of **${topRisky.volatility.toFixed(1)}x**, generating wider intraday ATR swings.\n` +
+        `• **#2 Runner-Up:** **${secondRisky.symbol}** (${secondRisky.name}) tracking at **${secondRisky.volatility.toFixed(1)}x** beta.\n\n` +
+        `💡 *Risk Advisory: Maintain conservative MIS position sizing (maximum 1-2% capital risk per trade) with mandatory hard stop-losses.*`
+      );
+    }
+
+    // 3. Intent: Intraday plan
+    if (/intraday plan|intraday strategy|day trading|intraday setup/i.test(qLower)) {
+      if (isHindi) {
+        return (
+          `### ⚡ TradeX Institutional Intraday Execution Playbook\n\n` +
+          `• **Step 1 (09:15 - 09:30 IST):** 15-Minute Opening Range High (ORH) aur Low (ORL) mark karein. Shuruat ke 15 minute me FOMO trade na lein.\n` +
+          `• **Step 2 (Breakout Trigger):** Agar 5-min candle ORH ke upar close ho with volume > 1.5x average aur RSI > 55, tab Long setup trigger hota hai.\n` +
+          `• **Step 3 (Leverage & Execution):** Order ticket se 5x MIS leverage select karein aur 1-Click execution karein.\n` +
+          `• **Step 4 (Risk-Reward):** Stop-loss breakout candle ke low par (-1.0%) lagayein aur Target +2.0% se +2.5% (1:2 R:R) book karein.`
+        );
+      }
+
+      return (
+        `### ⚡ TradeX Institutional Intraday Execution Playbook\n\n` +
+        `• **Phase 1 (09:15 - 09:30 IST):** Mark the 15-minute Opening Range High (ORH) and Low (ORL). Avoid early entry during price discovery.\n` +
+        `• **Phase 2 (Confirmation):** Await a 5-minute candle close beyond the range with Volume > 1.5x average and RSI confirming above 55.\n` +
+        `• **Phase 3 (Execution):** Deploy 5x MIS margin with predefined stop-loss order placed immediately.\n` +
+        `• **Phase 4 (Risk-Reward):** Maintain a strict 1:2 risk-to-reward ratio with target expansion at +2.0% to +2.5% and capital protection stop at -1.0%.`
+      );
+    }
+
+    // 4. Intent: Buy / Entry timing specifically
+    if (/buy|kharid|entry|best time|kab lena|lena chahiye/i.test(qLower)) {
+      if (isHindi) {
         if (isOverbought) {
-          return `### ⚠️ Institutional Alert: ${targetStock.symbol} Overbought (Thoda Wait Karein)\n\n` +
-            `• **Signal:** RSI (${sig.rsi.toFixed(1)}) overbought zone mein hai, short-term dip aane ki sambhavna hai.\n` +
-            `• **Best Buying Zone (Entry Dip):** Abhi jaldbazi na karein, **₹${pullbackEntry}** ke support pullback par buy karna best rahega.\n` +
+          return (
+            `### ⚠️ Institutional Alert: ${targetStock.symbol} Overbought (Thoda Wait Karein)\n\n` +
+            `• **Signal:** ${targetStock.symbol} ka RSI (${sig.rsi.toFixed(1)}) overbought zone mein hai, isliye short-term dip aane ki sambhavna hai.\n` +
+            `• **Best Buying Zone (Entry Dip):** Abhi CMP ₹${px.toFixed(2)} par chase na karein, **₹${pullbackEntry}** ke support pullback par buy karna sabse best rahega.\n` +
             `• **Upside Target:** **₹${target1}** (+2.5% projected target).\n` +
             `• **Strict Stop-Loss:** **₹${stopLoss}** (Capital preservation ke liye strict SL lagayein).\n\n` +
-            `💡 *Advice: Current price par buy na karein. ₹${pullbackEntry} ke support retest ka wait karein aur disciplined risk ke sath trade karein.*`;
+            `💡 *Advice: Current price par buy na karein. ₹${pullbackEntry} ke support retest ka wait karein aur disciplined risk ke sath trade karein.*`
+          );
         } else if (isOversold) {
-          return `### ⚡ Bullish Opportunity: ${targetStock.symbol} Prime Buying Zone\n\n` +
-            `• **Signal:** RSI (${sig.rsi.toFixed(1)}) oversold hai, downside exhaust ho chuki hai aur bounce-back expected hai.\n` +
+          return (
+            `### ⚡ Bullish Opportunity: ${targetStock.symbol} Prime Buying Zone\n\n` +
+            `• **Signal:** ${targetStock.symbol} ka RSI (${sig.rsi.toFixed(1)}) oversold hai, downside exhaust ho chuki hai aur bounce-back expected hai.\n` +
             `• **Best Entry Point:** Current zone **₹${px.toFixed(2)}** se **₹${pullbackEntry}** par buy karne ka ideal time hai.\n` +
             `• **Target Levels:** Target 1: **₹${target1}** | Target 2: **₹${target2}**.\n` +
             `• **Stop-Loss Protection:** **₹${stopLoss}**.\n\n` +
-            `💡 *Advice: Setup high-conviction hai. Partial quantity enter karke trailing stop-loss use karein.*`;
+            `💡 *Advice: Setup high-conviction hai. Partial quantity enter karke trailing stop-loss use karein.*`
+          );
         } else {
-          return `### 📊 Trend Analysis: ${targetStock.symbol} Entry Setup\n\n` +
+          return (
+            `### 📊 Trend Analysis: ${targetStock.symbol} Entry Setup\n\n` +
             `• **Current Market Price (LTP):** ₹${px.toFixed(2)} (${chgPct >= 0 ? "+" : ""}${chgPct.toFixed(2)}% aaj).\n` +
             `• **Momentum Telemetry:** RSI ${sig.rsi.toFixed(1)} hai, aur MACD **${sig.macdBull ? "Bullish trend mein" : "Consolidation mein"}** hai.\n` +
             `• **Suggested Entry:** **₹${px.toFixed(2)}** par accumulate karein, Target **₹${target1}** aur Stop-loss **₹${stopLoss}**.\n\n` +
-            `💡 *Risk-to-reward ratio 1:2.3 favorable hai. Order ticket se 1-Click execution kar sakte hain.*`;
+            `💡 *Risk-to-reward ratio 1:2.3 favorable hai. Order ticket se 1-Click execution kar sakte hain.*`
+          );
         }
       }
 
-      return `### 🤖 ARIA Quant Telemetry: ${targetStock.symbol}\n\n` +
-        `• **Price & Trend:** Current LTP ₹${px.toFixed(2)} (${sig.aboveMa50 ? "50-SMA ke upar" : "50-SMA ke niche"}).\n` +
-        `• **Technical Confluence:** RSI ${sig.rsi.toFixed(1)} · Technical Verdict: **${sig.verdict.toUpperCase()}**.\n` +
-        `• **Key Resistance:** ₹${target1} | **Key Support:** ₹${pullbackEntry}.\n\n` +
-        `💡 *Aap direct Order Ticket se 1-Click Buy/Sell execute kar sakte hain ya AI Autopilot on kar sakte hain.*`;
+      // English Buy Timing
+      return (
+        `### Institutional Brief: ${targetStock.symbol} (${targetStock.sector})\n\n` +
+        `• **Current Price (LTP):** ₹${px.toFixed(2)} (${chgPct >= 0 ? "+" : ""}${chgPct.toFixed(2)}%)\n` +
+        `• **Momentum Telemetry:** RSI at ${sig.rsi.toFixed(1)} (${isOverbought ? "Overbought Caution" : isOversold ? "Oversold Opportunity" : "Equilibrium"}), MACD ${sig.macdBull ? "Bullish Divergence" : "Consolidation"}.\n` +
+        `• **Recommended Execution:** ${sig.verdict === "buy" ? "Long Accumulation" : sig.verdict === "sell" ? "Short Tactical Setup" : "Range Trade"} around ₹${pullbackEntry}.\n` +
+        `• **Price Target:** ₹${target1} (+2.5%) | **Stop-Loss:** ₹${stopLoss} (-1.5%).\n\n` +
+        `Trade with disciplined position sizing. Fully paper simulated on NSE execution ladder.`
+      );
     }
 
-    // English
-    return `### Institutional Brief: ${targetStock.symbol} (${targetStock.sector})\n\n` +
-      `• **Current Price (LTP):** ₹${px.toFixed(2)} (${chgPct >= 0 ? "+" : ""}${chgPct.toFixed(2)}%)\n` +
-      `• **Momentum Telemetry:** RSI at ${sig.rsi.toFixed(1)} (${isOverbought ? "Overbought Caution" : isOversold ? "Oversold Opportunity" : "Equilibrium"}), MACD ${sig.macdBull ? "Bullish Divergence" : "Consolidation"}.\n` +
-      `• **Recommended Execution:** ${sig.verdict === "buy" ? "Long Accumulation" : sig.verdict === "sell" ? "Short Tactical Setup" : "Range Trade"} around ₹${pullbackEntry}.\n` +
-      `• **Price Target:** ₹${target1} (+2.5%) | **Stop-Loss:** ₹${stopLoss} (-1.5%).\n\n` +
-      `Trade with disciplined position sizing. Fully paper simulated on NSE execution ladder.`;
+    // 5. Default General Inquiry about targetStock (e.g. "tell me about TCS", "TCS kaisa hai", "analyze INFY")
+    if (isHindi) {
+      return (
+        `### 🤖 ARIA Quant Analysis: ${targetStock.symbol} (${targetStock.name})\n\n` +
+        `• **Current LTP:** ₹${px.toFixed(2)} (${chgPct >= 0 ? "+" : ""}${chgPct.toFixed(2)}% today) · Sector: **${targetStock.sector}**.\n` +
+        `• **Trend & Moving Average:** Price 50-SMA ke **${sig.aboveMa50 ? "upar sustain" : "niche consolidate"}** kar raha hai.\n` +
+        `• **Technical Momentum:** RSI **${sig.rsi.toFixed(1)}** · MACD is **${sig.macdBull ? "Bullish" : "Neutral/Consolidation"}**.\n` +
+        `• **Accumulation Level:** ₹${pullbackEntry} - ₹${px.toFixed(2)}.\n` +
+        `• **Key Levels:** Target: **₹${target1}** (+2.5%) | Support / Stop-Loss: **₹${stopLoss}** (-1.5%).\n\n` +
+        `💡 *Verdict: ${sig.verdict.toUpperCase()} setup. Aap direct Order Ticket se CNC ya MIS order place kar sakte hain.*`
+      );
+    }
+
+    // English General Brief
+    return (
+      `### Institutional Brief: ${targetStock.symbol} (${targetStock.sector})\n\n` +
+      `• **Company:** ${targetStock.name} · Market Cap: ₹${targetStock.capCr.toLocaleString("en-IN")} Cr\n` +
+      `• **Current Price (LTP):** ₹${px.toFixed(2)} (${chgPct >= 0 ? "+" : ""}${chgPct.toFixed(2)}% today)\n` +
+      `• **Technical Telemetry:** RSI at ${sig.rsi.toFixed(1)} (${isOverbought ? "Overbought Zone" : isOversold ? "Oversold Exhaustion" : "Balanced Momentum"}), price is ${sig.aboveMa50 ? "above" : "below"} 50-SMA.\n` +
+      `• **Recommended Accumulation:** ₹${pullbackEntry} to ₹${px.toFixed(2)}\n` +
+      `• **Upside Target:** ₹${target1} (+2.5%) | **Stop-Loss:** ₹${stopLoss} (-1.5% capital protection stop)\n\n` +
+      `Tactical Verdict: **${sig.verdict.toUpperCase()}**. Available for 1-Click execution via the Order Ticket.`
+    );
   }
 
   if (task === "ideas") {
@@ -254,7 +399,7 @@ function generateAutonomousResponse(
         entry: Math.round(p * 100) / 100,
         target: Math.round((isShort ? p * 0.975 : p * 1.028) * 100) / 100,
         stop: Math.round((isShort ? p * 1.015 : p * 0.985) * 100) / 100,
-        confidence: 82 + (idx * 4) % 15,
+        confidence: 82 + ((idx * 4) % 15),
         thesis: `${s.name} momentum confluence with RSI confirmation and breakout pattern on the 1D chart.`,
       };
     });
@@ -328,12 +473,12 @@ MACD: ${sig.macdBull ? "Bullish histogram expansion" : "Bearish crossover / cons
 
 4) KEY TECHNICAL LEVELS
 • Primary Resistance: ₹${target1}
-• Secondary Resistance: ₹${target2}
-• Tactical Accumulation Support: ₹${pullbackEntry}
-• Structural Stop-Loss: ₹${stopLoss}
+• Secondary Target: ₹${target2}
+• Tactical Support: ₹${pullbackEntry}
+• Dynamic Stop-Loss: ₹${stopLoss}
 
-5) CONVICTION VERDICT
-${sig.verdict.toUpperCase()} (High Conviction). Setup valid as long as ₹${stopLoss} remains defended on closing basis.`;
+5) QUANT SUMMARY & VERDICT
+Overall technical posture is graded as ${sig.verdict.toUpperCase()}. Paper-trade positions should be sized using 5x MIS or 1x CNC with stop-loss protection active.`;
   }
 
   return "";
@@ -362,7 +507,13 @@ export async function POST(req: Request) {
 
   const task = body.task ?? "chat";
   const prices = body.prices ?? {};
-  const symbol = (body.symbol ?? "RELIANCE").toUpperCase();
+  const questionRaw = (body.question ?? "").trim();
+  const defaultSymbol = (body.symbol ?? "RELIANCE").toUpperCase();
+
+  // Extract the true stock the user is asking about
+  const targetStock = extractTargetStock(questionRaw, defaultSymbol);
+  const symbol = targetStock.symbol;
+
   const provider = body.provider ?? "autonomous";
   const apiKey = (body.apiKey || "").trim();
   const model = (body.model || "").trim();
@@ -372,30 +523,45 @@ export async function POST(req: Request) {
     if (provider === "groq") {
       try {
         const text = await callGroq([{ role: "user", content: "Reply 'OK'" }], apiKey, model);
-        return NextResponse.json({ ok: true, message: "Connected successfully to Groq Cloud API!", model: model || "llama-3.1-8b-instant" });
+        return NextResponse.json({
+          ok: true,
+          message: "Connected successfully to Groq Cloud API!",
+          model: model || "llama-3.1-8b-instant",
+        });
       } catch (err) {
-        return NextResponse.json({ ok: false, error: err instanceof Error ? err.message : "Invalid Groq API key" }, { status: 400 });
+        return NextResponse.json(
+          { ok: false, error: err instanceof Error ? err.message : "Invalid Groq API key" },
+          { status: 400 }
+        );
       }
     } else if (provider === "gemini") {
       try {
         const text = await callGemini([{ role: "user", content: "Reply 'OK'" }], apiKey, model);
-        return NextResponse.json({ ok: true, message: "Connected successfully to Google Gemini API!", model: model || "gemini-2.0-flash" });
+        return NextResponse.json({
+          ok: true,
+          message: "Connected successfully to Google Gemini API!",
+          model: model || "gemini-2.0-flash",
+        });
       } catch (err) {
-        return NextResponse.json({ ok: false, error: err instanceof Error ? err.message : "Invalid Gemini API key" }, { status: 400 });
+        return NextResponse.json(
+          { ok: false, error: err instanceof Error ? err.message : "Invalid Gemini API key" },
+          { status: 400 }
+        );
       }
     }
     return NextResponse.json({ ok: true, message: "TradeX Autonomous Neural Engine is always active and ready." });
   }
 
   const context = buildContext(prices, symbol);
-  const baseSys = `You are ARIA CORE — the fully-AI brain of TradeX PRO, an institutional paper-trading terminal for the Indian market (NSE, INR). You reason like a sharp quant analyst.
+  const baseSys = `You are ARIA CORE — the fully-AI brain of TradeX PRO, an institutional trading terminal for the Indian market (NSE, INR). You reason like a sharp quant analyst.
 Rules:
 - Ground every claim in the LIVE MARKET CONTEXT below; never invent prices that contradict it.
+- Specific Stock Inquiries: If the user asks about a specific stock (e.g. TCS, INFY, HDFC, SBIN), answer SPECIFICALLY about that stock! Currently the user is asking about: ${symbol} (${targetStock.name}).
 - Language Protocol: If the user writes in Hindi or Hinglish (e.g. 'konsa', 'kya', 'buy krne ka', 'batao', 'kab lena hai', 'sahi time'), YOU MUST ALWAYS REPLY IN NATURAL FINANCIAL HINGLISH/HINDI with exact levels (LTP, Entry, Target, Stop Loss). Never reply in pure English if the user asked in Hinglish!
 - Keep answers tight (max ~180 words) unless a report is requested. Use bullets for clarity.
-- This is a simulated feed — mention risk discipline and levels.
+- This is a paper trading terminal — mention risk discipline and levels.
 
-LIVE MARKET CONTEXT (simulated feed, prices in INR):
+LIVE MARKET CONTEXT (prices in INR):
 ${context}`;
 
   // Complete via external AI or autonomous fallback
@@ -414,30 +580,24 @@ ${context}`;
       } catch {}
     }
 
-    // 3. Try ZAI SDK if installed
-    try {
-      return await callZai(messages);
-    } catch {}
-
     throw new Error("No external LLM available; use autonomous engine");
   };
 
   try {
     if (task === "chat") {
       const history = (body.history ?? []).slice(-8).map((m) => ({ role: m.role, content: m.content }));
-      const question = (body.question ?? "").slice(0, 600);
-      if (!question.trim()) return NextResponse.json({ ok: false, error: "Empty question" }, { status: 400 });
+      if (!questionRaw) return NextResponse.json({ ok: false, error: "Empty question" }, { status: 400 });
 
       try {
         const text = await tryExternalLLM([
-          { role: "assistant", content: baseSys },
+          { role: "system", content: baseSys },
           ...history,
-          { role: "user", content: question },
+          { role: "user", content: questionRaw },
         ]);
         return NextResponse.json({ ok: true, text });
       } catch {
-        // High quality autonomous response
-        const fallback = generateAutonomousResponse("chat", question, symbol, prices) as string;
+        // High quality autonomous response calibrated to targetStock
+        const fallback = generateAutonomousResponse("chat", questionRaw, symbol, prices) as string;
         return NextResponse.json({ ok: true, text: fallback });
       }
     }
@@ -445,42 +605,59 @@ ${context}`;
     if (task === "ideas") {
       const sys = `${baseSys}\n\nTASK: Propose 3-4 high-conviction paper-trade ideas. Strict JSON only: {"ideas":[{"symbol":"SYMBOL","side":"BUY"|"SELL","qty":number,"product":"MIS"|"CNC"|"MTF","entry":number,"target":number,"stop":number,"confidence":0-100,"thesis":"rationale"}]}`;
       try {
-        const text = await tryExternalLLM([{ role: "assistant", content: sys }, { role: "user", content: "Generate alpha ideas now." }]);
+        const text = await tryExternalLLM([
+          { role: "system", content: sys },
+          { role: "user", content: "Generate alpha ideas now." },
+        ]);
         const json = extractJson(text);
-        const ideas = Array.isArray(json) ? json : json && typeof json === "object" && Array.isArray((json as { ideas?: unknown }).ideas) ? (json as { ideas: unknown[] }).ideas : null;
-        if (ideas && ideas.length > 0) return NextResponse.json({ ok: true, ideas });
+        const ideas = Array.isArray(json)
+          ? json
+          : json && typeof json === "object" && Array.isArray((json as { ideas?: unknown }).ideas)
+          ? (json as { ideas: unknown[] }).ideas
+          : null;
+        if (ideas) return NextResponse.json({ ok: true, ideas });
       } catch {}
-
-      const fallbackIdeas = generateAutonomousResponse("ideas", "", symbol, prices);
-      return NextResponse.json({ ok: true, ideas: fallbackIdeas });
+      const fallback = generateAutonomousResponse("ideas", "", symbol, prices);
+      return NextResponse.json({ ok: true, ideas: fallback });
     }
 
     if (task === "news") {
-      const sys = `${baseSys}\n\nTASK: Write 6 market headlines. Strict JSON: {"news":[{"headline":"...","symbol":"SYMBOL"|null,"sentiment":"BULLISH"|"BEARISH"|"NEUTRAL","impact":1-5,"summary":"..."}]}`;
+      const sys = `${baseSys}\n\nTASK: Generate 6 breaking market news wire bullets with sentiments. Strict JSON only: [{"headline":"string","symbol":"string|null","sentiment":"BULLISH"|"BEARISH"|"NEUTRAL","impact":1-5,"summary":"string"}]`;
       try {
-        const text = await tryExternalLLM([{ role: "assistant", content: sys }, { role: "user", content: "Generate the newswire now." }]);
-        const json = extractJson(text) as { news?: unknown } | null;
-        if (json && Array.isArray(json.news)) return NextResponse.json({ ok: true, news: json.news });
+        const text = await tryExternalLLM([
+          { role: "system", content: sys },
+          { role: "user", content: "Generate breaking market news wire now." },
+        ]);
+        const json = extractJson(text);
+        const news = Array.isArray(json)
+          ? json
+          : json && typeof json === "object" && Array.isArray((json as { news?: unknown }).news)
+          ? (json as { news: unknown[] }).news
+          : null;
+        if (news) return NextResponse.json({ ok: true, news });
       } catch {}
-
-      const fallbackNews = generateAutonomousResponse("news", "", symbol, prices);
-      return NextResponse.json({ ok: true, news: fallbackNews });
+      const fallback = generateAutonomousResponse("news", "", symbol, prices);
+      return NextResponse.json({ ok: true, news: fallback });
     }
 
     if (task === "report") {
-      const sys = `${baseSys}\n\nTASK: Write a deep-dive analyst note on ${symbol}. Structure: 1) Snapshot 2) Bull case 3) Bear case 4) Key levels 5) Verdict with conviction.`;
+      const sys = `${baseSys}\n\nTASK: Generate a comprehensive quantitative research report for ${symbol}. Formatted in clean Markdown with sections: SNAPSHOT, BULL CASE, BEAR CASE, KEY TECHNICAL LEVELS, QUANT SUMMARY.`;
       try {
-        const text = await tryExternalLLM([{ role: "assistant", content: sys }, { role: "user", content: `Write the report on ${symbol}.` }]);
-        if (text && text.trim()) return NextResponse.json({ ok: true, text });
+        const text = await tryExternalLLM([
+          { role: "system", content: sys },
+          { role: "user", content: `Generate deep research report for ${symbol}` },
+        ]);
+        return NextResponse.json({ ok: true, text });
       } catch {}
-
-      const fallbackReport = generateAutonomousResponse("report", "", symbol, prices) as string;
-      return NextResponse.json({ ok: true, text: fallbackReport });
+      const fallback = generateAutonomousResponse("report", "", symbol, prices) as string;
+      return NextResponse.json({ ok: true, text: fallback });
     }
 
     return NextResponse.json({ ok: false, error: "Unknown task" }, { status: 400 });
-  } catch (e) {
-    const fallbackText = generateAutonomousResponse("chat", body.question || "", symbol, prices) as string;
-    return NextResponse.json({ ok: true, text: fallbackText });
+  } catch (err) {
+    return NextResponse.json(
+      { ok: false, error: err instanceof Error ? err.message : "Internal AI engine failure" },
+      { status: 500 }
+    );
   }
 }
