@@ -22,17 +22,17 @@ export type StockDef = {
 };
 
 export const STOCKS: StockDef[] = [
-  { symbol: "RELIANCE", name: "Reliance Industries", sector: "Energy", base: 1377.5, volatility: 0.9, capCr: 1864000, lot: 1 },
+  { symbol: "RELIANCE", name: "Reliance Industries", sector: "Energy", base: 1351.0, volatility: 0.9, capCr: 1864000, lot: 1 },
   { symbol: "TCS", name: "Tata Consultancy Svcs", sector: "IT", base: 2376.2, volatility: 0.8, capCr: 860000, lot: 1 },
-  { symbol: "HDFCBANK", name: "HDFC Bank", sector: "Banking", base: 846.0, volatility: 0.85, capCr: 1290000, lot: 1 },
+  { symbol: "HDFCBANK", name: "HDFC Bank", sector: "Banking", base: 817.8, volatility: 0.85, capCr: 1290000, lot: 1 },
   { symbol: "ICICIBANK", name: "ICICI Bank", sector: "Banking", base: 1640.0, volatility: 0.9, capCr: 1150000, lot: 1 },
   { symbol: "INFY", name: "Infosys", sector: "IT", base: 1098.0, volatility: 0.95, capCr: 456000, lot: 1 },
   { symbol: "BHARTIARTL", name: "Bharti Airtel", sector: "Telecom", base: 2161.7, volatility: 0.9, capCr: 1270000, lot: 1 },
-  { symbol: "SBIN", name: "State Bank of India", sector: "Banking", base: 1165.1, volatility: 1.05, capCr: 1040000, lot: 1 },
+  { symbol: "SBIN", name: "State Bank of India", sector: "Banking", base: 1132.65, volatility: 1.05, capCr: 1040000, lot: 1 },
   { symbol: "ITC", name: "ITC Ltd", sector: "FMCG", base: 299.1, volatility: 0.6, capCr: 374000, lot: 1 },
   { symbol: "LT", name: "Larsen & Toubro", sector: "Infra", base: 4209.1, volatility: 1.0, capCr: 579000, lot: 1 },
   { symbol: "HINDUNILVR", name: "Hindustan Unilever", sector: "FMCG", base: 2052.5, volatility: 0.6, capCr: 482000, lot: 1 },
-  { symbol: "KOTAKBANK", name: "Kotak Mahindra Bank", sector: "Banking", base: 1788.5, volatility: 0.9, capCr: 355000, lot: 1 },
+  { symbol: "KOTAKBANK", name: "Kotak Mahindra Bank", sector: "Banking", base: 502.85, volatility: 0.9, capCr: 355000, lot: 1 },
   { symbol: "AXISBANK", name: "Axis Bank", sector: "Banking", base: 1446.0, volatility: 1.0, capCr: 446000, lot: 1 },
   { symbol: "MARUTI", name: "Maruti Suzuki", sector: "Auto", base: 14011.0, volatility: 1.0, capCr: 440000, lot: 1 },
   { symbol: "SUNPHARMA", name: "Sun Pharma", sector: "Pharma", base: 1884.9, volatility: 0.8, capCr: 452000, lot: 1 },
@@ -296,11 +296,11 @@ export type IndexDef = {
 };
 
 export const INDICES: IndexDef[] = [
-  { symbol: "NIFTY50", name: "NIFTY 50", base: 25800.60, weight: 1.0, exchange: "NSE", chgPts: 286.30, chgPct: 1.12 },
-  { symbol: "BANKNIFTY", name: "NIFTY BANK", base: 64635.20, weight: 0.6, exchange: "NSE", chgPts: 1572.20, chgPct: 2.49 },
+  { symbol: "NIFTY50", name: "NIFTY 50", base: 25349.65, weight: 1.0, exchange: "NSE", chgPts: -450.85, chgPct: -1.75 },
+  { symbol: "BANKNIFTY", name: "NIFTY BANK", base: 62585.35, weight: 0.6, exchange: "NSE", chgPts: -2040.85, chgPct: -3.16 },
   { symbol: "NIFTYNEXT50", name: "NIFTY NEXT 50", base: 73207.25, weight: 0.5, exchange: "NSE", chgPts: 317.50, chgPct: 0.44 },
-  { symbol: "NIFTYFIN", name: "NIFTY FIN SERVICE", base: 28871.20, weight: 0.5, exchange: "NSE", chgPts: 571.55, chgPct: 2.02 },
-  { symbol: "SENSEX", name: "SENSEX", base: 83919.71, weight: 0.8, exchange: "BSE", chgPts: 1887.91, chgPct: 2.30 },
+  { symbol: "NIFTYFIN", name: "NIFTY FIN SERVICE", base: 28153.50, weight: 0.5, exchange: "NSE", chgPts: -717.70, chgPct: -2.49 },
+  { symbol: "SENSEX", name: "SENSEX", base: 82435.10, weight: 0.8, exchange: "BSE", chgPts: -1405.20, chgPct: -1.68 },
 ];
 
 export function computeIndexValue(
@@ -319,5 +319,62 @@ export function computeIndexValue(
     value: idx.base,
     chgPct: idx.chgPct,
     chgPts: idx.chgPts,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Real-world Market Status (Indian Standard Time: UTC+5:30)
+// Regular Market Hours: Monday to Friday, 09:15 to 15:30 IST
+// ---------------------------------------------------------------------------
+
+export type MarketStatus = {
+  isOpen: boolean;
+  label: string;
+  badgeClass: string;
+  subLabel: string;
+  istTime: string;
+};
+
+export function getMarketStatusIST(now: Date = new Date()): MarketStatus {
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const istOffset = 5.5 * 60 * 60000;
+  const istDate = new Date(utc + istOffset);
+
+  const day = istDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  const hours = istDate.getHours();
+  const minutes = istDate.getMinutes();
+  const timeInMinutes = hours * 60 + minutes;
+
+  // Trading days: Monday (1) to Friday (5)
+  // Trading hours: 09:15 IST (555 mins) to 15:30 IST (930 mins)
+  const isWeekday = day >= 1 && day <= 5;
+  const isTradingHours = timeInMinutes >= 555 && timeInMinutes < 930;
+  const isOpen = isWeekday && isTradingHours;
+
+  const timeStr = istDate.toLocaleTimeString("en-IN", {
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }) + " IST";
+
+  if (isOpen) {
+    return {
+      isOpen: true,
+      label: "LIVE (NSE)",
+      badgeClass: "border-emerald-500/30 bg-emerald-950/40 text-emerald-400",
+      subLabel: "Market Open",
+      istTime: timeStr,
+    };
+  }
+
+  const isWeekend = day === 0 || day === 6;
+  const reason = isWeekend ? "Weekend" : timeInMinutes < 555 ? "Pre-Market" : "Official Close";
+  return {
+    isOpen: false,
+    label: "MARKET CLOSED (OFFICIAL CLOSE)",
+    badgeClass: "border-amber-500/30 bg-amber-950/40 text-amber-400",
+    subLabel: `Closed · ${reason}`,
+    istTime: timeStr,
   };
 }

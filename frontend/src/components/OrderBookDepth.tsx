@@ -19,8 +19,8 @@ export const OrderBookDepth: React.FC<OrderBookDepthProps> = ({
   // Deterministic order book ladder generated around current price
   const { bids, asks, totalBidQty, totalAskQty, spread, spreadPct } = useMemo(() => {
     const tick = currency === "INR" ? 0.05 : 0.01;
-    const bidsArr = [];
-    const asksArr = [];
+    const bidsArr: { price: number; qty: number }[] = [];
+    const asksArr: { price: number; qty: number }[] = [];
 
     let totalBids = 0;
     let totalAsks = 0;

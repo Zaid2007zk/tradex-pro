@@ -25,6 +25,11 @@ export default function CandleChart({ symbol, candles, timeframe, price }: Props
   const [hover, setHover] = useState<Hover>(null);
   const [showMa, setShowMa] = useState(true);
 
+  // Smooth crosshair reset on symbol or timeframe transition
+  useEffect(() => {
+    setHover(null);
+  }, [symbol, timeframe]);
+
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;

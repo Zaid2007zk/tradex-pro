@@ -1,0 +1,19 @@
+================================================================================
+CRITICAL DEPLOYMENT INSTRUCTION / MANDATORY RULE
+================================================================================
+
+RULE:
+"Agar 100% sahi hai tabhi deploy karna. Pehle poochna, ek ek cheez dikhana 
+ 100% correct hai ya nahi, uske baad hi deploy karenge."
+
+ENGLISH TRANSLATION / SPECIFICATION:
+1. NEVER deploy automatically.
+2. Only deploy when the application/code is 100% verified and correct.
+3. Before initiating any deployment, ALWAYS ask the user explicitly.
+4. Show and explain every single change, metric, and feature line-by-line to the user.
+5. Verify with the user that everything is 100% accurate (especially real-time NSE data, price calculations, and trade signals).
+6. Proceed with deployment ONLY AFTER explicit user approval.
+
+Saved on: 2026-11-22
+Project: MarketPulse (d:\MarketPulse)
+================================================================================

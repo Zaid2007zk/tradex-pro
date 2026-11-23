@@ -13,6 +13,11 @@ export default function AiPanel({ symbol, candles }: { symbol: string; candles: 
     : "text-rose-400 border-rose-500/40 bg-rose-500/10";
 
   const rsiPos = Math.min(100, Math.max(0, sig.rsi));
+  const currentPrice = candles[candles.length - 1]?.close || 1000;
+  const isBull = sig.score >= 25;
+  const target = isBull ? (currentPrice * 1.025).toFixed(2) : (currentPrice * 0.975).toFixed(2);
+  const stopLoss = isBull ? (currentPrice * 0.985).toFixed(2) : (currentPrice * 1.015).toFixed(2);
+
   const insight = (() => {
     const dir = sig.score >= 25 ? "bullish" : sig.score > -25 ? "range-bound" : "bearish";
     const rsiNote = sig.rsi > 70 ? "overbought — momentum may cool" : sig.rsi < 30 ? "oversold — a bounce is plausible" : "in neutral territory";
@@ -43,7 +48,7 @@ export default function AiPanel({ symbol, candles }: { symbol: string; candles: 
       </div>
 
       {/* indicator rows */}
-      <div className="space-y-2.5 px-3.5 pb-3.5 pt-3">
+      <div className="space-y-2.5 px-3.5 pb-3 pt-3">
         <GaugeRow
           label="RSI (14)"
           value={sig.rsi.toFixed(1)}
@@ -74,9 +79,30 @@ export default function AiPanel({ symbol, candles }: { symbol: string; candles: 
         />
       </div>
 
-      {/* insight */}
-      <div className="border-t border-white/8 px-3.5 py-3">
+      {/* Risk / Reward & Quant Levels */}
+      <div className="border-t border-white/8 px-3.5 py-2.5 bg-white/2">
+        <div className="grid grid-cols-3 gap-2 text-center font-mono text-[10px]">
+          <div className="rounded bg-emerald-500/10 border border-emerald-500/20 p-1">
+            <span className="block text-[8.5px] uppercase text-emerald-400/70 font-sans">Target</span>
+            <span className="font-bold text-emerald-300">₹{target}</span>
+          </div>
+          <div className="rounded bg-rose-500/10 border border-rose-500/20 p-1">
+            <span className="block text-[8.5px] uppercase text-rose-400/70 font-sans">Stop Loss</span>
+            <span className="font-bold text-rose-300">₹{stopLoss}</span>
+          </div>
+          <div className="rounded bg-white/5 border border-white/10 p-1">
+            <span className="block text-[8.5px] uppercase text-white/50 font-sans">R:R Ratio</span>
+            <span className="font-bold text-amber-300">1 : 1.7</span>
+          </div>
+        </div>
+      </div>
+
+      {/* insight & disclaimer */}
+      <div className="border-t border-white/8 px-3.5 py-2.5">
         <p className="text-[11px] leading-relaxed text-white/55">{insight}</p>
+        <p className="mt-2 text-[9px] text-white/35 border-t border-white/5 pt-1.5 leading-tight">
+          ⚠️ SEBI Disclaimer: Educational paper-trading analytics only. Not registered investment advisory.
+        </p>
       </div>
     </div>
   );

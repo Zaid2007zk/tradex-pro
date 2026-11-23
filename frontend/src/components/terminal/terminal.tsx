@@ -103,11 +103,16 @@ export default function Terminal() {
         );
       }
       const opp = prev.find((p) => p.symbol === o.symbol && p.side !== o.side);
-      if (opp && opp.qty === o.qty) {
-        return prev.filter((p) => p.id !== opp.id);
-      }
-      if (opp && opp.qty > o.qty) {
-        return prev.map((p) => (p.id === opp.id ? { ...p, qty: p.qty - o.qty, ltp: o.price } : p));
+      if (opp) {
+        if (opp.qty === o.qty) {
+          return prev.filter((p) => p.id !== opp.id);
+        }
+        if (opp.qty > o.qty) {
+          return prev.map((p) => (p.id === opp.id ? { ...p, qty: p.qty - o.qty, ltp: o.price } : p));
+        }
+        // Position flip (e.g. was Short 10, now Buy 25 -> becomes Long 15)
+        const remQty = o.qty - opp.qty;
+        return [...prev.filter((p) => p.id !== opp.id), { ...order, qty: remQty, ltp: o.price }];
       }
       return [...prev, { ...order, ltp: o.price }];
     });

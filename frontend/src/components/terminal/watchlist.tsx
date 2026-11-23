@@ -26,16 +26,16 @@ export default function Watchlist({ quotes, selected, onSelect }: Props) {
   const [q, setQ] = useState("");
 
   const rows = useMemo(() => {
-    let list = STOCKS.filter(
+    const filtered = STOCKS.filter(
       (s) =>
         !q.trim() ||
         s.symbol.toLowerCase().includes(q.trim().toLowerCase()) ||
         s.name.toLowerCase().includes(q.trim().toLowerCase())
     );
-    list = list.map((s) => ({ def: s, quote: quotes[s.symbol] }));
-    if (mode === "gainers") list.sort((a, b) => b.quote.chgPct - a.quote.chgPct);
-    if (mode === "losers") list.sort((a, b) => a.quote.chgPct - b.quote.chgPct);
-    return list;
+    const mapped = filtered.map((s) => ({ def: s, quote: quotes[s.symbol] }));
+    if (mode === "gainers") mapped.sort((a, b) => (b.quote?.chgPct ?? 0) - (a.quote?.chgPct ?? 0));
+    if (mode === "losers") mapped.sort((a, b) => (a.quote?.chgPct ?? 0) - (b.quote?.chgPct ?? 0));
+    return mapped;
   }, [mode, q, quotes]);
 
   const advancers = STOCKS.filter((s) => quotes[s.symbol].chgPct >= 0).length;

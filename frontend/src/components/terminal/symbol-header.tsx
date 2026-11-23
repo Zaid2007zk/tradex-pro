@@ -3,9 +3,11 @@
 import { ArrowDownRight, ArrowUpRight, Eye, Gauge, Layers, ShieldCheck } from "lucide-react";
 import { STOCKS, fmtCompact, fmtPct, fmtPrice } from "@/lib/market/engine";
 import type { Quote } from "@/hooks/use-market";
+import { useMarketStatus } from "@/hooks/use-market";
 import { isShariahCompliant } from "./shariah-modal";
 
 export default function SymbolHeader({ symbol, quote }: { symbol: string; quote: Quote }) {
+  const marketStatus = useMarketStatus();
   const def = STOCKS.find((s) => s.symbol === symbol)!;
   const isHalal = isShariahCompliant(symbol);
   const up = quote.chgPct >= 0;
@@ -28,9 +30,9 @@ export default function SymbolHeader({ symbol, quote }: { symbol: string; quote:
             <span className="rounded border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-emerald-300">
               EQ
             </span>
-            <span className="flex items-center gap-1 rounded border border-emerald-500/30 bg-emerald-950/40 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-emerald-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              LIVE NSE
+            <span className={`flex items-center gap-1 rounded border px-1.5 py-0.5 text-[9px] font-bold tracking-wider ${marketStatus.badgeClass}`}>
+              <span className={`h-1.5 w-1.5 rounded-full ${marketStatus.isOpen ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
+              {marketStatus.isOpen ? "LIVE NSE" : "OFFICIAL CLOSE"}
             </span>
             {isHalal ? (
               <span className="rounded border border-emerald-500/35 bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-emerald-300">

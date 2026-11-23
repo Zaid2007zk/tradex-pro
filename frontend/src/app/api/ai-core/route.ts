@@ -219,6 +219,57 @@ async function callGemini(messages: ChatMsg[], apiKey: string, modelName?: strin
 }
 
 // -----------------------------------------------------------------------------
+// NVIDIA NIM API CALLER (OpenAI-compatible)
+// -----------------------------------------------------------------------------
+async function callNvidia(messages: ChatMsg[], apiKey: string, modelName?: string): Promise<{ text: string; model: string }> {
+  const cleanKey = apiKey.trim();
+  if (!cleanKey) throw new Error("Missing NVIDIA API Key");
+
+  const candidates: string[] = [
+    modelName || "",
+    "meta/llama-3.3-70b-instruct",
+    "meta/llama-3.1-70b-instruct",
+    "deepseek-ai/deepseek-r1",
+    "nvidia/llama-3.1-nemotron-70b-instruct",
+  ].filter(Boolean);
+
+  let lastError = "";
+  for (const model of Array.from(new Set(candidates))) {
+    try {
+      const res = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${cleanKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: messages.map((m) => ({
+            role: m.role === "system" ? "system" : m.role === "assistant" ? "assistant" : "user",
+            content: m.content,
+          })),
+          temperature: 0.5,
+          max_tokens: 800,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const text = data.choices?.[0]?.message?.content;
+        if (text && text.trim()) return { text: text.trim(), model };
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        lastError = errData?.error?.message || `NVIDIA NIM error status ${res.status}`;
+      }
+    } catch (e) {
+      lastError = e instanceof Error ? e.message : String(e);
+    }
+  }
+
+  throw new Error(lastError || "NVIDIA NIM could not be reached");
+}
+
+// -----------------------------------------------------------------------------
 // AUTONOMOUS TRADEX NEURAL ENGINE (Zero-Key Guaranteed Intelligence)
 // -----------------------------------------------------------------------------
 function generateAutonomousResponse(
@@ -372,8 +423,10 @@ function generateAutonomousResponse(
         `• **Trend & Moving Average:** Price 50-SMA ke **${sig.aboveMa50 ? "upar sustain" : "niche consolidate"}** kar raha hai.\n` +
         `• **Technical Momentum:** RSI **${sig.rsi.toFixed(1)}** · MACD is **${sig.macdBull ? "Bullish" : "Neutral/Consolidation"}**.\n` +
         `• **Accumulation Level:** ₹${pullbackEntry} - ₹${px.toFixed(2)}.\n` +
-        `• **Key Levels:** Target: **₹${target1}** (+2.5%) | Support / Stop-Loss: **₹${stopLoss}** (-1.5%).\n\n` +
-        `💡 *Verdict: ${sig.verdict.toUpperCase()} setup. Aap direct Order Ticket se CNC ya MIS order place kar sakte hain.*`
+        `• **Key Levels:** Target: **₹${target1}** (+2.5%) | Support / Stop-Loss: **₹${stopLoss}** (-1.5%).\n` +
+        `• **Risk-to-Reward:** 1 : 1.7 (Favorable for Disciplined Execution).\n\n` +
+        `💡 *Verdict: ${sig.verdict.toUpperCase()} setup. Aap direct Order Ticket se CNC ya MIS order place kar sakte hain.*\n\n` +
+        `⚠️ *SEBI Compliance Disclaimer: Ye analysis kewal educational paper-trading simulation ke liye hai. Koi SEBI registered financial advice nahi hai.*`
       );
     }
 
@@ -384,8 +437,10 @@ function generateAutonomousResponse(
       `• **Current Price (LTP):** ₹${px.toFixed(2)} (${chgPct >= 0 ? "+" : ""}${chgPct.toFixed(2)}% today)\n` +
       `• **Technical Telemetry:** RSI at ${sig.rsi.toFixed(1)} (${isOverbought ? "Overbought Zone" : isOversold ? "Oversold Exhaustion" : "Balanced Momentum"}), price is ${sig.aboveMa50 ? "above" : "below"} 50-SMA.\n` +
       `• **Recommended Accumulation:** ₹${pullbackEntry} to ₹${px.toFixed(2)}\n` +
-      `• **Upside Target:** ₹${target1} (+2.5%) | **Stop-Loss:** ₹${stopLoss} (-1.5% capital protection stop)\n\n` +
-      `Tactical Verdict: **${sig.verdict.toUpperCase()}**. Available for 1-Click execution via the Order Ticket.`
+      `• **Upside Target:** ₹${target1} (+2.5%) | **Stop-Loss:** ₹${stopLoss} (-1.5% capital protection stop)\n` +
+      `• **Risk-to-Reward Ratio:** 1 : 1.7 (Favorable for Disciplined Execution)\n\n` +
+      `Tactical Verdict: **${sig.verdict.toUpperCase()}**. Available for 1-Click execution via the Order Ticket.\n\n` +
+      `⚠️ *Compliance Disclaimer: Generated for educational paper-trading simulation only. Not registered SEBI investment advice.*`
     );
   }
 
@@ -497,7 +552,7 @@ export async function POST(req: Request) {
     symbol?: string;
     history?: ChatMsg[];
     prices?: Record<string, number>;
-    provider?: "groq" | "gemini" | "autonomous" | "zai";
+    provider?: "groq" | "gemini" | "autonomous" | "zai" | "nvidia";
     apiKey?: string;
     model?: string;
   };
@@ -551,15 +606,32 @@ export async function POST(req: Request) {
           { status: 400 }
         );
       }
+    } else if (provider === "nvidia") {
+      try {
+        const result = await callNvidia([{ role: "user", content: "Reply 'OK'" }], apiKey, model);
+        return NextResponse.json({
+          ok: true,
+          message: `Connected successfully to NVIDIA NIM API (${result.model})!`,
+          model: result.model,
+        });
+      } catch (err) {
+        return NextResponse.json(
+          { ok: false, error: err instanceof Error ? err.message : "Invalid NVIDIA NIM API key" },
+          { status: 400 }
+        );
+      }
     }
     return NextResponse.json({ ok: true, message: "TradeX Autonomous Neural Engine is always active and ready." });
   }
 
   const context = buildContext(prices, symbol);
+  const px = prices[symbol] || targetStock.base;
   const baseSys = `You are ARIA CORE — the fully-AI brain of TradeX PRO, an institutional trading terminal for the Indian market (NSE, INR). You reason like a sharp quant analyst.
 Rules:
 - Ground every claim in the LIVE MARKET CONTEXT below; never invent prices that contradict it.
-- Specific Stock Inquiries: If the user asks about a specific stock (e.g. TCS, INFY, HDFC, SBIN), answer SPECIFICALLY about that stock! Currently the user is asking about: ${symbol} (${targetStock.name}).
+- Specific Stock Inquiries: If the user asks about a specific stock (e.g. TCS, INFY, HDFC, SBIN), answer SPECIFICALLY about that stock! Currently the user is asking about: ${symbol} (${targetStock.name}) at CMP ₹${px.toFixed(2)}.
+- Always include suggested Entry, Target, Stop Loss, and Risk/Reward ratio (e.g. 1:1.7).
+- Compliance: Always include educational disclaimer: "For educational paper-trading simulation only. Not registered SEBI investment advice."
 - Language Protocol: If the user writes in Hindi or Hinglish (e.g. 'konsa', 'kya', 'buy krne ka', 'batao', 'kab lena hai', 'sahi time'), YOU MUST ALWAYS REPLY IN NATURAL FINANCIAL HINGLISH/HINDI with exact levels (LTP, Entry, Target, Stop Loss). Never reply in pure English if the user asked in Hinglish!
 - Keep answers tight (max ~180 words) unless a report is requested. Use bullets for clarity.
 - This is a paper trading terminal — mention risk discipline and levels.
@@ -581,6 +653,14 @@ ${context}`;
     if ((provider === "gemini" && apiKey) || process.env.GEMINI_API_KEY) {
       try {
         return await callGemini(messages, apiKey || process.env.GEMINI_API_KEY!, model);
+      } catch {}
+    }
+
+    // 3. If explicit NVIDIA NIM key
+    if ((provider === "nvidia" && apiKey) || process.env.NVIDIA_API_KEY) {
+      try {
+        const res = await callNvidia(messages, apiKey || process.env.NVIDIA_API_KEY!, model);
+        return res.text;
       } catch {}
     }
 

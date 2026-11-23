@@ -1,0 +1,107 @@
+# ==============================================================================
+# 🎯 MARKETPULSE — COMPREHENSIVE PRODUCTION MASTER FIX PROMPT
+# ==============================================================================
+# Role: Principal Full-Stack Financial Systems Architect & Senior Next.js / TypeScript Engineer
+# Goal: Eliminate 100% of bugs, price discrepancies, and AI synchronization flaws in MarketPulse.
+# Constraints: Zero breaking changes. Strict adherence to official Indian Market (NSE/BSE) standards.
+# ==============================================================================
+
+TASK OVERVIEW:
+Execute an end-to-end audit, repair, and hardening across MarketPulse's 4 core layers:
+1. Live Exchange Data & Indices Accuracy (0-Discrepancy)
+2. Market Hours & Ticking Lifecycle (Smart Market State)
+3. AI Intelligence Layer & Provider Integration (NVIDIA NIM / Groq / Gemini)
+4. Order Execution, Portfolio Math & UI Component Cohesion
+
+---
+
+### [SECTION 1: LIVE EXCHANGE DATA & SYMBOL ENGINE]
+Files to inspect & fix:
+- `frontend/src/app/api/market-quotes/route.ts`
+- `frontend/src/lib/market/engine.ts`
+- `frontend/src/hooks/use-market.ts`
+
+REQUIREMENTS:
+1. Fix Broken & 404 Symbols:
+   - `NIFTYNEXT50`: Change query ticker from `^NSENEXT50` (returns 404) to `^CRSLDX` (official Yahoo ticker for Nifty Next 50).
+   - `TATAMOTORS`: Update mapped ticker from `TMCV.NS` (returns 404) to `TATAMOTORS.NS`.
+   - `ETERNAL`: Map properly to `ZOMATO.NS` with proper fallback validation.
+2. Synchronize Calibrated Benchmarks & Fallbacks:
+   - Ensure all fallback values in `INDEX_MAP` (`route.ts`) and `INDICES` (`engine.ts`) match true market reality:
+     * `NIFTY50`: Benchmark ~25,349 (Not outdated 25,800).
+     * `BANKNIFTY`: Benchmark ~62,585 (Eliminate the 12,000-point error of 64,635).
+     * `SENSEX`: Benchmark ~82,435 (Not 83,919).
+     * `NIFTYFIN`: Benchmark ~28,153 (Not 28,871).
+   - Recalibrate stock base values in `STOCKS` array:
+     * `KOTAKBANK`: Fix from obsolete 1,788.50 to post-split/bonus ~502.85.
+     * `HDFCBANK`: Fix to ~817.80.
+     * `RELIANCE`: Fix to ~1,351.00.
+     * `SBIN`: Fix to ~1,132.65.
+3. Multi-Tier Graceful Resilience:
+   - If Yahoo Finance rate-limits or returns delayed data, smoothly serve cached calibrated quotes with a clear `source: "calibrated_cache"` tag, preventing arbitrary undefined/NaN values in the UI.
+
+---
+
+### [SECTION 2: SMART MARKET-HOURS & TICKING LIFECYCLE]
+Files to inspect & fix:
+- `frontend/src/hooks/use-market.ts`
+- `frontend/src/components/terminal/status-bar.tsx`
+- `frontend/src/components/terminal/top-bar.tsx`
+
+REQUIREMENTS:
+1. Real-World Market Status Detection:
+   - Implement an IST (UTC+5:30) helper:
+     * Market Open: Monday to Friday, 09:15 to 15:30 IST.
+     * Market Closed: Weekdays before 09:15, after 15:30 IST, and entire Saturday/Sunday.
+2. Freeze Prices When Market Is Closed:
+   - In `use-market.ts`, disable the random micro-tick fluctuation when market is CLOSED.
+   - When market is closed, lock price to the official `regularMarketPrice` or `prevClose`. Do NOT fabricate synthetic price movements outside trading hours.
+3. Clear Market Status Indicator:
+   - Surface a visual status pill in `TopBar` / `StatusBar`:
+     * 🟢 "LIVE (NSE)" during 09:15-15:30 IST.
+     * 🟠 "MARKET CLOSED (OFFICIAL CLOSE)" outside market hours.
+
+---
+
+### [SECTION 3: AI INTELLIGENCE LAYER & ENGINE INTEGRATION]
+Files to inspect & fix:
+- `frontend/src/components/terminal/ai-panel.tsx`
+- `frontend/src/components/terminal/ai-core.tsx`
+- `frontend/src/components/terminal/autopilot.tsx`
+- `frontend/src/app/api/ai/...` (any existing AI route)
+
+REQUIREMENTS:
+1. Fix AI Data Context Injection:
+   - Ensure the AI panel receives the REAL active symbol's current price, RSI, MACD, 20 EMA, and 50 EMA from `computeSignals()`.
+   - Prevent the AI from giving generic or outdated price advice by prepending the live market snapshot directly into the system prompt.
+2. Fast Multi-Provider LLM Streaming:
+   - Support Groq (Llama 3.3 70B - ultra low latency) and Google Gemini (Gemini 2.0 Flash) with streaming SSE (`ReadableStream`).
+   - If an API key is missing or quota is exhausted, provide an instant, informative fallback rather than an infinite loading spinner or crash.
+3. Strict Safety & Financial Disclaimer:
+   - All AI insights must render with clear Risk/Reward ratios, Stop Loss suggestions, and SEBI compliance educational disclaimers.
+
+---
+
+### [SECTION 4: ORDER EXECUTION, PORTFOLIO MATH & UI SYNC]
+Files to inspect & fix:
+- `frontend/src/components/terminal/order-ticket.tsx`
+- `frontend/src/components/terminal/terminal.tsx`
+- `frontend/src/components/terminal/bottom-tabs.tsx`
+
+REQUIREMENTS:
+1. Accurate Margin & P&L Calculation:
+   - Intraday (MIS): 5x leverage (`price * qty / 5`).
+   - Delivery (CNC): 1x leverage (`price * qty`).
+   - PayLater (MTF): 4x leverage.
+   - Ensure live Unrealized P&L recalculates dynamically against current `quote.price`, without rounding errors or desyncing after switching symbols.
+2. Chart Crosshair & Candle Consistency:
+   - When changing symbols or timeframes (`1D`, `1W`, `1M`), reset the candle series smoothly without rendering blank canvas or detached indicator lines.
+
+---
+
+### [SECTION 5: VERIFICATION & ZERO-REGRESSION QUALITY GATE]
+Before finalizing:
+1. Run TypeScript type check (`npm run build` or `npx tsc --noEmit`) to verify 0 compiler errors.
+2. Verify all 5 indices (`NIFTY50`, `BANKNIFTY`, `NIFTYNEXT50`, `NIFTYFIN`, `SENSEX`) render green/red changes matching actual exchange directions.
+3. Verify responsive layout across mobile and desktop.
+4. Document all changed lines and present a structured summary before deployment.

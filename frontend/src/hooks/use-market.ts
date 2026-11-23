@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { STOCKS, buildDepth, r2 } from "@/lib/market/engine";
+import { STOCKS, buildDepth, r2, getMarketStatusIST, type MarketStatus } from "@/lib/market/engine";
 
 export type Quote = {
   symbol: string;
@@ -54,12 +54,23 @@ export type IndexQuote = {
 
 // Global cache for live index quotes
 let globalIndexQuotes: Record<string, IndexQuote> = {
-  NIFTY50: { price: 25800.60, chgPct: 1.12, chgPts: 286.30 },
-  BANKNIFTY: { price: 64635.20, chgPct: 2.49, chgPts: 1572.20 },
+  NIFTY50: { price: 25349.65, chgPct: -1.75, chgPts: -450.85 },
+  BANKNIFTY: { price: 62585.35, chgPct: -3.16, chgPts: -2040.85 },
   NIFTYNEXT50: { price: 73207.25, chgPct: 0.44, chgPts: 317.50 },
-  NIFTYFIN: { price: 28871.20, chgPct: 2.02, chgPts: 571.55 },
-  SENSEX: { price: 83919.71, chgPct: 2.30, chgPts: 1887.91 },
+  NIFTYFIN: { price: 28153.50, chgPct: -2.49, chgPts: -717.70 },
+  SENSEX: { price: 82435.10, chgPct: -1.68, chgPts: -1405.20 },
 };
+
+export function useMarketStatus(): MarketStatus {
+  const [status, setStatus] = useState<MarketStatus>(getMarketStatusIST);
+  useEffect(() => {
+    const update = () => setStatus(getMarketStatusIST());
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, []);
+  return status;
+}
 
 export function useIndices(): Record<string, IndexQuote> {
   const [indices, setIndices] = useState<Record<string, IndexQuote>>(globalIndexQuotes);
@@ -142,10 +153,17 @@ export function useMarket(): Record<string, Quote> {
     };
   }, []);
 
-  // 2. High-Frequency Real-time Sub-Second Micro Tick Engine
-  // Tight sub-rupee micro-fluctuations (0.05% max) strictly pinned to the official NSE anchor price
+  // 2. High-Frequency Real-time Micro Tick Engine
+  // Active ONLY during official trading hours (Monday-Friday 09:15 - 15:30 IST)
+  // When market is closed, prices remain strictly locked to official close price.
   useEffect(() => {
     const id = setInterval(() => {
+      const status = getMarketStatusIST();
+      if (!status.isOpen) {
+        // Market is closed: do not fabricate synthetic price movements outside trading hours
+        return;
+      }
+
       setQuotes((prev) => {
         const next: Record<string, Quote> = {};
         for (const s of STOCKS) {

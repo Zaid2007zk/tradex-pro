@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Bell, CandlestickChart, Command, Search, Wallet, Sparkles, Zap, Scale, User, ShieldCheck, SlidersHorizontal } from "lucide-react";
 import { INDICES, STOCKS, computeIndexValue, fmtPct, fmtPrice, fmtINR } from "@/lib/market/engine";
-import { useIndices, type Quote } from "@/hooks/use-market";
+import { useIndices, useMarketStatus, type Quote } from "@/hooks/use-market";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import AiSettingsModal from "./ai-settings-modal";
 import BrokerGatewayModal from "./broker-gateway-modal";
@@ -25,6 +25,7 @@ export default function TopBar({ quotes, onSelect, balance }: Props) {
   const [shariahModalOpen, setShariahModalOpen] = useState(false);
 
   const indexQuotes = useIndices();
+  const marketStatus = useMarketStatus();
 
   const indexData = useMemo(() => {
     return INDICES.slice(0, 4).map((idx) => {
@@ -86,6 +87,12 @@ export default function TopBar({ quotes, onSelect, balance }: Props) {
               Quantum Terminal
             </div>
           </div>
+        </div>
+
+        {/* Real-time Official Market Hours Status Pill */}
+        <div className={`hidden 2xl:flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[9px] font-bold tracking-wider shrink-0 ${marketStatus.badgeClass}`}>
+          <span className={`h-1.5 w-1.5 rounded-full ${marketStatus.isOpen ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
+          {marketStatus.label}
         </div>
 
         {/* Index pills */}
