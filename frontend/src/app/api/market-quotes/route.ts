@@ -12,6 +12,7 @@ type LiveQuote = {
   chgPct: number;
   volume: number;
   updatedAt: number;
+  currency?: "INR" | "USD";
 };
 
 // Map platform symbols to live exchange query symbols (with multi-tier fallback candidates)
@@ -55,6 +56,21 @@ const SYMBOL_MAP: Record<string, string[]> = {
   ETH: ["ETH-INR", "ETH-USD"],
   SOL: ["SOL-INR", "SOL-USD"],
   BNB: ["BNB-INR", "BNB-USD"],
+
+  // US Tech Giants & Global (NASDAQ / NYSE)
+  NVDA: ["NVDA"],
+  AAPL: ["AAPL"],
+  TSLA: ["TSLA"],
+  MSFT: ["MSFT"],
+  GOOGL: ["GOOGL"],
+  AMZN: ["AMZN"],
+  META: ["META"],
+  GIFTNIFTY: ["^NSEI"],
+
+  // Bonds, Debt & Agri (RBI / NCDEX)
+  INDIA10Y: ["^TNX"],
+  SGB: ["GOLDBEES.NS", "GC=F"],
+  JEERA: ["GOLDBEES.NS"],
 };
 
 const INDEX_MAP: Record<string, { yahoo: string[]; fallbackPrice: number; fallbackChgPct: number; fallbackPts: number }> = {
@@ -90,20 +106,34 @@ async function fetchTickerQuote(sym: string, exchCandidates: string[], basePrice
         if (meta) {
           const price = meta.regularMarketPrice ?? meta.chartPreviousClose ?? basePrice;
           const prevClose = meta.chartPreviousClose ?? meta.previousClose ?? basePrice;
-          const dayHigh = meta.regularMarketDayHigh ?? Math.max(price, prevClose * 1.015);
-          const dayLow = meta.regularMarketDayLow ?? Math.min(price, prevClose * 0.985);
+
+          // Smart MCX Lot Scaling (GOLDBEES/SILVERBEES ETFs to 10g Gold and 1kg Silver)
+          let finalPrice = price;
+          let finalPrevClose = prevClose;
+          if (sym === "GOLD" && price < 1000) {
+            finalPrice = Math.round(price * 755.4 * 100) / 100;
+            finalPrevClose = Math.round(prevClose * 755.4 * 100) / 100;
+          } else if (sym === "SILVER" && price < 1000) {
+            finalPrice = Math.round(price * 1000 * 100) / 100;
+            finalPrevClose = Math.round(prevClose * 1000 * 100) / 100;
+          }
+
+          const dayHigh = meta.regularMarketDayHigh ? (finalPrice / price) * meta.regularMarketDayHigh : Math.max(finalPrice, finalPrevClose * 1.015);
+          const dayLow = meta.regularMarketDayLow ? (finalPrice / price) * meta.regularMarketDayLow : Math.min(finalPrice, finalPrevClose * 0.985);
           const volume = meta.regularMarketVolume ?? 1500000;
-          const chgPct = prevClose > 0 ? ((price - prevClose) / prevClose) * 100 : 0;
+          const chgPct = finalPrevClose > 0 ? ((finalPrice - finalPrevClose) / finalPrevClose) * 100 : 0;
+          const currency = meta.currency === "USD" ? "USD" : "INR";
 
           return {
             symbol: sym,
-            price: Math.round(price * 100) / 100,
-            prevClose: Math.round(prevClose * 100) / 100,
+            price: Math.round(finalPrice * 100) / 100,
+            prevClose: Math.round(finalPrevClose * 100) / 100,
             dayHigh: Math.round(dayHigh * 100) / 100,
             dayLow: Math.round(dayLow * 100) / 100,
             chgPct: Math.round(chgPct * 100) / 100,
             volume,
             updatedAt: Date.now(),
+            currency,
           };
         }
       }
@@ -113,6 +143,7 @@ async function fetchTickerQuote(sym: string, exchCandidates: string[], basePrice
   }
 
   // Multi-tier graceful fallback to accurate calibrated base
+  const def = STOCKS.find((s) => s.symbol === sym);
   return {
     symbol: sym,
     price: basePrice,
@@ -122,6 +153,7 @@ async function fetchTickerQuote(sym: string, exchCandidates: string[], basePrice
     chgPct: 0,
     volume: 1200000,
     updatedAt: Date.now(),
+    currency: def?.currency ?? "INR",
   };
 }
 

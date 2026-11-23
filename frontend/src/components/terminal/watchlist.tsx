@@ -14,7 +14,7 @@ type Props = {
 };
 
 type Mode = "all" | "gainers" | "losers";
-type Segment = "ALL" | "NSE" | "MCX" | "FOREX" | "CRYPTO";
+type Segment = "ALL" | "NSE" | "GLOBAL" | "MCX" | "FOREX" | "CRYPTO" | "BONDS";
 
 const MODES: { key: Mode; label: string }[] = [
   { key: "all", label: "All" },
@@ -24,10 +24,12 @@ const MODES: { key: Mode; label: string }[] = [
 
 const SEGMENTS: { key: Segment; label: string }[] = [
   { key: "ALL", label: "All" },
-  { key: "NSE", label: "NSE Stocks" },
-  { key: "MCX", label: "MCX" },
+  { key: "NSE", label: "NSE" },
+  { key: "GLOBAL", label: "US Tech" },
+  { key: "MCX", label: "MCX / Agri" },
   { key: "FOREX", label: "Forex" },
   { key: "CRYPTO", label: "Crypto 24/7" },
+  { key: "BONDS", label: "Bonds & SGB" },
 ];
 
 export default function Watchlist({ quotes, selected, onSelect }: Props) {
@@ -73,9 +75,10 @@ export default function Watchlist({ quotes, selected, onSelect }: Props) {
             </div>
             <div className="mt-2 space-y-1.5 font-mono text-[11px] text-white/60">
               <div className="flex justify-between"><span>NSE · BSE Equities</span><span className="text-white/85">09:15 – 15:30 IST</span></div>
-              <div className="flex justify-between"><span>MCX Commodities</span><span className="text-amber-400">09:00 – 23:30 IST</span></div>
-              <div className="flex justify-between"><span>Forex CDS</span><span className="text-cyan-400">09:00 – 17:00 IST</span></div>
-              <div className="flex justify-between"><span>Crypto Markets</span><span className="text-purple-400 font-bold">24 Hours / 7 Days</span></div>
+              <div className="flex justify-between"><span>US Markets (NASDAQ/NYSE)</span><span className="text-blue-400">19:00 – 01:30 IST</span></div>
+              <div className="flex justify-between"><span>MCX Commodities & Agri</span><span className="text-amber-400">09:00 – 23:30 IST</span></div>
+              <div className="flex justify-between"><span>Forex CDS & Bonds</span><span className="text-cyan-400">09:00 – 17:00 IST</span></div>
+              <div className="flex justify-between"><span>Crypto 24/7 Markets</span><span className="text-purple-400 font-bold">24 Hours / 7 Days</span></div>
             </div>
             <div className="mt-3 flex items-center gap-2 text-[12.5px] font-semibold">
               <CalendarDays className="h-3.5 w-3.5 text-amber-300" /> Upcoming Holidays
@@ -169,9 +172,11 @@ export default function Watchlist({ quotes, selected, onSelect }: Props) {
                     def.exchange === "CRYPTO" ? "bg-purple-500/15 text-purple-300 border border-purple-500/25" :
                     def.exchange === "MCX" ? "bg-amber-500/15 text-amber-300 border border-amber-500/25" :
                     def.exchange === "FOREX" ? "bg-cyan-500/15 text-cyan-300 border border-cyan-500/25" :
+                    def.exchange === "GLOBAL" ? "bg-blue-500/15 text-blue-300 border border-blue-500/25" :
+                    def.exchange === "BONDS" ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/25" :
                     "bg-white/6 text-white/40 border border-white/10"
                   }`}>
-                    {def.exchange || "NSE"}
+                    {def.exchange === "GLOBAL" ? "US" : def.exchange || "NSE"}
                   </span>
                 </div>
                 <div className="truncate text-[10px] text-white/35">{def.sector}</div>
@@ -184,7 +189,7 @@ export default function Watchlist({ quotes, selected, onSelect }: Props) {
                     quote.tickDir === 1 ? "tx-flash-up" : quote.tickDir === -1 ? "tx-flash-down" : ""
                   }`}
                 >
-                  {fmtPrice(quote.price)}
+                  {def.currency === "USD" ? "$" : "₹"}{fmtPrice(quote.price)}
                 </div>
                 <div className={`font-mono text-[10.5px] font-medium tabular-nums ${up ? "text-emerald-400" : "text-rose-400"}`}>
                   {fmtPct(quote.chgPct)}

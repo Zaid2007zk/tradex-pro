@@ -11,7 +11,7 @@ export type Candle = {
   volume: number;
 };
 
-export type ExchangeSegment = "NSE" | "MCX" | "FOREX" | "CRYPTO";
+export type ExchangeSegment = "NSE" | "BSE" | "MCX" | "FOREX" | "CRYPTO" | "GLOBAL" | "BONDS";
 
 export type StockDef = {
   symbol: string;
@@ -22,6 +22,7 @@ export type StockDef = {
   capCr: number; // market cap in ₹ crore (for heatmap sizing)
   lot: number; // lot / step size for qty stepper
   exchange?: ExchangeSegment;
+  currency?: "INR" | "USD";
 };
 
 export const STOCKS: StockDef[] = [
@@ -65,6 +66,21 @@ export const STOCKS: StockDef[] = [
   { symbol: "ETH", name: "Ethereum / INR", sector: "Smart Contracts", exchange: "CRYPTO", base: 159800.0, volatility: 2.1, capCr: 35000000, lot: 1 },
   { symbol: "SOL", name: "Solana / INR", sector: "DeFi", exchange: "CRYPTO", base: 11200.0, volatility: 2.5, capCr: 9000000, lot: 1 },
   { symbol: "BNB", name: "Binance Coin / INR", sector: "Exchange Token", exchange: "CRYPTO", base: 45400.0, volatility: 1.6, capCr: 8000000, lot: 1 },
+
+  // --- 5. US TECH GIANTS & GLOBAL (NASDAQ / NYSE) ---
+  { symbol: "NVDA", name: "NVIDIA Corp", sector: "Semiconductors", exchange: "GLOBAL", currency: "USD", base: 166.42, volatility: 2.2, capCr: 35000000, lot: 1 },
+  { symbol: "AAPL", name: "Apple Inc.", sector: "Consumer Tech", exchange: "GLOBAL", currency: "USD", base: 348.12, volatility: 1.1, capCr: 38000000, lot: 1 },
+  { symbol: "TSLA", name: "Tesla Inc.", sector: "EV & Clean Energy", exchange: "GLOBAL", currency: "USD", base: 390.47, volatility: 2.8, capCr: 12000000, lot: 1 },
+  { symbol: "MSFT", name: "Microsoft Corp", sector: "Cloud & AI", exchange: "GLOBAL", currency: "USD", base: 498.78, volatility: 1.0, capCr: 34000000, lot: 1 },
+  { symbol: "GOOGL", name: "Alphabet (Google)", sector: "Search & Cloud", exchange: "GLOBAL", currency: "USD", base: 282.23, volatility: 1.2, capCr: 25000000, lot: 1 },
+  { symbol: "AMZN", name: "Amazon.com Inc.", sector: "E-Commerce & Cloud", exchange: "GLOBAL", currency: "USD", base: 257.02, volatility: 1.4, capCr: 26000000, lot: 1 },
+  { symbol: "META", name: "Meta Platforms", sector: "Social & AI", exchange: "GLOBAL", currency: "USD", base: 592.05, volatility: 1.6, capCr: 18000000, lot: 1 },
+  { symbol: "GIFTNIFTY", name: "GIFT Nifty 50 Futures", sector: "GIFT City IFSC", exchange: "GLOBAL", currency: "USD", base: 25380.0, volatility: 0.9, capCr: 5000000, lot: 25 },
+
+  // --- 6. BONDS, DEBT & AGRI (NCDEX / RBI) ---
+  { symbol: "INDIA10Y", name: "India 10Y Benchmark G-Sec", sector: "Sovereign Debt", exchange: "BONDS", currency: "INR", base: 6.84, volatility: 0.15, capCr: 120000000, lot: 1 },
+  { symbol: "SGB", name: "Sovereign Gold Bond (24K)", sector: "RBI Gold Debt", exchange: "BONDS", currency: "INR", base: 7785.0, volatility: 0.5, capCr: 8000000, lot: 1 },
+  { symbol: "JEERA", name: "NCDEX Jeera Unjha", sector: "Agri Commodity", exchange: "MCX", currency: "INR", base: 24500.0, volatility: 1.8, capCr: 350000, lot: 1 },
 ];
 
 export const SECTORS = Array.from(new Set(STOCKS.map((s) => s.sector)));
@@ -454,6 +470,30 @@ export function getInstrumentMarketStatus(stock?: StockDef | null, now: Date = n
       label: isOpen ? "LIVE (CDS FOREX)" : "FOREX CLOSED",
       badgeClass: isOpen ? "border-cyan-500/35 bg-cyan-950/40 text-cyan-300" : "border-slate-500/30 bg-slate-950/40 text-slate-400",
       subLabel: isOpen ? "Currency Open" : "Closed",
+      istTime: timeStr,
+    };
+  }
+
+  if (exchange === "GLOBAL") {
+    // US Markets (NASDAQ/NYSE): 19:00 to 02:00 IST Monday-Friday (or 00:00 to 02:00 next day)
+    const isUsOpen = (isWeekday && timeInMinutes >= 1140) || (day >= 2 && day <= 6 && timeInMinutes < 120);
+    return {
+      isOpen: isUsOpen,
+      label: isUsOpen ? "LIVE (NASDAQ/NYSE)" : "US MARKET CLOSED",
+      badgeClass: isUsOpen ? "border-blue-500/35 bg-blue-950/40 text-blue-300" : "border-slate-500/30 bg-slate-950/40 text-slate-400",
+      subLabel: isUsOpen ? "US Session Active" : "US Official Close",
+      istTime: timeStr,
+    };
+  }
+
+  if (exchange === "BONDS") {
+    // RBI G-Sec & Debt Market: 09:00 to 17:00 IST
+    const isOpen = isWeekday && timeInMinutes >= 540 && timeInMinutes < 1020;
+    return {
+      isOpen,
+      label: isOpen ? "LIVE (G-SEC / RBI)" : "DEBT MARKET CLOSED",
+      badgeClass: isOpen ? "border-emerald-500/35 bg-emerald-950/40 text-emerald-300" : "border-slate-500/30 bg-slate-950/40 text-slate-400",
+      subLabel: isOpen ? "Debt Market Open" : "Closed",
       istTime: timeStr,
     };
   }

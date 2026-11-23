@@ -66,7 +66,22 @@ export function extractTargetStock(question: string, defaultSymbol: string) {
   if (/\b(sol|solana)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "SOL")!;
   if (/\b(bnb|binance)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "BNB")!;
 
-  // 5. Fallback to active terminal symbol
+  // 5. US Tech Giants & Global
+  if (/\b(nvda|nvidia)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "NVDA")!;
+  if (/\b(aapl|apple)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "AAPL")!;
+  if (/\b(tsla|tesla|elon)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "TSLA")!;
+  if (/\b(msft|microsoft)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "MSFT")!;
+  if (/\b(googl|google|alphabet)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "GOOGL")!;
+  if (/\b(amzn|amazon)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "AMZN")!;
+  if (/\b(meta|facebook)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "META")!;
+  if (/\b(giftnifty|gift nifty|sgx nifty|gift city)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "GIFTNIFTY")!;
+
+  // 6. Bonds, Debt & Agri
+  if (/\b(g-sec|gsec|bond|india10y|10y bond|treasury)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "INDIA10Y")!;
+  if (/\b(sgb|sovereign gold bond)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "SGB")!;
+  if (/\b(jeera|ncdex jeera|cumin)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "JEERA")!;
+
+  // 7. Fallback to active terminal symbol
   return STOCKS.find((s) => s.symbol.toUpperCase() === defaultSymbol.toUpperCase()) || STOCKS[0];
 }
 

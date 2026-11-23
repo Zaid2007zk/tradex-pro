@@ -27,7 +27,7 @@ export default function SymbolHeader({ symbol, quote }: { symbol: string; quote:
               {def.exchange || "NSE"}
             </span>
             <span className="rounded border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-emerald-300">
-              {def.exchange === "CRYPTO" ? "SPOT" : def.exchange === "MCX" ? "COMMODITY" : def.exchange === "FOREX" ? "CDS" : "EQ"}
+              {def.exchange === "CRYPTO" ? "SPOT" : def.exchange === "MCX" ? "COMMODITY" : def.exchange === "FOREX" ? "CDS" : def.exchange === "GLOBAL" ? "US TECH" : def.exchange === "BONDS" ? "G-SEC" : "EQ"}
             </span>
             <span className={`flex items-center gap-1 rounded border px-1.5 py-0.5 text-[9px] font-bold tracking-wider ${marketStatus.badgeClass}`}>
               <span className={`h-1.5 w-1.5 rounded-full ${marketStatus.isOpen ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
@@ -56,7 +56,7 @@ export default function SymbolHeader({ symbol, quote }: { symbol: string; quote:
             quote.tickDir === 1 ? "tx-flash-up text-emerald-400" : quote.tickDir === -1 ? "tx-flash-down text-rose-400" : "text-white"
           }`}
         >
-          ₹{fmtPrice(quote.price)}
+          {def.currency === "USD" ? "$" : "₹"}{fmtPrice(quote.price)}
         </div>
         <div
           className={`mb-0.5 flex items-center gap-1 rounded-md px-2 py-0.5 font-mono text-[12px] font-semibold tabular-nums ${
@@ -71,9 +71,9 @@ export default function SymbolHeader({ symbol, quote }: { symbol: string; quote:
       {/* day range */}
       <div className="w-full sm:w-auto sm:min-w-44 sm:flex-1">
         <div className="mb-1 flex items-center justify-between font-mono text-[10px] text-white/40">
-          <span>L {fmtPrice(quote.dayLow)}</span>
+          <span>L {def.currency === "USD" ? "$" : "₹"}{fmtPrice(quote.dayLow)}</span>
           <span className="uppercase tracking-wider">Day Range</span>
-          <span>H {fmtPrice(quote.dayHigh)}</span>
+          <span>H {def.currency === "USD" ? "$" : "₹"}{fmtPrice(quote.dayHigh)}</span>
         </div>
         <div className="relative h-1.5 rounded-full bg-gradient-to-r from-rose-500/50 via-white/15 to-emerald-500/50">
           <div

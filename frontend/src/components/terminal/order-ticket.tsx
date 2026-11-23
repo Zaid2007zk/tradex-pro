@@ -38,6 +38,8 @@ const PRODUCTS: { key: ProductType; hint: string }[] = [
 ];
 
 export default function OrderTicket({ symbol, quote, balance, onExecute, defaultSide = "BUY" }: Props) {
+  const def = STOCKS.find((s) => s.symbol === symbol) || STOCKS[0];
+  const currSym = def.currency === "USD" ? "$" : "₹";
   const [side, setSide] = useState<"BUY" | "SELL">(defaultSide);
 
   // Sync side if defaultSide changes externally (e.g. from mobile quick action)
@@ -50,7 +52,6 @@ export default function OrderTicket({ symbol, quote, balance, onExecute, default
   const [limit, setLimit] = useState(quote.price);
   const { toast } = useToast();
 
-  const def = STOCKS.find((s) => s.symbol === symbol)!;
   const price = orderType === "MARKET" ? quote.price : limit;
   const leverage = product === "MIS" ? 5 : product === "MTF" ? 4 : 1;
   const total = price * qty;
@@ -173,7 +174,7 @@ export default function OrderTicket({ symbol, quote, balance, onExecute, default
         </div>
         <div>
           <div className="mb-0.5 text-[9px] font-semibold uppercase tracking-wider text-white/40">
-            {orderType === "MARKET" ? "LTP" : "Limit ₹"}
+            {orderType === "MARKET" ? "LTP" : `Limit ${currSym}`}
           </div>
           <div
             className={`flex h-8 items-center justify-center rounded-lg border font-mono text-[12px] font-semibold tabular-nums ${
@@ -207,7 +208,7 @@ export default function OrderTicket({ symbol, quote, balance, onExecute, default
 
       {/* summary */}
       <div className="mx-2.5 rounded-lg border border-white/8 bg-white/3 px-2.5 py-1.5 font-mono text-[10.5px]">
-        <Row label="Order value" value={`₹${fmtPrice(total)}`} />
+        <Row label="Order value" value={`${currSym}${fmtPrice(total)}`} />
         <Row label={`Margin (${leverage}x)`} value={fmtINR(margin)} strong />
         <Row label="Available funds" value={fmtINR(balance)} />
       </div>
