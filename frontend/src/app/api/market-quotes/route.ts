@@ -31,11 +31,11 @@ const SYMBOL_MAP: Record<string, string> = {
   MARUTI: "MARUTI.NS",
   SUNPHARMA: "SUNPHARMA.NS",
   HCLTECH: "HCLTECH.NS",
-  TATAMOTORS: "TATAMOTORS.NS",
+  TATAMOTORS: "TMCV.NS",
   ADANIENT: "ADANIENT.NS",
   TITAN: "TITAN.NS",
   WIPRO: "WIPRO.NS",
-  ETERNAL: "ZOMATO.BO",
+  ETERNAL: "ETERNAL.NS",
 };
 
 const INDEX_MAP: Record<string, { yahoo: string; fallbackPrice: number; fallbackChgPct: number; fallbackPts: number }> = {

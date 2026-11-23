@@ -37,11 +37,11 @@ export const STOCKS: StockDef[] = [
   { symbol: "MARUTI", name: "Maruti Suzuki", sector: "Auto", base: 14011.0, volatility: 1.0, capCr: 440000, lot: 1 },
   { symbol: "SUNPHARMA", name: "Sun Pharma", sector: "Pharma", base: 1884.9, volatility: 0.8, capCr: 452000, lot: 1 },
   { symbol: "HCLTECH", name: "HCL Technologies", sector: "IT", base: 1344.4, volatility: 0.95, capCr: 365000, lot: 1 },
-  { symbol: "TATAMOTORS", name: "Tata Motors", sector: "Auto", base: 788.4, volatility: 1.3, capCr: 290000, lot: 1 },
+  { symbol: "TATAMOTORS", name: "Tata Motors", sector: "Auto", base: 453.8, volatility: 1.3, capCr: 290000, lot: 1 },
   { symbol: "ADANIENT", name: "Adani Enterprises", sector: "Conglomerate", base: 2709.0, volatility: 1.6, capCr: 308000, lot: 1 },
   { symbol: "TITAN", name: "Titan Company", sector: "Consumer", base: 4620.0, volatility: 0.9, capCr: 410000, lot: 1 },
   { symbol: "WIPRO", name: "Wipro", sector: "IT", base: 185.7, volatility: 1.0, capCr: 194000, lot: 1 },
-  { symbol: "ETERNAL", name: "Eternal (Zomato)", sector: "Internet", base: 268.0, volatility: 1.7, capCr: 236000, lot: 1 },
+  { symbol: "ETERNAL", name: "Eternal (Zomato)", sector: "Internet", base: 362.1, volatility: 1.7, capCr: 236000, lot: 1 },
 ];
 
 export const SECTORS = Array.from(new Set(STOCKS.map((s) => s.sector)));
