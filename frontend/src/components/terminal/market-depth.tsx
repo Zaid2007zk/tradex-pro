@@ -9,14 +9,14 @@ export default function MarketDepth({ price }: { price: number }) {
 
   return (
     <div className="tx-panel shrink-0">
-      <div className="tx-panel-head flex items-center justify-between px-3.5 py-2.5">
-        <span className="text-[12.5px] font-semibold tracking-wide">Market Depth</span>
-        <span className="font-mono text-[10px] text-white/40">
+      <div className="tx-panel-head flex items-center justify-between px-3 py-1.5">
+        <span className="text-[12px] font-semibold tracking-wide">Market Depth</span>
+        <span className="font-mono text-[9.5px] text-white/40">
           Spread <span className="text-amber-300">₹{fmtPrice(spread)}</span>
         </span>
       </div>
 
-      <div className="grid grid-cols-3 px-3.5 pb-1 pt-2 text-[9px] font-semibold uppercase tracking-wider text-white/35">
+      <div className="grid grid-cols-3 px-3 pb-0.5 pt-1.5 text-[8.5px] font-semibold uppercase tracking-wider text-white/35">
         <span>Price</span>
         <span className="text-center">Qty</span>
         <span className="text-right">Orders</span>
@@ -25,7 +25,7 @@ export default function MarketDepth({ price }: { price: number }) {
       {/* asks (descending so best ask is nearest center) */}
       <div className="tx-divide">
         {[...asks].reverse().map((a, i) => (
-          <div key={`a-${i}`} className="relative grid grid-cols-3 px-3.5 py-1 font-mono text-[11px] tabular-nums">
+          <div key={`a-${i}`} className="relative grid grid-cols-3 px-3 py-0.5 font-mono text-[10.5px] tabular-nums">
             <div
               className="absolute inset-y-0.5 right-0 rounded-l bg-rose-500/12"
               style={{ width: `${(a.qty / maxQty) * 62}%` }}
@@ -38,15 +38,15 @@ export default function MarketDepth({ price }: { price: number }) {
       </div>
 
       {/* last price divider */}
-      <div className="relative flex items-center justify-between bg-white/5 px-3.5 py-1.5">
-        <span className="font-mono text-[12px] font-bold tabular-nums text-amber-300">₹{fmtPrice(price)}</span>
-        <span className="text-[9px] font-semibold uppercase tracking-wider text-white/40">LTP</span>
+      <div className="relative flex items-center justify-between bg-white/5 px-3 py-1">
+        <span className="font-mono text-[11px] font-bold tabular-nums text-amber-300">₹{fmtPrice(price)}</span>
+        <span className="text-[8.5px] font-semibold uppercase tracking-wider text-white/40">LTP</span>
       </div>
 
       {/* bids */}
-      <div className="tx-divide pb-2">
+      <div className="tx-divide pb-1">
         {bids.map((b, i) => (
-          <div key={`b-${i}`} className="relative grid grid-cols-3 px-3.5 py-1 font-mono text-[11px] tabular-nums">
+          <div key={`b-${i}`} className="relative grid grid-cols-3 px-3 py-0.5 font-mono text-[10.5px] tabular-nums">
             <div
               className="absolute inset-y-0.5 right-0 rounded-l bg-emerald-500/12"
               style={{ width: `${(b.qty / maxQty) * 62}%` }}

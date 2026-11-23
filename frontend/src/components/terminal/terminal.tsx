@@ -131,7 +131,7 @@ export default function Terminal() {
   }, []);
 
   return (
-    <div className="tx-terminal flex min-h-screen flex-col lg:h-screen lg:overflow-hidden select-none">
+    <div className="tx-terminal flex h-screen max-h-screen w-screen max-w-screen flex-col overflow-hidden select-none">
       {/* 1. Global Header Bar */}
       <TopBar quotes={quotes} onSelect={handleSelectSymbol} balance={balance} />
 
@@ -203,14 +203,14 @@ export default function Terminal() {
       </div>
 
       {/* 5. Main Content Area */}
-      <main className="flex min-h-0 flex-1 flex-col gap-2 p-2 lg:flex-row overflow-hidden">
+      <main className="flex min-h-0 flex-1 flex-col gap-1.5 p-1.5 lg:flex-row lg:h-full lg:overflow-hidden">
         {/* ========================================================================= */}
         {/* A. DESKTOP / LAPTOP LAYOUT (Width >= 1024px)                                */}
         {/* ========================================================================= */}
         <div className="hidden lg:contents">
           {/* Left Rail (Watchlist) with Smooth Collapse / Expand */}
           <div
-            className={`transition-all duration-300 ease-in-out shrink-0 flex flex-col ${
+            className={`transition-all duration-300 ease-in-out shrink-0 flex flex-col h-full min-h-0 overflow-hidden ${
               leftRailCollapsed ? "w-11 items-center" : "w-60 xl:w-72 2xl:w-80"
             }`}
           >
@@ -228,7 +228,7 @@ export default function Terminal() {
                 </div>
               </div>
             ) : (
-              <div className="relative h-full flex flex-col">
+              <div className="relative h-full min-h-0 flex flex-col overflow-hidden">
                 <button
                   onClick={() => setLeftRailCollapsed(true)}
                   title="Collapse Watchlist"
@@ -242,7 +242,7 @@ export default function Terminal() {
           </div>
 
           {/* Center Column (Chart & Bottom Tabs OR Specialized Workspace) */}
-          <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-hidden">
+          <section className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-hidden">
             {workspace === "terminal" ? (
               <>
                 <div className="tx-panel shrink-0">
@@ -250,7 +250,7 @@ export default function Terminal() {
                 </div>
 
                 {/* Chart / Heatmap panel */}
-                <div className="tx-panel flex flex-1 min-h-[170px] flex-col overflow-hidden">
+                <div className="tx-panel flex flex-1 min-h-[160px] flex-col overflow-hidden">
                   <div className="tx-panel-head flex items-center justify-between px-3 py-2 shrink-0">
                     <div className="flex items-center gap-1">
                       <button
@@ -314,7 +314,7 @@ export default function Terminal() {
                 </div>
 
                 {/* Bottom Tabs (Positions & Orders) */}
-                <div className="h-36 sm:h-40 xl:h-44 shrink-0">
+                <div className="h-36 sm:h-40 xl:h-44 shrink-0 overflow-hidden">
                   <BottomTabs positions={livePositions} orders={orders} />
                 </div>
               </>
@@ -336,7 +336,7 @@ export default function Terminal() {
 
           {/* Right Rail (Order Ticket, Depth, AI) with Collapse Toggle */}
           <div
-            className={`transition-all duration-300 ease-in-out shrink-0 flex flex-col ${
+            className={`transition-all duration-300 ease-in-out shrink-0 flex flex-col h-full min-h-0 overflow-hidden ${
               rightRailCollapsed ? "w-11 items-center" : "w-72 xl:w-80 2xl:w-88"
             }`}
           >
@@ -354,7 +354,7 @@ export default function Terminal() {
                 </div>
               </div>
             ) : (
-              <aside className="tx-scroll relative flex h-full w-full flex-col gap-2 overflow-y-auto">
+              <aside className="tx-scroll relative flex h-full min-h-0 w-full flex-col gap-1.5 overflow-y-auto pb-16">
                 <div className="relative">
                   <button
                     onClick={() => setRightRailCollapsed(true)}
