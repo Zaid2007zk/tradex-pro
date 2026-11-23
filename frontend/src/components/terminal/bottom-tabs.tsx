@@ -39,7 +39,19 @@ export default function BottomTabs({ positions, orders }: Props) {
                   const pnlPct = ((p.side === "BUY" ? p.ltp - p.price : p.price - p.ltp) / p.price) * 100;
                   return (
                     <tr key={p.id} className="border-t border-white/5 hover:bg-white/3">
-                      <td className="px-3 py-1.5 font-sans text-[11.5px] font-semibold">{p.symbol}</td>
+                      <td className="px-3 py-1.5 font-sans text-[11.5px] font-semibold">
+                        <div className="flex items-center gap-1.5">
+                          <span>{p.symbol}</span>
+                          {p.isBracket && (
+                            <span
+                              className="rounded border border-purple-500/35 bg-purple-500/15 px-1 py-0.2 font-mono text-[8px] font-bold text-purple-300"
+                              title={`SL: ₹${p.sl} · Target: ₹${p.target}`}
+                            >
+                              AI BRKT
+                            </span>
+                          )}
+                        </div>
+                      </td>
                       <td className="px-1 py-1.5">
                         <span className={`text-[10px] font-bold ${p.side === "BUY" ? "text-emerald-400" : "text-rose-400"}`}>
                           {p.side === "BUY" ? "L" : "S"}

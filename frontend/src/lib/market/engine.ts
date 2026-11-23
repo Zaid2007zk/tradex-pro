@@ -508,3 +508,99 @@ export function getInstrumentMarketStatus(stock?: StockDef | null, now: Date = n
     istTime: timeStr,
   };
 }
+
+// -----------------------------------------------------------------------------
+// AI CHART PATTERN & KEY SUPPORT / RESISTANCE DETECTOR
+// -----------------------------------------------------------------------------
+export type ChartPatternResult = {
+  support: number;
+  resistance: number;
+  pattern: string;
+  bias: "BULLISH" | "BEARISH" | "NEUTRAL";
+  confidence: number;
+  keyLevels: { price: number; label: string; type: "SUP" | "RES" }[];
+};
+
+export function detectChartPatterns(candles: Candle[], currSym = "₹"): ChartPatternResult {
+  if (!candles || candles.length < 5) {
+    return {
+      support: 0,
+      resistance: 0,
+      pattern: "Consolidation Range",
+      bias: "NEUTRAL",
+      confidence: 50,
+      keyLevels: [],
+    };
+  }
+
+  const closes = candles.map((c) => c.close);
+  const highs = candles.map((c) => c.high);
+  const lows = candles.map((c) => c.low);
+
+  const highest = Math.max(...highs);
+  const lowest = Math.min(...lows);
+  const lastClose = closes[closes.length - 1];
+
+  // Cluster swing lows and highs for robust S/R
+  const sortedLows = [...lows].sort((a, b) => a - b);
+  const sortedHighs = [...highs].sort((a, b) => b - a);
+
+  const support = sortedLows[Math.min(2, sortedLows.length - 1)];
+  const resistance = sortedHighs[Math.min(2, sortedHighs.length - 1)];
+
+  // Pattern detection logic
+  const recent = candles.slice(-15);
+  const recentLows = recent.map((c) => c.low);
+
+  let pattern = "Consolidation Range";
+  let bias: "BULLISH" | "BEARISH" | "NEUTRAL" = "NEUTRAL";
+  let confidence = 72;
+
+  // 1. Double Bottom (Bullish Reversal)
+  if (recentLows.length >= 8) {
+    const min1 = Math.min(...recentLows.slice(0, Math.floor(recentLows.length / 2)));
+    const min2 = Math.min(...recentLows.slice(Math.floor(recentLows.length / 2)));
+    const diffPct = Math.abs(min1 - min2) / min1;
+    if (diffPct < 0.009 && lastClose > min2 * 1.01) {
+      pattern = "Double Bottom Reversal";
+      bias = "BULLISH";
+      confidence = 86;
+    }
+  }
+
+  // 2. Breakout above Resistance
+  if (lastClose >= resistance * 0.998) {
+    pattern = "Bullish Breakout Expansion";
+    bias = "BULLISH";
+    confidence = 89;
+  } else if (lastClose <= support * 1.002) {
+    pattern = "Support Breakdown Warning";
+    bias = "BEARISH";
+    confidence = 85;
+  } else if (bias === "NEUTRAL") {
+    // 3. Trend Continuation / Golden Cross check
+    const ma20 = sma(closes, 20);
+    const ma50 = sma(closes, 50);
+    if (ma20 > ma50 && lastClose > ma20) {
+      pattern = "Bull Flag Trend Continuation";
+      bias = "BULLISH";
+      confidence = 79;
+    } else if (ma20 < ma50 && lastClose < ma20) {
+      pattern = "Descending Channel / Bearish Trend";
+      bias = "BEARISH";
+      confidence = 76;
+    }
+  }
+
+  return {
+    support: r2(support),
+    resistance: r2(resistance),
+    pattern,
+    bias,
+    confidence,
+    keyLevels: [
+      { price: r2(support), label: `SUP ${currSym}${fmtPrice(support)}`, type: "SUP" },
+      { price: r2(resistance), label: `RES ${currSym}${fmtPrice(resistance)}`, type: "RES" },
+    ],
+  };
+}

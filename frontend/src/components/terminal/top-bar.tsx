@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Bell, BrainCircuit, CandlestickChart, Command, Search, Wallet, Sparkles, Zap, Scale, User, ShieldCheck, SlidersHorizontal } from "lucide-react";
+import { Bell, BrainCircuit, CandlestickChart, Command, Search, Wallet, Sparkles, Zap, Scale, User, ShieldCheck, SlidersHorizontal, Mic, Plus, Trash2 } from "lucide-react";
 import { INDICES, STOCKS, computeIndexValue, fmtPct, fmtPrice, fmtINR } from "@/lib/market/engine";
 import { useIndices, useMarketStatus, type Quote } from "@/hooks/use-market";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useToast } from "@/hooks/use-toast";
 import AiSettingsModal from "./ai-settings-modal";
 import BrokerGatewayModal from "./broker-gateway-modal";
 import ShariahModal from "./shariah-modal";
@@ -14,16 +15,52 @@ type Props = {
   onSelect: (symbol: string) => void;
   balance: number;
   onOpenAiCore?: () => void;
+  onOpenVoice?: () => void;
 };
 
 const chgColor = (v: number) => (v >= 0 ? "text-emerald-400" : "text-rose-400");
 
-export default function TopBar({ quotes, onSelect, balance, onOpenAiCore }: Props) {
+export default function TopBar({ quotes, onSelect, balance, onOpenAiCore, onOpenVoice }: Props) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [aiModalOpen, setAiModalOpen] = useState(false);
   const [brokerModalOpen, setBrokerModalOpen] = useState(false);
   const [shariahModalOpen, setShariahModalOpen] = useState(false);
+
+  const [alerts, setAlerts] = useState<
+    { id: string; symbol: string; targetPrice: number; direction: "ABOVE" | "BELOW"; triggered: boolean; timeStr: string }[]
+  >([
+    { id: "a1", symbol: "RELIANCE", targetPrice: 1370, direction: "ABOVE", triggered: false, timeStr: "Target Alert" },
+    { id: "a2", symbol: "TATAMOTORS", targetPrice: 450, direction: "BELOW", triggered: false, timeStr: "Support Alert" },
+    { id: "a3", symbol: "NIFTY 50", targetPrice: 25400, direction: "ABOVE", triggered: true, timeStr: "Triggered · 12:04 pm" },
+  ]);
+  const [newSym, setNewSym] = useState("RELIANCE");
+  const [newPrice, setNewPrice] = useState(1360);
+  const [newDir, setNewDir] = useState<"ABOVE" | "BELOW">("ABOVE");
+  const [showAddAlert, setShowAddAlert] = useState(false);
+  const { toast } = useToast();
+
+  // Monitor active alerts
+  useEffect(() => {
+    alerts.forEach((a) => {
+      if (a.triggered) return;
+      const px = quotes[a.symbol]?.price;
+      if (!px) return;
+      if ((a.direction === "ABOVE" && px >= a.targetPrice) || (a.direction === "BELOW" && px <= a.targetPrice)) {
+        setAlerts((prev) =>
+          prev.map((item) =>
+            item.id === a.id
+              ? { ...item, triggered: true, timeStr: `Triggered at ₹${fmtPrice(px)}` }
+              : item
+          )
+        );
+        toast({
+          title: `🔔 Price Alert Triggered: ${a.symbol}`,
+          description: `Price reached ₹${fmtPrice(px)} (${a.direction === "ABOVE" ? "crossed above" : "dropped below"} ₹${a.targetPrice})`,
+        });
+      }
+    });
+  }, [quotes, alerts, toast]);
 
   const indexQuotes = useIndices();
   const marketStatus = useMarketStatus();
@@ -188,6 +225,18 @@ export default function TopBar({ quotes, onSelect, balance, onOpenAiCore }: Prop
             </button>
           )}
 
+          {/* Voice AI Assistant Button */}
+          {onOpenVoice && (
+            <button
+              onClick={onOpenVoice}
+              className="flex items-center gap-1.5 rounded-lg border border-purple-500/35 bg-purple-500/10 px-2.5 py-1.5 text-[11px] font-bold text-purple-200 transition hover:bg-purple-500/20 shadow-sm"
+              title="TradeX Voice AI Assistant (Speech-to-Trade)"
+            >
+              <Mic className="h-3.5 w-3.5 text-purple-400 animate-pulse" />
+              <span className="hidden md:inline">Voice AI</span>
+            </button>
+          )}
+
           {/* AI Engine Button */}
           <button
             onClick={() => setAiModalOpen(true)}
@@ -213,6 +262,15 @@ export default function TopBar({ quotes, onSelect, balance, onOpenAiCore }: Prop
             </PopoverTrigger>
             <PopoverContent align="end" className="w-56 border-white/12 bg-[#0e121a] p-2 shadow-2xl z-50">
               <div className="px-2 py-1.5 text-[11px] font-semibold text-white/50 uppercase tracking-wider">Terminal Features</div>
+              {onOpenVoice && (
+                <button
+                  onClick={onOpenVoice}
+                  className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-semibold text-purple-200 hover:bg-purple-500/10 transition"
+                >
+                  <Mic className="h-4 w-4 text-purple-400" />
+                  <span>Voice AI Assistant</span>
+                </button>
+              )}
               <button
                 onClick={() => setAiModalOpen(true)}
                 className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-semibold text-purple-300 hover:bg-purple-500/10 transition"
@@ -284,35 +342,101 @@ export default function TopBar({ quotes, onSelect, balance, onOpenAiCore }: Prop
             >
               <Bell className="h-4 w-4 text-white/65" />
               <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white">
-                4
+                {alerts.filter((a) => a.triggered).length || alerts.length}
               </span>
             </button>
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-80 border-slate-700/70 bg-[#0a0d15] p-2 shadow-[0_20px_50px_rgba(0,0,0,0.95)] z-[9999] ring-1 ring-white/10">
-            <div className="px-2.5 py-2 text-[12.5px] font-semibold text-white">Price & System Alerts</div>
-            <div className="tx-scroll max-h-72 overflow-y-auto">
-              {[
-                { t: "NIFTY 50 crossed 24,300", d: "Triggered · 12:04 pm", tone: "up" },
-                { t: "RELIANCE RSI above 70", d: "Aria signal · 11:47 am", tone: "warn" },
-                { t: "TATAMOTORS down 1.2% today", d: "Price alert · 10:32 am", tone: "down" },
-                { t: "BSE closed · weekend schedule", d: "System · 09:00 am", tone: "muted" },
-              ].map((a) => (
-                <div key={a.t} className="flex items-start gap-2.5 rounded-md px-2.5 py-2 transition hover:bg-white/6">
-                  <span
-                    className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${
-                      a.tone === "up"
-                        ? "bg-emerald-400"
-                        : a.tone === "down"
-                        ? "bg-rose-400"
-                        : a.tone === "warn"
-                        ? "bg-amber-400"
-                        : "bg-white/40"
-                    }`}
+          <PopoverContent align="end" className="w-84 border-slate-700/70 bg-[#0a0d15] p-3 shadow-[0_20px_50px_rgba(0,0,0,0.95)] z-[9999] ring-1 ring-white/10">
+            <div className="flex items-center justify-between pb-2 border-b border-white/8">
+              <span className="text-[12.5px] font-semibold text-white">Smart Price & Volatility Alerts</span>
+              <button
+                onClick={() => setShowAddAlert(!showAddAlert)}
+                className="flex items-center gap-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 text-[10.5px] font-semibold hover:bg-amber-500/30 transition"
+              >
+                <Plus className="h-3 w-3" />
+                <span>{showAddAlert ? "Close" : "New Alert"}</span>
+              </button>
+            </div>
+
+            {showAddAlert && (
+              <div className="my-2 p-2 rounded-lg border border-white/10 bg-white/4 space-y-2 font-mono text-[11px]">
+                <div className="grid grid-cols-2 gap-1.5">
+                  <select
+                    value={newSym}
+                    onChange={(e) => setNewSym(e.target.value)}
+                    className="h-7 rounded border border-white/10 bg-[#0e121a] px-2 text-white outline-none text-[11px]"
+                  >
+                    {STOCKS.map((s) => (
+                      <option key={s.symbol} value={s.symbol}>
+                        {s.symbol}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={newDir}
+                    onChange={(e) => setNewDir(e.target.value as any)}
+                    className="h-7 rounded border border-white/10 bg-[#0e121a] px-2 text-white outline-none text-[11px]"
+                  >
+                    <option value="ABOVE">Price ≥ Target</option>
+                    <option value="BELOW">Price ≤ Target</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    value={newPrice}
+                    onChange={(e) => setNewPrice(parseFloat(e.target.value) || 0)}
+                    placeholder="Target Price"
+                    className="h-7 flex-1 rounded border border-white/10 bg-[#0e121a] px-2 text-white outline-none text-[11px]"
                   />
-                  <div>
-                    <div className="text-[12px] font-medium text-white/85">{a.t}</div>
-                    <div className="text-[10px] text-white/40">{a.d}</div>
+                  <button
+                    onClick={() => {
+                      if (!newPrice) return;
+                      const newAlert = {
+                        id: `alt-${Date.now()}`,
+                        symbol: newSym,
+                        targetPrice: newPrice,
+                        direction: newDir,
+                        triggered: false,
+                        timeStr: "Active Watch",
+                      };
+                      setAlerts([newAlert, ...alerts]);
+                      setShowAddAlert(false);
+                      toast({
+                        title: `🔔 Alert Created for ${newSym}`,
+                        description: `Will notify when price ${newDir === "ABOVE" ? "crosses above" : "drops below"} ₹${newPrice}`,
+                      });
+                    }}
+                    className="h-7 px-3 rounded bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-[11px] transition"
+                  >
+                    Set
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="tx-scroll max-h-72 overflow-y-auto mt-2 space-y-1">
+              {alerts.map((a) => (
+                <div key={a.id} className="flex items-center justify-between rounded-md px-2.5 py-1.5 transition hover:bg-white/6 text-[11.5px]">
+                  <div className="flex items-start gap-2">
+                    <span
+                      className={`mt-1 h-2 w-2 shrink-0 rounded-full ${
+                        a.triggered ? "bg-amber-400 animate-pulse" : "bg-emerald-400"
+                      }`}
+                    />
+                    <div>
+                      <div className="font-semibold text-white/90">
+                        {a.symbol} {a.direction === "ABOVE" ? "≥" : "≤"} ₹{fmtPrice(a.targetPrice)}
+                      </div>
+                      <div className="text-[9.5px] text-white/40">{a.timeStr}</div>
+                    </div>
                   </div>
+                  <button
+                    onClick={() => setAlerts(alerts.filter((item) => item.id !== a.id))}
+                    className="text-white/30 hover:text-rose-400 p-1 transition"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
                 </div>
               ))}
             </div>

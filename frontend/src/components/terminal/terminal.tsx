@@ -38,12 +38,15 @@ import Academy from "./academy";
 import AiCore from "./ai-core";
 import Autopilot from "./autopilot";
 import ShariahScreenerView from "./shariah-screener-view";
+import VoiceAssistantModal from "./voice-assistant-modal";
+import { useToast } from "@/hooks/use-toast";
 
 const START_BALANCE = 1_000_000;
 
 export type MobileTab = "chart" | "watchlist" | "trade" | "positions" | "depth";
 
 export default function Terminal() {
+  const { toast } = useToast();
   const quotes = useMarket();
   const [symbol, setSymbol] = useState("RELIANCE");
   const [timeframe, setTimeframe] = useState<Timeframe>("1D");
@@ -61,6 +64,7 @@ export default function Terminal() {
   const [rightRailCollapsed, setRightRailCollapsed] = useState(false);
   const [chartExpanded, setChartExpanded] = useState(false);
   const [aiCoreOpen, setAiCoreOpen] = useState(false);
+  const [voiceModalOpen, setVoiceModalOpen] = useState(false);
 
   const quote = quotes[symbol];
 
@@ -133,6 +137,58 @@ export default function Terminal() {
     return a + pnl;
   }, 0);
 
+  const triggeredBracketRef = useRef<Set<string>>(new Set());
+
+  // Automated Bracket Order Trigger Monitor (Auto Exit on Stop Loss or Target Hit)
+  useEffect(() => {
+    positions.forEach((p) => {
+      if (!p.isBracket || triggeredBracketRef.current.has(p.id)) return;
+      const curPrice = quotes[p.symbol]?.price;
+      if (!curPrice) return;
+
+      let triggered = false;
+      let isTarget = false;
+
+      if (p.side === "BUY") {
+        if (p.target && curPrice >= p.target) {
+          triggered = true;
+          isTarget = true;
+        } else if (p.sl && curPrice <= p.sl) {
+          triggered = true;
+          isTarget = false;
+        }
+      } else if (p.side === "SELL") {
+        if (p.target && curPrice <= p.target) {
+          triggered = true;
+          isTarget = true;
+        } else if (p.sl && curPrice >= p.sl) {
+          triggered = true;
+          isTarget = false;
+        }
+      }
+
+      if (triggered) {
+        triggeredBracketRef.current.add(p.id);
+        const exitSide = p.side === "BUY" ? "SELL" : "BUY";
+        const pnl = (p.side === "BUY" ? curPrice - p.price : p.price - curPrice) * p.qty;
+        // Close position
+        onExecute({
+          symbol: p.symbol,
+          side: exitSide,
+          qty: p.qty,
+          price: curPrice,
+          type: "MARKET",
+          product: p.product,
+        });
+
+        toast({
+          title: isTarget ? `🎯 AI Target Hit (+₹${fmtPrice(Math.abs(pnl))})` : `🛑 AI Stop Loss Hit (-₹${fmtPrice(Math.abs(pnl))})`,
+          description: `${p.symbol} auto-closed at ₹${fmtPrice(curPrice)} · Bracket Auto-Exit`,
+        });
+      }
+    });
+  }, [quotes, positions, onExecute, toast]);
+
   // When a stock is selected from Watchlist on mobile, auto-switch to chart
   const handleSelectSymbol = useCallback((sym: string) => {
     setSymbol(sym);
@@ -144,7 +200,13 @@ export default function Terminal() {
   return (
     <div className="tx-terminal flex h-screen max-h-screen w-screen max-w-screen flex-col overflow-hidden select-none">
       {/* 1. Global Header Bar */}
-      <TopBar quotes={quotes} onSelect={handleSelectSymbol} balance={balance} onOpenAiCore={() => setAiCoreOpen((o) => !o)} />
+      <TopBar
+        quotes={quotes}
+        onSelect={handleSelectSymbol}
+        balance={balance}
+        onOpenAiCore={() => setAiCoreOpen((o) => !o)}
+        onOpenVoice={() => setVoiceModalOpen(true)}
+      />
 
       {/* 2. Ticker Tape */}
       <TickerTape quotes={quotes} onSelect={handleSelectSymbol} />
@@ -570,6 +632,17 @@ export default function Terminal() {
         onExecute={onExecute}
         isOpen={aiCoreOpen}
         onOpenChange={setAiCoreOpen}
+      />
+
+      {/* 8. Voice AI Assistant */}
+      <VoiceAssistantModal
+        isOpen={voiceModalOpen}
+        onClose={() => setVoiceModalOpen(false)}
+        onSelectSymbol={handleSelectSymbol}
+        onExecuteOrder={onExecute}
+        onOpenAiCore={() => setAiCoreOpen(true)}
+        quotes={quotes}
+        currentSymbol={symbol}
       />
     </div>
   );

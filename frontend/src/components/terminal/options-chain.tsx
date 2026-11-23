@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Sparkles, Zap, ShieldCheck, TrendingUp, TrendingDown, Layers } from "lucide-react";
 import { mulberry32, STOCKS, fmtCompact, fmtPrice } from "@/lib/market/engine";
 import type { Quote } from "@/hooks/use-market";
+import { useToast } from "@/hooks/use-toast";
 
 type Row = {
   strike: number;
@@ -34,6 +36,9 @@ function expiryDates(): string[] {
 export default function OptionsChain({ symbol, quote }: { symbol: string; quote: Quote }) {
   const [tick, setTick] = useState(0);
   const [expiry, setExpiry] = useState(0);
+  const [selectedStrategy, setSelectedStrategy] = useState<"BULL_CALL" | "BEAR_PUT" | "STRADDLE" | "IRON_CONDOR" | null>("BULL_CALL");
+  const { toast } = useToast();
+
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 1600);
     return () => clearInterval(id);
@@ -98,10 +103,74 @@ export default function OptionsChain({ symbol, quote }: { symbol: string; quote:
 
   const maxOi = Math.max(...rows.map((r) => Math.max(r.ceOi, r.peOi)));
 
+  const step = spot > 2000 ? 100 : spot > 1000 ? 50 : spot > 400 ? 20 : 10;
+  const atm = Math.round(spot / step) * step;
+
+  const strategyDetails = useMemo(() => {
+    if (!selectedStrategy) return null;
+    if (selectedStrategy === "BULL_CALL") {
+      const leg1 = rows.find((r) => r.strike === atm)?.ceLtp ?? 40;
+      const leg2 = rows.find((r) => r.strike === atm + step)?.ceLtp ?? 18;
+      const netDebit = Math.max(1, leg1 - leg2);
+      const maxProfit = Math.max(1, step - netDebit);
+      return {
+        name: "Bull Call Spread",
+        bias: "Moderately Bullish",
+        legs: `Buy ${atm} CE (₹${leg1.toFixed(1)}) + Sell ${atm + step} CE (₹${leg2.toFixed(1)})`,
+        maxProfit: Math.round(maxProfit * 50),
+        maxLoss: Math.round(netDebit * 50),
+        breakeven: Math.round((atm + netDebit) * 10) / 10,
+        pop: 68,
+      };
+    }
+    if (selectedStrategy === "BEAR_PUT") {
+      const leg1 = rows.find((r) => r.strike === atm)?.peLtp ?? 42;
+      const leg2 = rows.find((r) => r.strike === atm - step)?.peLtp ?? 20;
+      const netDebit = Math.max(1, leg1 - leg2);
+      const maxProfit = Math.max(1, step - netDebit);
+      return {
+        name: "Bear Put Spread",
+        bias: "Moderately Bearish",
+        legs: `Buy ${atm} PE (₹${leg1.toFixed(1)}) + Sell ${atm - step} PE (₹${leg2.toFixed(1)})`,
+        maxProfit: Math.round(maxProfit * 50),
+        maxLoss: Math.round(netDebit * 50),
+        breakeven: Math.round((atm - netDebit) * 10) / 10,
+        pop: 66,
+      };
+    }
+    if (selectedStrategy === "STRADDLE") {
+      const leg1 = rows.find((r) => r.strike === atm)?.ceLtp ?? 40;
+      const leg2 = rows.find((r) => r.strike === atm)?.peLtp ?? 42;
+      const totalCost = leg1 + leg2;
+      return {
+        name: "Long Straddle (0DTE Breakout)",
+        bias: "High Volatility / Non-Directional",
+        legs: `Buy ${atm} CE (₹${leg1.toFixed(1)}) + Buy ${atm} PE (₹${leg2.toFixed(1)})`,
+        maxProfit: "Unlimited",
+        maxLoss: Math.round(totalCost * 50),
+        breakeven: `₹${Math.round(atm - totalCost)} - ₹${Math.round(atm + totalCost)}`,
+        pop: 54,
+      };
+    }
+    // IRON_CONDOR
+    const leg1 = rows.find((r) => r.strike === atm + step)?.ceLtp ?? 18;
+    const leg2 = rows.find((r) => r.strike === atm - step)?.peLtp ?? 20;
+    const netCredit = leg1 + leg2;
+    return {
+      name: "Iron Condor (Rangebound Theta Harvest)",
+      bias: "Neutral / Expiry Pinning",
+      legs: `Sell ${atm + step} CE + Sell ${atm - step} PE`,
+      maxProfit: Math.round(netCredit * 50),
+      maxLoss: Math.round((step - netCredit) * 50),
+      breakeven: `₹${atm - step} - ₹${atm + step}`,
+      pop: 74,
+    };
+  }, [selectedStrategy, rows, atm, step]);
+
   return (
     <div className="tx-scroll flex h-full min-h-0 flex-col overflow-y-auto">
       {/* header */}
-      <div className="tx-panel-head flex flex-wrap items-center gap-3 px-4 py-3">
+      <div className="tx-panel-head flex flex-wrap items-center gap-3 px-4 py-3 shrink-0">
         <div>
           <div className="text-[13px] font-bold tracking-wide">
             {symbol} <span className="text-white/40">· Options</span>
@@ -128,6 +197,71 @@ export default function OptionsChain({ symbol, quote }: { symbol: string; quote:
           <Chip label="CE OI" value={fmtCompact(totCeOi)} tone="down" />
           <Chip label="PE OI" value={fmtCompact(totPeOi)} tone="up" />
         </div>
+      </div>
+
+      {/* 0DTE & Expiry AI Strategy Builder Bar */}
+      <div className="mx-4 my-2.5 rounded-xl border border-purple-500/30 bg-purple-500/10 p-3 shrink-0">
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-white/8">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-purple-400 animate-pulse" />
+            <span className="text-xs font-bold text-white">ARIA 0DTE Options AI Strategist</span>
+            <span className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[9.5px] text-purple-300">
+              Expiry Bias: {pcr > 1.15 ? "🟢 Bullish (PE Writers Dominant)" : pcr < 0.85 ? "🔴 Bearish (CE Writers Dominant)" : "🟡 Range Pinning"}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            {[
+              { key: "BULL_CALL", label: "Bull Call Spread" },
+              { key: "BEAR_PUT", label: "Bear Put Spread" },
+              { key: "STRADDLE", label: "Straddle" },
+              { key: "IRON_CONDOR", label: "Iron Condor" },
+            ].map((s) => (
+              <button
+                key={s.key}
+                onClick={() => setSelectedStrategy(s.key as any)}
+                className={`rounded-lg px-2.5 py-1 text-[10.5px] font-semibold transition ${
+                  selectedStrategy === s.key
+                    ? "bg-purple-600 text-white shadow-[0_0_12px_rgba(168,85,247,0.4)]"
+                    : "border border-white/10 bg-white/5 text-white/60 hover:text-white"
+                }`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {strategyDetails && (
+          <div className="mt-2.5 flex flex-wrap items-center justify-between gap-3 font-mono text-[11px]">
+            <div>
+              <div className="text-white/50 text-[10px]">{strategyDetails.legs}</div>
+              <div className="font-semibold text-white/90 text-xs mt-0.5">
+                Bias: <span className="text-purple-300">{strategyDetails.bias}</span> · Breakeven: {strategyDetails.breakeven}
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <span className="text-white/40 text-[9.5px]">Max Profit / Loss:</span>{" "}
+                <strong className="text-emerald-400">
+                  {typeof strategyDetails.maxProfit === "number" ? `+₹${strategyDetails.maxProfit}` : strategyDetails.maxProfit}
+                </strong>{" "}
+                / <strong className="text-rose-400">-₹{strategyDetails.maxLoss}</strong>
+              </div>
+              <button
+                onClick={() => {
+                  toast({
+                    title: `⚡ ${strategyDetails.name} Paper Executed`,
+                    description: `Spread deployed for ${symbol} · Legs: ${strategyDetails.legs}`,
+                  });
+                }}
+                className="flex items-center gap-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black px-3 py-1.5 text-xs font-bold shadow-md transition active:scale-95"
+              >
+                <Zap className="h-3 w-3" />
+                <span>Execute Spread</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* table */}

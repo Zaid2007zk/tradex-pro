@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Candle, Timeframe } from "@/lib/market/engine";
-import { sma } from "@/lib/market/engine";
+import { sma, detectChartPatterns, STOCKS } from "@/lib/market/engine";
+import { Sparkles } from "lucide-react";
 
 type Props = {
   symbol: string;
@@ -24,6 +25,11 @@ export default function CandleChart({ symbol, candles, timeframe, price }: Props
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [hover, setHover] = useState<Hover>(null);
   const [showMa, setShowMa] = useState(true);
+  const [showAiLevels, setShowAiLevels] = useState(true);
+
+  const def = useMemo(() => STOCKS.find((s) => s.symbol === symbol) || STOCKS[0], [symbol]);
+  const currSym = def.currency === "USD" ? "$" : "₹";
+  const patternResult = useMemo(() => detectChartPatterns(candles, currSym), [candles, currSym]);
 
   // Smooth crosshair reset on symbol or timeframe transition
   useEffect(() => {
@@ -196,6 +202,52 @@ export default function CandleChart({ symbol, candles, timeframe, price }: Props
       ctx.fillText(label, chartW + 7, lp + 3.5);
     }
 
+    // AI Support & Resistance Levels
+    if (showAiLevels && patternResult) {
+      if (patternResult.resistance > 0) {
+        const ry = y(patternResult.resistance);
+        if (ry > padT && ry < H - padB) {
+          ctx.strokeStyle = "rgba(246,70,93,0.55)";
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          ctx.moveTo(0, ry);
+          ctx.lineTo(chartW, ry);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = "rgba(246,70,93,0.18)";
+          ctx.strokeStyle = "rgba(246,70,93,0.6)";
+          ctx.beginPath();
+          ctx.roundRect(chartW + 2, ry - 8, Math.max(padR - 4, 58), 16, 3);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#fca5a5";
+          ctx.font = "600 9px var(--font-geist-mono), monospace";
+          ctx.fillText(`RES ${currSym}${patternResult.resistance}`, chartW + 4, ry + 3.5);
+        }
+      }
+      if (patternResult.support > 0) {
+        const sy = y(patternResult.support);
+        if (sy > padT && sy < H - padB) {
+          ctx.strokeStyle = "rgba(14,203,129,0.55)";
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          ctx.moveTo(0, sy);
+          ctx.lineTo(chartW, sy);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = "rgba(14,203,129,0.18)";
+          ctx.strokeStyle = "rgba(14,203,129,0.6)";
+          ctx.beginPath();
+          ctx.roundRect(chartW + 2, sy - 8, Math.max(padR - 4, 58), 16, 3);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#86efac";
+          ctx.font = "600 9px var(--font-geist-mono), monospace";
+          ctx.fillText(`SUP ${currSym}${patternResult.support}`, chartW + 4, sy + 3.5);
+        }
+      }
+    }
+
     // crosshair
     if (hover) {
       const cx = hover.index * step + step / 2;
@@ -209,7 +261,7 @@ export default function CandleChart({ symbol, candles, timeframe, price }: Props
       ctx.stroke();
       ctx.setLineDash([]);
     }
-  }, [candles, size, hover, price, symbol, timeframe, maSeries, showMa]);
+  }, [candles, size, hover, price, symbol, timeframe, maSeries, showMa, showAiLevels, patternResult, currSym]);
 
   const onMove = (e: React.MouseEvent) => {
     const canvas = canvasRef.current;
@@ -229,18 +281,50 @@ export default function CandleChart({ symbol, candles, timeframe, price }: Props
   return (
     <div ref={wrapRef} className="relative h-full w-full" onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
       <canvas ref={canvasRef} className="h-full w-full cursor-crosshair" />
-      {showMa && (
-        <div className="pointer-events-none absolute left-3 top-2 flex items-center gap-3 font-mono text-[10px]">
-          <span className="text-amber-400">MA20</span>
-          <span className="text-white/45">MA50</span>
-        </div>
-      )}
-      <button
-        onClick={() => setShowMa((s) => !s)}
-        className="absolute right-[76px] top-2 rounded border border-white/10 bg-black/40 px-2 py-0.5 text-[10px] text-white/60 backdrop-blur transition hover:text-white"
-      >
-        {showMa ? "Hide MA" : "Show MA"}
-      </button>
+      <div className="pointer-events-none absolute left-3 top-2 flex flex-wrap items-center gap-2 font-mono text-[10px]">
+        {showMa && (
+          <div className="flex items-center gap-2">
+            <span className="text-amber-400">MA20</span>
+            <span className="text-white/45">MA50</span>
+          </div>
+        )}
+        {showAiLevels && patternResult && (
+          <div className="flex items-center gap-1.5 rounded border border-purple-500/30 bg-[#0d1016]/90 px-2 py-0.5 text-[9.5px] font-sans font-medium backdrop-blur">
+            <Sparkles className="h-3 w-3 text-purple-400 animate-pulse" />
+            <span className="text-purple-300 font-semibold">{patternResult.pattern}</span>
+            <span
+              className={`font-mono font-bold text-[9px] ${
+                patternResult.bias === "BULLISH"
+                  ? "text-emerald-400"
+                  : patternResult.bias === "BEARISH"
+                  ? "text-rose-400"
+                  : "text-amber-400"
+              }`}
+            >
+              ({patternResult.confidence}%)
+            </span>
+          </div>
+        )}
+      </div>
+      <div className="absolute right-[76px] top-2 flex items-center gap-1.5">
+        <button
+          onClick={() => setShowAiLevels((s) => !s)}
+          className={`rounded border px-2 py-0.5 text-[10px] font-semibold backdrop-blur transition ${
+            showAiLevels
+              ? "border-purple-500/40 bg-purple-500/20 text-purple-200"
+              : "border-white/10 bg-black/40 text-white/50 hover:text-white"
+          }`}
+          title="Toggle AI Support / Resistance Levels & Chart Patterns"
+        >
+          {showAiLevels ? "AI Levels ON" : "AI Levels OFF"}
+        </button>
+        <button
+          onClick={() => setShowMa((s) => !s)}
+          className="rounded border border-white/10 bg-black/40 px-2 py-0.5 text-[10px] text-white/60 backdrop-blur transition hover:text-white"
+        >
+          {showMa ? "Hide MA" : "Show MA"}
+        </button>
+      </div>
       {hover && hoverCandle && (
         <div
           className="pointer-events-none absolute z-10 rounded-lg border border-white/10 bg-[#0d1016]/95 px-3 py-2 font-mono text-[11px] shadow-xl backdrop-blur"

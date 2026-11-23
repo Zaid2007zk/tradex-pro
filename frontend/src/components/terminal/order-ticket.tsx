@@ -19,6 +19,9 @@ export type Order = {
   type: OrderType;
   product: ProductType;
   ts: number;
+  sl?: number;
+  target?: number;
+  isBracket?: boolean;
 };
 
 export type Position = Order & { ltp: number };
@@ -43,6 +46,19 @@ export default function OrderTicket({ symbol, quote, balance, onExecute, default
   const currSym = def.currency === "USD" ? "$" : "₹";
   const [side, setSide] = useState<"BUY" | "SELL">(defaultSide);
   const sig = useMemo(() => (candles && candles.length ? computeSignals(candles) : null), [candles]);
+
+  const [isBracket, setIsBracket] = useState(false);
+  const [stopLoss, setStopLoss] = useState<number | undefined>();
+  const [takeProfit, setTakeProfit] = useState<number | undefined>();
+
+  const aiSl = useMemo(
+    () => (quote.price ? r2(quote.price * (side === "SELL" ? 1.015 : 0.985)) : 0),
+    [quote.price, side]
+  );
+  const aiTgt = useMemo(
+    () => (quote.price ? r2(quote.price * (side === "SELL" ? 0.97 : 1.03)) : 0),
+    [quote.price, side]
+  );
 
   // Sync side if defaultSide changes externally (e.g. from mobile quick action)
   useEffect(() => {
@@ -71,10 +87,22 @@ export default function OrderTicket({ symbol, quote, balance, onExecute, default
   const submit = () => {
     if (qty <= 0) return;
     playOrderSound(side);
-    onExecute({ symbol, side, qty, price: r2(price), type: orderType, product });
+    const finalSl = isBracket ? (stopLoss ?? aiSl) : undefined;
+    const finalTgt = isBracket ? (takeProfit ?? aiTgt) : undefined;
+    onExecute({
+      symbol,
+      side,
+      qty,
+      price: r2(price),
+      type: orderType,
+      product,
+      sl: finalSl,
+      target: finalTgt,
+      isBracket,
+    });
     toast({
-      title: `${side} order filled`,
-      description: `${qty} × ${symbol} @ ₹${fmtPrice(price)} · ${product} · Paper trade`,
+      title: `${side} order filled ${isBracket ? "· AI Bracket Armed ⚡" : ""}`,
+      description: `${qty} × ${symbol} @ ${currSym}${fmtPrice(price)} · ${product}${isBracket ? ` · SL ${currSym}${finalSl} | TGT ${currSym}${finalTgt}` : ""}`,
     });
   };
 
@@ -250,6 +278,50 @@ export default function OrderTicket({ symbol, quote, balance, onExecute, default
             </span>
             <span className="text-white/40">R:R 1:2</span>
           </div>
+
+          {/* 1-Click AI Smart Bracket Order Trigger */}
+          <button
+            type="button"
+            onClick={() => {
+              const nextState = !isBracket;
+              setIsBracket(nextState);
+              if (nextState) {
+                setStopLoss(aiSl);
+                setTakeProfit(aiTgt);
+              }
+            }}
+            className={`mt-2 flex w-full items-center justify-center gap-1.5 rounded-md border py-1 font-sans text-[10px] font-bold transition active:scale-[0.98] ${
+              isBracket
+                ? "border-emerald-500/50 bg-emerald-500/20 text-emerald-300 shadow-[0_0_12px_rgba(14,203,129,0.2)]"
+                : "border-purple-500/40 bg-purple-500/20 text-purple-200 hover:bg-purple-500/30"
+            }`}
+          >
+            <Zap className="h-3 w-3 text-amber-300" />
+            <span>{isBracket ? "✓ AI Bracket Active (Auto Exit)" : "⚡ Arm AI Smart Bracket"}</span>
+          </button>
+
+          {isBracket && (
+            <div className="mt-2 grid grid-cols-2 gap-1.5 font-mono text-[9.5px]">
+              <div>
+                <span className="text-[8.5px] text-rose-300/80 uppercase">Stop Loss ({currSym})</span>
+                <input
+                  value={stopLoss ?? aiSl}
+                  onChange={(e) => setStopLoss(parseFloat(e.target.value) || 0)}
+                  className="mt-0.5 h-6.5 w-full rounded border border-rose-500/30 bg-black/40 px-1 text-center font-bold text-rose-300 outline-none"
+                  inputMode="decimal"
+                />
+              </div>
+              <div>
+                <span className="text-[8.5px] text-emerald-300/80 uppercase">Target ({currSym})</span>
+                <input
+                  value={takeProfit ?? aiTgt}
+                  onChange={(e) => setTakeProfit(parseFloat(e.target.value) || 0)}
+                  className="mt-0.5 h-6.5 w-full rounded border border-emerald-500/30 bg-black/40 px-1 text-center font-bold text-emerald-300 outline-none"
+                  inputMode="decimal"
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
 
