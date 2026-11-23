@@ -59,6 +59,7 @@ export default function Terminal() {
   const [orderSide, setOrderSide] = useState<"BUY" | "SELL">("BUY");
   const [leftRailCollapsed, setLeftRailCollapsed] = useState(false);
   const [rightRailCollapsed, setRightRailCollapsed] = useState(false);
+  const [chartExpanded, setChartExpanded] = useState(false);
 
   const quote = quotes[symbol];
 
@@ -242,7 +243,7 @@ export default function Terminal() {
           </div>
 
           {/* Center Column (Chart & Bottom Tabs OR Specialized Workspace) */}
-          <section className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-hidden">
+          <section className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-y-auto tx-scroll pr-1">
             {workspace === "terminal" ? (
               <>
                 <div className="tx-panel shrink-0">
@@ -250,7 +251,13 @@ export default function Terminal() {
                 </div>
 
                 {/* Chart / Heatmap panel */}
-                <div className="tx-panel flex flex-1 min-h-[160px] flex-col overflow-hidden">
+                <div
+                  className={`tx-panel flex flex-col overflow-hidden transition-all duration-200 ${
+                    chartExpanded
+                      ? "flex-1 min-h-[520px] 2xl:min-h-[640px]"
+                      : "flex-1 min-h-[380px] xl:min-h-[440px] 2xl:min-h-[520px]"
+                  }`}
+                >
                   <div className="tx-panel-head flex items-center justify-between px-3 py-2 shrink-0">
                     <div className="flex items-center gap-1">
                       <button
@@ -291,8 +298,8 @@ export default function Terminal() {
                         </div>
                       )}
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="flex items-center gap-1.5 font-mono text-[10px] text-white/40">
+                    <div className="flex items-center gap-2.5">
+                      <span className="hidden sm:flex items-center gap-1.5 font-mono text-[10px] text-white/40">
                         <span className="tx-live-dot h-1.5 w-1.5 rounded-full bg-emerald-400" /> LIVE NSE FEED
                       </span>
                       <span className="rounded-md border border-white/10 bg-white/4 px-2 py-1 font-mono text-[10px] text-white/55">
@@ -302,6 +309,23 @@ export default function Terminal() {
                           {fmtINR(Math.abs(totalPnl))}
                         </span>
                       </span>
+                      <button
+                        onClick={() => setChartExpanded(!chartExpanded)}
+                        title={chartExpanded ? "Restore Normal View (Show Positions)" : "Expand Chart View (Hide Bottom Panels)"}
+                        className="flex items-center gap-1 rounded border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-semibold text-white/70 hover:bg-white/15 hover:text-white transition"
+                      >
+                        {chartExpanded ? (
+                          <>
+                            <Minimize2 className="h-3 w-3 text-amber-400" />
+                            <span className="hidden xl:inline">Normal View</span>
+                          </>
+                        ) : (
+                          <>
+                            <Maximize2 className="h-3 w-3 text-amber-400" />
+                            <span className="hidden xl:inline">Expand Chart</span>
+                          </>
+                        )}
+                      </button>
                     </div>
                   </div>
                   <div className="min-h-0 flex-1 relative">
@@ -314,9 +338,11 @@ export default function Terminal() {
                 </div>
 
                 {/* Bottom Tabs (Positions & Orders) */}
-                <div className="h-36 sm:h-40 xl:h-44 shrink-0 overflow-hidden">
-                  <BottomTabs positions={livePositions} orders={orders} />
-                </div>
+                {!chartExpanded && (
+                  <div className="h-52 sm:h-56 xl:h-64 shrink-0 overflow-hidden">
+                    <BottomTabs positions={livePositions} orders={orders} />
+                  </div>
+                )}
               </>
             ) : (
               <div className="tx-panel flex min-h-0 flex-1 flex-col overflow-hidden">
