@@ -60,6 +60,7 @@ export default function Terminal() {
   const [leftRailCollapsed, setLeftRailCollapsed] = useState(false);
   const [rightRailCollapsed, setRightRailCollapsed] = useState(false);
   const [chartExpanded, setChartExpanded] = useState(false);
+  const [aiCoreOpen, setAiCoreOpen] = useState(false);
 
   const quote = quotes[symbol];
 
@@ -81,7 +82,11 @@ export default function Terminal() {
     };
   }, []);
 
-  const baseCandles = useMemo(() => generateCandles(symbol, timeframe), [symbol, timeframe]);
+  const basePrice = quote?.prevClose || quote?.price;
+  const baseCandles = useMemo(
+    () => generateCandles(symbol, timeframe, basePrice),
+    [symbol, timeframe, Math.round(basePrice || 0)]
+  );
   const candles = useMemo(() => liveCandle(baseCandles, quote.price), [baseCandles, quote.price]);
 
   const marginUsed = positions.reduce(
@@ -139,7 +144,7 @@ export default function Terminal() {
   return (
     <div className="tx-terminal flex h-screen max-h-screen w-screen max-w-screen flex-col overflow-hidden select-none">
       {/* 1. Global Header Bar */}
-      <TopBar quotes={quotes} onSelect={handleSelectSymbol} balance={balance} />
+      <TopBar quotes={quotes} onSelect={handleSelectSymbol} balance={balance} onOpenAiCore={() => setAiCoreOpen((o) => !o)} />
 
       {/* 2. Ticker Tape */}
       <TickerTape quotes={quotes} onSelect={handleSelectSymbol} />
@@ -248,7 +253,7 @@ export default function Terminal() {
           </div>
 
           {/* Center Column (Chart & Bottom Tabs OR Specialized Workspace) */}
-          <section className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-y-auto tx-scroll pr-1">
+          <section className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-hidden pr-0.5">
             {workspace === "terminal" ? (
               <>
                 <div className="tx-panel shrink-0">
@@ -259,8 +264,8 @@ export default function Terminal() {
                 <div
                   className={`tx-panel flex flex-col overflow-hidden transition-all duration-200 ${
                     chartExpanded
-                      ? "flex-1 min-h-[520px] 2xl:min-h-[640px]"
-                      : "flex-1 min-h-[380px] xl:min-h-[440px] 2xl:min-h-[520px]"
+                      ? "flex-1 min-h-0"
+                      : "flex-1 min-h-[200px]"
                   }`}
                 >
                   <div className="tx-panel-head flex items-center justify-between px-3 py-2 shrink-0">
@@ -344,7 +349,7 @@ export default function Terminal() {
 
                 {/* Bottom Tabs (Positions & Orders) */}
                 {!chartExpanded && (
-                  <div className="h-52 sm:h-56 xl:h-64 shrink-0 overflow-hidden">
+                  <div className="h-44 xl:h-48 shrink-0 overflow-hidden">
                     <BottomTabs positions={livePositions} orders={orders} />
                   </div>
                 )}
@@ -385,7 +390,7 @@ export default function Terminal() {
                 </div>
               </div>
             ) : (
-              <aside className="tx-scroll relative flex h-full min-h-0 w-full flex-col gap-1.5 overflow-y-auto pb-16">
+              <aside className="tx-scroll relative flex h-full min-h-0 w-full flex-col gap-1.5 overflow-y-auto pb-4">
                 <div className="relative">
                   <button
                     onClick={() => setRightRailCollapsed(true)}
@@ -552,10 +557,18 @@ export default function Terminal() {
       </main>
 
       {/* 6. Status Bar at Bottom */}
-      <StatusBar fps={fps} />
+      <StatusBar fps={fps} onOpenAiCore={() => setAiCoreOpen((o) => !o)} />
 
       {/* 7. Institutional ARIA Neural AI Core */}
-      <AiCore quotes={quotes} symbol={symbol} positions={livePositions} onSelect={handleSelectSymbol} onExecute={onExecute} />
+      <AiCore
+        quotes={quotes}
+        symbol={symbol}
+        positions={livePositions}
+        onSelect={handleSelectSymbol}
+        onExecute={onExecute}
+        isOpen={aiCoreOpen}
+        onOpenChange={setAiCoreOpen}
+      />
     </div>
   );
 }

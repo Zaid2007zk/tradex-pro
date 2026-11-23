@@ -31,11 +31,30 @@ const SYMBOL_MAP: Record<string, string[]> = {
   MARUTI: ["MARUTI.NS"],
   SUNPHARMA: ["SUNPHARMA.NS"],
   HCLTECH: ["HCLTECH.NS"],
-  TATAMOTORS: ["TATAMOTORS.NS", "TMCV.NS"],
+  TATAMOTORS: ["TMCV.NS", "TATAMOTORS.NS"],
   ADANIENT: ["ADANIENT.NS"],
   TITAN: ["TITAN.NS"],
   WIPRO: ["WIPRO.NS"],
   ETERNAL: ["ZOMATO.NS", "ETERNAL.NS"],
+
+  // MCX Commodities
+  GOLD: ["GOLDBEES.NS", "GC=F"],
+  SILVER: ["SILVERBEES.NS", "SI=F"],
+  CRUDEOIL: ["CL=F"],
+  NATURALGAS: ["NG=F"],
+  COPPER: ["HG=F"],
+
+  // Forex / Currency CDS
+  USDINR: ["USDINR=X"],
+  EURINR: ["EURINR=X"],
+  GBPINR: ["GBPINR=X"],
+  JPYINR: ["JPYINR=X"],
+
+  // Crypto 24/7
+  BTC: ["BTC-INR", "BTC-USD"],
+  ETH: ["ETH-INR", "ETH-USD"],
+  SOL: ["SOL-INR", "SOL-USD"],
+  BNB: ["BNB-INR", "BNB-USD"],
 };
 
 const INDEX_MAP: Record<string, { yahoo: string[]; fallbackPrice: number; fallbackChgPct: number; fallbackPts: number }> = {

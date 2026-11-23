@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Bell, CandlestickChart, Command, Search, Wallet, Sparkles, Zap, Scale, User, ShieldCheck, SlidersHorizontal } from "lucide-react";
+import { Bell, BrainCircuit, CandlestickChart, Command, Search, Wallet, Sparkles, Zap, Scale, User, ShieldCheck, SlidersHorizontal } from "lucide-react";
 import { INDICES, STOCKS, computeIndexValue, fmtPct, fmtPrice, fmtINR } from "@/lib/market/engine";
 import { useIndices, useMarketStatus, type Quote } from "@/hooks/use-market";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -13,11 +13,12 @@ type Props = {
   quotes: Record<string, Quote>;
   onSelect: (symbol: string) => void;
   balance: number;
+  onOpenAiCore?: () => void;
 };
 
 const chgColor = (v: number) => (v >= 0 ? "text-emerald-400" : "text-rose-400");
 
-export default function TopBar({ quotes, onSelect, balance }: Props) {
+export default function TopBar({ quotes, onSelect, balance, onOpenAiCore }: Props) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [aiModalOpen, setAiModalOpen] = useState(false);
@@ -171,13 +172,30 @@ export default function TopBar({ quotes, onSelect, balance }: Props) {
 
         {/* Feature Action Pills */}
         <div className="flex items-center gap-2">
+          {/* AI Core Intelligence Launcher */}
+          {onOpenAiCore && (
+            <button
+              onClick={onOpenAiCore}
+              className="flex items-center gap-1.5 rounded-lg border border-fuchsia-500/40 bg-gradient-to-r from-fuchsia-500/20 to-purple-600/20 px-2.5 py-1.5 text-[11px] font-bold text-fuchsia-200 transition hover:from-fuchsia-500/30 hover:to-purple-600/30 shadow-sm"
+              title="Open ARIA AI Core — Chat, Ideas, NewsWire & Reports"
+            >
+              <BrainCircuit className="h-3.5 w-3.5 text-fuchsia-300" />
+              <span className="hidden sm:inline">AI Core</span>
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+              </span>
+            </button>
+          )}
+
           {/* AI Engine Button */}
           <button
             onClick={() => setAiModalOpen(true)}
             className="flex items-center gap-1.5 rounded-lg border border-purple-500/35 bg-purple-500/10 px-2.5 py-1.5 text-[11px] font-bold text-purple-300 transition hover:bg-purple-500/20 shadow-sm"
+            title="Configure AI Providers (Groq / Gemini / Autonomous)"
           >
             <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-            <span className="hidden sm:inline">AI Engine</span>
+            <span className="hidden sm:inline">AI Config</span>
             <span className="rounded bg-emerald-500/25 px-1 py-0.5 text-[8.5px] font-bold text-emerald-300 font-mono">
               ACTIVE
             </span>

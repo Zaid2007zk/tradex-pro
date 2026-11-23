@@ -11,6 +11,8 @@ export type Candle = {
   volume: number;
 };
 
+export type ExchangeSegment = "NSE" | "MCX" | "FOREX" | "CRYPTO";
+
 export type StockDef = {
   symbol: string;
   name: string;
@@ -19,29 +21,50 @@ export type StockDef = {
   volatility: number; // daily-ish vol factor
   capCr: number; // market cap in ₹ crore (for heatmap sizing)
   lot: number; // lot / step size for qty stepper
+  exchange?: ExchangeSegment;
 };
 
 export const STOCKS: StockDef[] = [
-  { symbol: "RELIANCE", name: "Reliance Industries", sector: "Energy", base: 1351.0, volatility: 0.9, capCr: 1864000, lot: 1 },
-  { symbol: "TCS", name: "Tata Consultancy Svcs", sector: "IT", base: 2376.2, volatility: 0.8, capCr: 860000, lot: 1 },
-  { symbol: "HDFCBANK", name: "HDFC Bank", sector: "Banking", base: 817.8, volatility: 0.85, capCr: 1290000, lot: 1 },
-  { symbol: "ICICIBANK", name: "ICICI Bank", sector: "Banking", base: 1640.0, volatility: 0.9, capCr: 1150000, lot: 1 },
-  { symbol: "INFY", name: "Infosys", sector: "IT", base: 1098.0, volatility: 0.95, capCr: 456000, lot: 1 },
-  { symbol: "BHARTIARTL", name: "Bharti Airtel", sector: "Telecom", base: 2161.7, volatility: 0.9, capCr: 1270000, lot: 1 },
-  { symbol: "SBIN", name: "State Bank of India", sector: "Banking", base: 1132.65, volatility: 1.05, capCr: 1040000, lot: 1 },
-  { symbol: "ITC", name: "ITC Ltd", sector: "FMCG", base: 299.1, volatility: 0.6, capCr: 374000, lot: 1 },
-  { symbol: "LT", name: "Larsen & Toubro", sector: "Infra", base: 4209.1, volatility: 1.0, capCr: 579000, lot: 1 },
-  { symbol: "HINDUNILVR", name: "Hindustan Unilever", sector: "FMCG", base: 2052.5, volatility: 0.6, capCr: 482000, lot: 1 },
-  { symbol: "KOTAKBANK", name: "Kotak Mahindra Bank", sector: "Banking", base: 502.85, volatility: 0.9, capCr: 355000, lot: 1 },
-  { symbol: "AXISBANK", name: "Axis Bank", sector: "Banking", base: 1446.0, volatility: 1.0, capCr: 446000, lot: 1 },
-  { symbol: "MARUTI", name: "Maruti Suzuki", sector: "Auto", base: 14011.0, volatility: 1.0, capCr: 440000, lot: 1 },
-  { symbol: "SUNPHARMA", name: "Sun Pharma", sector: "Pharma", base: 1884.9, volatility: 0.8, capCr: 452000, lot: 1 },
-  { symbol: "HCLTECH", name: "HCL Technologies", sector: "IT", base: 1344.4, volatility: 0.95, capCr: 365000, lot: 1 },
-  { symbol: "TATAMOTORS", name: "Tata Motors", sector: "Auto", base: 453.8, volatility: 1.3, capCr: 290000, lot: 1 },
-  { symbol: "ADANIENT", name: "Adani Enterprises", sector: "Conglomerate", base: 2709.0, volatility: 1.6, capCr: 308000, lot: 1 },
-  { symbol: "TITAN", name: "Titan Company", sector: "Consumer", base: 4620.0, volatility: 0.9, capCr: 410000, lot: 1 },
-  { symbol: "WIPRO", name: "Wipro", sector: "IT", base: 185.7, volatility: 1.0, capCr: 194000, lot: 1 },
-  { symbol: "ETERNAL", name: "Eternal (Zomato)", sector: "Internet", base: 362.1, volatility: 1.7, capCr: 236000, lot: 1 },
+  // --- 1. NSE EQUITIES ---
+  { symbol: "RELIANCE", name: "Reliance Industries", sector: "Energy", exchange: "NSE", base: 1351.0, volatility: 0.9, capCr: 1864000, lot: 1 },
+  { symbol: "TCS", name: "Tata Consultancy Svcs", sector: "IT", exchange: "NSE", base: 2376.2, volatility: 0.8, capCr: 860000, lot: 1 },
+  { symbol: "HDFCBANK", name: "HDFC Bank", sector: "Banking", exchange: "NSE", base: 817.8, volatility: 0.85, capCr: 1290000, lot: 1 },
+  { symbol: "ICICIBANK", name: "ICICI Bank", sector: "Banking", exchange: "NSE", base: 1640.0, volatility: 0.9, capCr: 1150000, lot: 1 },
+  { symbol: "INFY", name: "Infosys", sector: "IT", exchange: "NSE", base: 1098.0, volatility: 0.95, capCr: 456000, lot: 1 },
+  { symbol: "BHARTIARTL", name: "Bharti Airtel", sector: "Telecom", exchange: "NSE", base: 2161.7, volatility: 0.9, capCr: 1270000, lot: 1 },
+  { symbol: "SBIN", name: "State Bank of India", sector: "Banking", exchange: "NSE", base: 1132.65, volatility: 1.05, capCr: 1040000, lot: 1 },
+  { symbol: "ITC", name: "ITC Ltd", sector: "FMCG", exchange: "NSE", base: 299.1, volatility: 0.6, capCr: 374000, lot: 1 },
+  { symbol: "LT", name: "Larsen & Toubro", sector: "Infra", exchange: "NSE", base: 4209.1, volatility: 1.0, capCr: 579000, lot: 1 },
+  { symbol: "HINDUNILVR", name: "Hindustan Unilever", sector: "FMCG", exchange: "NSE", base: 2052.5, volatility: 0.6, capCr: 482000, lot: 1 },
+  { symbol: "KOTAKBANK", name: "Kotak Mahindra Bank", sector: "Banking", exchange: "NSE", base: 502.85, volatility: 0.9, capCr: 355000, lot: 1 },
+  { symbol: "AXISBANK", name: "Axis Bank", sector: "Banking", exchange: "NSE", base: 1446.0, volatility: 1.0, capCr: 446000, lot: 1 },
+  { symbol: "MARUTI", name: "Maruti Suzuki", sector: "Auto", exchange: "NSE", base: 14011.0, volatility: 1.0, capCr: 440000, lot: 1 },
+  { symbol: "SUNPHARMA", name: "Sun Pharma", sector: "Pharma", exchange: "NSE", base: 1884.9, volatility: 0.8, capCr: 452000, lot: 1 },
+  { symbol: "HCLTECH", name: "HCL Technologies", sector: "IT", exchange: "NSE", base: 1344.4, volatility: 0.95, capCr: 365000, lot: 1 },
+  { symbol: "TATAMOTORS", name: "Tata Motors", sector: "Auto", exchange: "NSE", base: 453.8, volatility: 1.3, capCr: 290000, lot: 1 },
+  { symbol: "ADANIENT", name: "Adani Enterprises", sector: "Conglomerate", exchange: "NSE", base: 2709.0, volatility: 1.6, capCr: 308000, lot: 1 },
+  { symbol: "TITAN", name: "Titan Company", sector: "Consumer", exchange: "NSE", base: 4620.0, volatility: 0.9, capCr: 410000, lot: 1 },
+  { symbol: "WIPRO", name: "Wipro", sector: "IT", exchange: "NSE", base: 185.7, volatility: 1.0, capCr: 194000, lot: 1 },
+  { symbol: "ETERNAL", name: "Eternal (Zomato)", sector: "Internet", exchange: "NSE", base: 362.1, volatility: 1.7, capCr: 236000, lot: 1 },
+
+  // --- 2. MCX COMMODITIES ---
+  { symbol: "GOLD", name: "Gold 10g", sector: "Precious Metals", exchange: "MCX", base: 77850.0, volatility: 0.7, capCr: 4500000, lot: 1 },
+  { symbol: "SILVER", name: "Silver 1kg", sector: "Precious Metals", exchange: "MCX", base: 91400.0, volatility: 1.1, capCr: 2100000, lot: 1 },
+  { symbol: "CRUDEOIL", name: "Crude Oil BBL", sector: "Energy", exchange: "MCX", base: 6120.0, volatility: 1.5, capCr: 1800000, lot: 1 },
+  { symbol: "NATURALGAS", name: "Natural Gas mmBtu", sector: "Energy", exchange: "MCX", base: 268.5, volatility: 2.2, capCr: 450000, lot: 1 },
+  { symbol: "COPPER", name: "Copper 1kg", sector: "Base Metals", exchange: "MCX", base: 842.3, volatility: 0.9, capCr: 850000, lot: 1 },
+
+  // --- 3. FOREX / CURRENCY CDS ---
+  { symbol: "USDINR", name: "US Dollar / Indian Rupee", sector: "Forex", exchange: "FOREX", base: 84.42, volatility: 0.25, capCr: 15000000, lot: 1 },
+  { symbol: "EURINR", name: "Euro / Indian Rupee", sector: "Forex", exchange: "FOREX", base: 88.65, volatility: 0.35, capCr: 8000000, lot: 1 },
+  { symbol: "GBPINR", name: "British Pound / INR", sector: "Forex", exchange: "FOREX", base: 106.30, volatility: 0.4, capCr: 6000000, lot: 1 },
+  { symbol: "JPYINR", name: "100 Japanese Yen / INR", sector: "Forex", exchange: "FOREX", base: 54.80, volatility: 0.45, capCr: 4000000, lot: 1 },
+
+  // --- 4. CRYPTO 24/7 ---
+  { symbol: "BTC", name: "Bitcoin / INR", sector: "Digital Asset", exchange: "CRYPTO", base: 5682000.0, volatility: 1.8, capCr: 160000000, lot: 1 },
+  { symbol: "ETH", name: "Ethereum / INR", sector: "Smart Contracts", exchange: "CRYPTO", base: 159800.0, volatility: 2.1, capCr: 35000000, lot: 1 },
+  { symbol: "SOL", name: "Solana / INR", sector: "DeFi", exchange: "CRYPTO", base: 11200.0, volatility: 2.5, capCr: 9000000, lot: 1 },
+  { symbol: "BNB", name: "Binance Coin / INR", sector: "Exchange Token", exchange: "CRYPTO", base: 45400.0, volatility: 1.6, capCr: 8000000, lot: 1 },
 ];
 
 export const SECTORS = Array.from(new Set(STOCKS.map((s) => s.sector)));
@@ -84,16 +107,18 @@ export const TIMEFRAMES: { key: Timeframe; label: string; candles: number; stepM
 ];
 
 /** Generate a deterministic candle series for a symbol/timeframe. */
-export function generateCandles(symbol: string, tf: Timeframe): Candle[] {
+export function generateCandles(symbol: string, tf: Timeframe, targetPrice?: number): Candle[] {
   const def = STOCKS.find((s) => s.symbol === symbol) ?? STOCKS[0];
   const conf = TIMEFRAMES.find((t) => t.key === tf)!;
   const rng = mulberry32(hashCode(symbol + tf));
   const scale = tf === "1D" ? 0.05 : tf === "1W" ? 0.1 : tf === "1M" ? 0.22 : 0.4;
   const vol = def.volatility * scale;
 
-  // walk, then normalize so the final close ≈ base price
+  const anchor = typeof targetPrice === "number" && targetPrice > 0 ? targetPrice : def.base;
+
+  // walk, then normalize so the final close ≈ anchor price
   const closes: number[] = [];
-  let p = def.base;
+  let p = anchor;
   let drift = (rng() - 0.42) * vol * 0.35;
   for (let i = 0; i < conf.candles; i++) {
     closes.push(p);
@@ -101,7 +126,7 @@ export function generateCandles(symbol: string, tf: Timeframe): Candle[] {
     drift = drift * 0.9 + shock * 0.1;
     p = p * (1 - drift - (rng() - 0.5) * vol * 0.12);
   }
-  const norm = def.base / closes[0];
+  const norm = anchor / closes[0];
   const candles: Candle[] = [];
   const now = Date.now();
   for (let i = conf.candles - 1; i >= 0; i--) {
@@ -375,6 +400,71 @@ export function getMarketStatusIST(now: Date = new Date()): MarketStatus {
     label: "MARKET CLOSED (OFFICIAL CLOSE)",
     badgeClass: "border-amber-500/30 bg-amber-950/40 text-amber-400",
     subLabel: `Closed · ${reason}`,
+    istTime: timeStr,
+  };
+}
+
+export function getInstrumentMarketStatus(stock?: StockDef | null, now: Date = new Date()): MarketStatus {
+  const exchange = stock?.exchange || "NSE";
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const istOffset = 5.5 * 60 * 60000;
+  const istDate = new Date(utc + istOffset);
+
+  const day = istDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  const hours = istDate.getHours();
+  const minutes = istDate.getMinutes();
+  const timeInMinutes = hours * 60 + minutes;
+
+  const timeStr = istDate.toLocaleTimeString("en-IN", {
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }) + " IST";
+
+  if (exchange === "CRYPTO") {
+    return {
+      isOpen: true,
+      label: "LIVE 24/7 (CRYPTO)",
+      badgeClass: "border-purple-500/35 bg-purple-950/40 text-purple-300",
+      subLabel: "Crypto Market Open 24/7",
+      istTime: timeStr,
+    };
+  }
+
+  const isWeekday = day >= 1 && day <= 5;
+
+  if (exchange === "MCX") {
+    // MCX trading: 09:00 to 23:30 / 23:55 IST
+    const isOpen = isWeekday && timeInMinutes >= 540 && timeInMinutes < 1410;
+    return {
+      isOpen,
+      label: isOpen ? "LIVE (MCX)" : "MCX CLOSED (OFFICIAL CLOSE)",
+      badgeClass: isOpen ? "border-amber-500/35 bg-amber-950/40 text-amber-300" : "border-slate-500/30 bg-slate-950/40 text-slate-400",
+      subLabel: isOpen ? "Commodities Open" : "Closed",
+      istTime: timeStr,
+    };
+  }
+
+  if (exchange === "FOREX") {
+    // Forex trading: 09:00 to 17:00 IST
+    const isOpen = isWeekday && timeInMinutes >= 540 && timeInMinutes < 1020;
+    return {
+      isOpen,
+      label: isOpen ? "LIVE (CDS FOREX)" : "FOREX CLOSED",
+      badgeClass: isOpen ? "border-cyan-500/35 bg-cyan-950/40 text-cyan-300" : "border-slate-500/30 bg-slate-950/40 text-slate-400",
+      subLabel: isOpen ? "Currency Open" : "Closed",
+      istTime: timeStr,
+    };
+  }
+
+  // NSE Equities
+  const isOpen = isWeekday && timeInMinutes >= 555 && timeInMinutes < 930;
+  return {
+    isOpen,
+    label: isOpen ? "LIVE (NSE)" : "MARKET CLOSED (OFFICIAL CLOSE)",
+    badgeClass: isOpen ? "border-emerald-500/30 bg-emerald-950/40 text-emerald-400" : "border-amber-500/30 bg-amber-950/40 text-amber-400",
+    subLabel: isOpen ? "Market Open" : "Official Close",
     istTime: timeStr,
   };
 }

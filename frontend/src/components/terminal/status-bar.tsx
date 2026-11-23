@@ -1,9 +1,9 @@
 "use client";
 
-import { Activity, Clock, ShieldCheck, Wifi } from "lucide-react";
+import { Activity, BrainCircuit, Clock, ShieldCheck, Wifi } from "lucide-react";
 import { useMarketStatus } from "@/hooks/use-market";
 
-export default function StatusBar({ fps }: { fps: number }) {
+export default function StatusBar({ fps, onOpenAiCore }: { fps: number; onOpenAiCore?: () => void }) {
   const marketStatus = useMarketStatus();
 
   return (
@@ -24,10 +24,26 @@ export default function StatusBar({ fps }: { fps: number }) {
       <span className="hidden items-center gap-1 md:flex">
         <ShieldCheck className="h-3 w-3 text-amber-400/80" /> Paper trading session
       </span>
-      <span className="ml-auto flex items-center gap-1.5">
-        <Clock className="h-3 w-3" />
-        {marketStatus.istTime}
-      </span>
+      <div className="ml-auto flex items-center gap-3">
+        {onOpenAiCore && (
+          <button
+            onClick={onOpenAiCore}
+            className="flex items-center gap-1.5 rounded border border-purple-500/35 bg-purple-500/15 px-2 py-0.5 text-[9.5px] font-bold text-purple-200 transition hover:bg-purple-500/25 active:scale-95"
+            title="Toggle ARIA AI Core"
+          >
+            <BrainCircuit className="h-3 w-3 text-purple-300" />
+            <span>AI CORE</span>
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            </span>
+          </button>
+        )}
+        <span className="flex items-center gap-1.5">
+          <Clock className="h-3 w-3" />
+          {marketStatus.istTime}
+        </span>
+      </div>
     </footer>
   );
 }

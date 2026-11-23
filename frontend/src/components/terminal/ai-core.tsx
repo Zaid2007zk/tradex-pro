@@ -100,14 +100,24 @@ export default function AiCore({
   positions,
   onSelect,
   onExecute,
+  isOpen,
+  onOpenChange,
 }: {
   quotes: Record<string, Quote>;
   symbol: string;
   positions: Position[];
   onSelect: (s: string) => void;
   onExecute: (o: Omit<Order, "id" | "ts">) => void;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = typeof isOpen === "boolean" ? isOpen : internalOpen;
+  const setOpen = (val: boolean | ((prev: boolean) => boolean)) => {
+    const next = typeof val === "function" ? val(open) : val;
+    setInternalOpen(next);
+    onOpenChange?.(next);
+  };
   const [tab, setTab] = useState<Tab>("chat");
 
   // chat state
@@ -336,7 +346,16 @@ export default function AiCore({
                 </div>
               </div>
             </div>
-            <span className="rounded-md border border-fuchsia-500/30 bg-fuchsia-500/10 px-1.5 py-0.5 font-mono text-[9px] font-semibold text-fuchsia-300">NEURAL</span>
+            <div className="flex items-center gap-2">
+              <span className="rounded-md border border-fuchsia-500/30 bg-fuchsia-500/10 px-1.5 py-0.5 font-mono text-[9px] font-semibold text-fuchsia-300">NEURAL</span>
+              <button
+                onClick={() => setOpen(false)}
+                className="flex h-6 w-6 items-center justify-center rounded-md border border-white/10 text-white/60 hover:bg-white/10 hover:text-white transition"
+                title="Close AI Core"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
 
           {/* tabs */}

@@ -14,31 +14,44 @@ type Props = {
 };
 
 type Mode = "all" | "gainers" | "losers";
+type Segment = "ALL" | "NSE" | "MCX" | "FOREX" | "CRYPTO";
 
 const MODES: { key: Mode; label: string }[] = [
-  { key: "all", label: "NIFTY 50" },
+  { key: "all", label: "All" },
   { key: "gainers", label: "Gainers" },
   { key: "losers", label: "Losers" },
 ];
 
+const SEGMENTS: { key: Segment; label: string }[] = [
+  { key: "ALL", label: "All" },
+  { key: "NSE", label: "NSE Stocks" },
+  { key: "MCX", label: "MCX" },
+  { key: "FOREX", label: "Forex" },
+  { key: "CRYPTO", label: "Crypto 24/7" },
+];
+
 export default function Watchlist({ quotes, selected, onSelect }: Props) {
   const [mode, setMode] = useState<Mode>("all");
+  const [segment, setSegment] = useState<Segment>("ALL");
   const [q, setQ] = useState("");
 
   const rows = useMemo(() => {
-    const filtered = STOCKS.filter(
-      (s) =>
+    const filtered = STOCKS.filter((s) => {
+      const matchSegment = segment === "ALL" || (s.exchange || "NSE") === segment;
+      const matchQuery =
         !q.trim() ||
         s.symbol.toLowerCase().includes(q.trim().toLowerCase()) ||
-        s.name.toLowerCase().includes(q.trim().toLowerCase())
-    );
+        s.name.toLowerCase().includes(q.trim().toLowerCase()) ||
+        s.sector.toLowerCase().includes(q.trim().toLowerCase());
+      return matchSegment && matchQuery;
+    });
     const mapped = filtered.map((s) => ({ def: s, quote: quotes[s.symbol] }));
     if (mode === "gainers") mapped.sort((a, b) => (b.quote?.chgPct ?? 0) - (a.quote?.chgPct ?? 0));
     if (mode === "losers") mapped.sort((a, b) => (a.quote?.chgPct ?? 0) - (b.quote?.chgPct ?? 0));
     return mapped;
-  }, [mode, q, quotes]);
+  }, [mode, segment, q, quotes]);
 
-  const advancers = STOCKS.filter((s) => quotes[s.symbol].chgPct >= 0).length;
+  const advancers = STOCKS.filter((s) => (quotes[s.symbol]?.chgPct ?? 0) >= 0).length;
 
   return (
     <aside className="tx-panel flex h-full min-h-0 flex-col">
@@ -51,17 +64,18 @@ export default function Watchlist({ quotes, selected, onSelect }: Props) {
         <Popover>
           <PopoverTrigger asChild>
             <button className="flex items-center gap-0.5 text-[11px] text-white/45 transition hover:text-white">
-              NSE <ChevronDown className="h-3 w-3" />
+              {segment === "ALL" ? "Markets" : segment} <ChevronDown className="h-3 w-3" />
             </button>
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-72 border-white/10 bg-[#0f1219] p-3">
+          <PopoverContent align="end" className="w-76 border-white/10 bg-[#0f1219] p-3 shadow-2xl z-50">
             <div className="flex items-center gap-2 text-[12.5px] font-semibold">
-              <Clock className="h-3.5 w-3.5 text-emerald-400" /> Exchange Timings
+              <Clock className="h-3.5 w-3.5 text-emerald-400" /> Exchange Trading Sessions
             </div>
             <div className="mt-2 space-y-1.5 font-mono text-[11px] text-white/60">
-              <div className="flex justify-between"><span>NSE · BSE Equity</span><span className="text-white/85">09:15 – 15:30 IST</span></div>
-              <div className="flex justify-between"><span>Pre-open</span><span className="text-white/85">09:00 – 09:15 IST</span></div>
-              <div className="flex justify-between"><span>Post-close</span><span className="text-white/85">15:40 – 16:00 IST</span></div>
+              <div className="flex justify-between"><span>NSE · BSE Equities</span><span className="text-white/85">09:15 – 15:30 IST</span></div>
+              <div className="flex justify-between"><span>MCX Commodities</span><span className="text-amber-400">09:00 – 23:30 IST</span></div>
+              <div className="flex justify-between"><span>Forex CDS</span><span className="text-cyan-400">09:00 – 17:00 IST</span></div>
+              <div className="flex justify-between"><span>Crypto Markets</span><span className="text-purple-400 font-bold">24 Hours / 7 Days</span></div>
             </div>
             <div className="mt-3 flex items-center gap-2 text-[12.5px] font-semibold">
               <CalendarDays className="h-3.5 w-3.5 text-amber-300" /> Upcoming Holidays
@@ -70,19 +84,34 @@ export default function Watchlist({ quotes, selected, onSelect }: Props) {
               <div className="flex justify-between"><span>Republic Day</span><span className="text-white/85">Jan 26</span></div>
               <div className="flex justify-between"><span>Independence Day</span><span className="text-white/85">Aug 15</span></div>
               <div className="flex justify-between"><span>Gandhi Jayanti</span><span className="text-white/85">Oct 02</span></div>
-              <div className="flex justify-between"><span>Christmas</span><span className="text-white/85">Dec 25</span></div>
             </div>
-            <p className="mt-2.5 text-[9.5px] text-white/30">Session is simulated — feed runs 24×7 for practice.</p>
           </PopoverContent>
         </Popover>
       </div>
 
+      {/* Segment Selector Tabs (NSE, MCX, Forex, Crypto) */}
+      <div className="flex items-center gap-1 px-3 pt-2 pb-1 overflow-x-auto no-scrollbar">
+        {SEGMENTS.map((s) => (
+          <button
+            key={s.key}
+            onClick={() => setSegment(s.key)}
+            className={`rounded px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap transition ${
+              segment === s.key
+                ? "bg-amber-500/20 text-amber-300 border border-amber-500/35 shadow-sm"
+                : "text-white/45 hover:text-white/70 bg-white/4 border border-white/5"
+            }`}
+          >
+            {s.label}
+          </button>
+        ))}
+      </div>
+
       {/* search */}
-      <div className="px-3 pb-2 pt-2.5">
+      <div className="px-3 pb-2 pt-1.5">
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Filter symbols…"
+          placeholder="Filter symbols, commodities, crypto…"
           className="h-8 w-full rounded-md border border-white/10 bg-white/4 px-2.5 text-[12px] text-white/85 outline-none transition placeholder:text-white/30 focus:border-amber-500/50"
         />
       </div>
@@ -135,6 +164,14 @@ export default function Watchlist({ quotes, selected, onSelect }: Props) {
                 <div className="flex items-center gap-1.5">
                   <span className={`text-[12.5px] font-semibold ${isSel ? "text-amber-300" : "text-white/90"}`}>
                     {def.symbol}
+                  </span>
+                  <span className={`text-[8px] font-mono px-1 py-0.2 rounded font-semibold ${
+                    def.exchange === "CRYPTO" ? "bg-purple-500/15 text-purple-300 border border-purple-500/25" :
+                    def.exchange === "MCX" ? "bg-amber-500/15 text-amber-300 border border-amber-500/25" :
+                    def.exchange === "FOREX" ? "bg-cyan-500/15 text-cyan-300 border border-cyan-500/25" :
+                    "bg-white/6 text-white/40 border border-white/10"
+                  }`}>
+                    {def.exchange || "NSE"}
                   </span>
                 </div>
                 <div className="truncate text-[10px] text-white/35">{def.sector}</div>

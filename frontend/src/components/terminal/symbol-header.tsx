@@ -1,14 +1,13 @@
 "use client";
 
 import { ArrowDownRight, ArrowUpRight, Eye, Gauge, Layers, ShieldCheck } from "lucide-react";
-import { STOCKS, fmtCompact, fmtPct, fmtPrice } from "@/lib/market/engine";
+import { STOCKS, fmtCompact, fmtPct, fmtPrice, getInstrumentMarketStatus } from "@/lib/market/engine";
 import type { Quote } from "@/hooks/use-market";
-import { useMarketStatus } from "@/hooks/use-market";
 import { isShariahCompliant } from "./shariah-modal";
 
 export default function SymbolHeader({ symbol, quote }: { symbol: string; quote: Quote }) {
-  const marketStatus = useMarketStatus();
-  const def = STOCKS.find((s) => s.symbol === symbol)!;
+  const def = STOCKS.find((s) => s.symbol === symbol) || STOCKS[0];
+  const marketStatus = getInstrumentMarketStatus(def);
   const isHalal = isShariahCompliant(symbol);
   const up = quote.chgPct >= 0;
   const dayRange = quote.dayHigh - quote.dayLow || 1;
@@ -25,14 +24,14 @@ export default function SymbolHeader({ symbol, quote }: { symbol: string; quote:
           <div className="flex items-center gap-2">
             <h1 className="text-base font-bold tracking-tight">{symbol}</h1>
             <span className="rounded border border-white/12 bg-white/6 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-white/55">
-              NSE
+              {def.exchange || "NSE"}
             </span>
             <span className="rounded border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-emerald-300">
-              EQ
+              {def.exchange === "CRYPTO" ? "SPOT" : def.exchange === "MCX" ? "COMMODITY" : def.exchange === "FOREX" ? "CDS" : "EQ"}
             </span>
             <span className={`flex items-center gap-1 rounded border px-1.5 py-0.5 text-[9px] font-bold tracking-wider ${marketStatus.badgeClass}`}>
               <span className={`h-1.5 w-1.5 rounded-full ${marketStatus.isOpen ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
-              {marketStatus.isOpen ? "LIVE NSE" : "OFFICIAL CLOSE"}
+              {marketStatus.label}
             </span>
             {isHalal ? (
               <span className="rounded border border-emerald-500/35 bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-emerald-300">

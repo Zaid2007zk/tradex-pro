@@ -51,7 +51,22 @@ export function extractTargetStock(question: string, defaultSymbol: string) {
   if (/\b(wipro)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "WIPRO")!;
   if (/\b(zomato|eternal)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "ETERNAL")!;
 
-  // 4. Fallback to active terminal symbol
+  // 4. MCX Commodities, Forex & Crypto aliases
+  if (/\b(gold|sona)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "GOLD")!;
+  if (/\b(silver|chandi)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "SILVER")!;
+  if (/\b(crude|crude oil|tel)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "CRUDEOIL")!;
+  if (/\b(natural gas|gas|ng)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "NATURALGAS")!;
+  if (/\b(copper|tamba)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "COPPER")!;
+  if (/\b(usdinr|dollar|usd)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "USDINR")!;
+  if (/\b(eurinr|euro|eur)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "EURINR")!;
+  if (/\b(gbpinr|pound|gbp)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "GBPINR")!;
+  if (/\b(jpyinr|yen|jpy)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "JPYINR")!;
+  if (/\b(btc|bitcoin)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "BTC")!;
+  if (/\b(eth|ethereum)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "ETH")!;
+  if (/\b(sol|solana)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "SOL")!;
+  if (/\b(bnb|binance)\b/i.test(q)) return STOCKS.find((s) => s.symbol === "BNB")!;
+
+  // 5. Fallback to active terminal symbol
   return STOCKS.find((s) => s.symbol.toUpperCase() === defaultSymbol.toUpperCase()) || STOCKS[0];
 }
 

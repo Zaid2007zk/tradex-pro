@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { STOCKS, buildDepth, r2, getMarketStatusIST, type MarketStatus } from "@/lib/market/engine";
+import { STOCKS, buildDepth, r2, getMarketStatusIST, getInstrumentMarketStatus, type MarketStatus } from "@/lib/market/engine";
 
 export type Quote = {
   symbol: string;
@@ -154,20 +154,25 @@ export function useMarket(): Record<string, Quote> {
   }, []);
 
   // 2. High-Frequency Real-time Micro Tick Engine
-  // Active ONLY during official trading hours (Monday-Friday 09:15 - 15:30 IST)
-  // When market is closed, prices remain strictly locked to official close price.
+  // Respects instrument-specific trading hours:
+  // - Crypto: 24/7 continuous live ticks
+  // - MCX Commodities: Open 09:00 - 23:30/23:55 IST
+  // - Forex CDS: Open 09:00 - 17:00 IST
+  // - NSE Equities: Open 09:15 - 15:30 IST (frozen outside market hours)
   useEffect(() => {
     const id = setInterval(() => {
-      const status = getMarketStatusIST();
-      if (!status.isOpen) {
-        // Market is closed: do not fabricate synthetic price movements outside trading hours
-        return;
-      }
-
       setQuotes((prev) => {
         const next: Record<string, Quote> = {};
         for (const s of STOCKS) {
           const q = prev[s.symbol];
+          const instStatus = getInstrumentMarketStatus(s);
+
+          // If market for this instrument is closed, keep prices strictly locked to official close
+          if (!instStatus.isOpen) {
+            next[s.symbol] = q;
+            continue;
+          }
+
           const anchor = realBasesRef.current[s.symbol] || s.base;
           const pull = (anchor - q.price) / anchor; // strong reversion to exact exchange price
           const noise = (Math.random() - 0.5) * 0.0006 * s.volatility;
