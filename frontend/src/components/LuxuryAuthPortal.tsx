@@ -420,9 +420,9 @@ export const LuxuryAuthPortal: React.FC<LuxuryAuthPortalProps> = ({
   };
 
   const liveTickers = [
-    { symbol: "NIFTY 50", price: "25,302.40", change: "+0.42%", exch: "NSE" },
-    { symbol: "SENSEX", price: "82,248.12", change: "+0.38%", exch: "BSE" },
-    { symbol: "RELIANCE", price: "₹1,337.30", change: "+0.97%", exch: "NSE" },
+    { symbol: "NIFTY 50", price: "25,800.60", change: "+1.12%", exch: "NSE" },
+    { symbol: "SENSEX", price: "83,919.71", change: "+2.30%", exch: "BSE" },
+    { symbol: "RELIANCE", price: "₹1,377.50", change: "+0.97%", exch: "NSE" },
     { symbol: "S&P 500", price: "5,983.99", change: "+0.74%", exch: "NYSE" },
     { symbol: "NASDAQ", price: "19,281.40", change: "+0.92%", exch: "US" },
   ];

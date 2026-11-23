@@ -12,13 +12,16 @@ interface TapeItem {
 }
 
 const DEFAULT_TAPE_ITEMS: TapeItem[] = [
-  { symbol: "NIFTY 50", name: "NSE Index", price: "25,302.40", change: "+0.42%", isUp: true },
-  { symbol: "SENSEX", name: "BSE Index", price: "82,248.12", change: "+0.38%", isUp: true },
+  { symbol: "NIFTY 50", name: "NSE Index", price: "25,800.60", change: "+1.12%", isUp: true },
+  { symbol: "NIFTY BANK", name: "NSE Banking", price: "64,635.20", change: "+2.49%", isUp: true },
+  { symbol: "SENSEX", name: "BSE Index", price: "83,919.71", change: "+2.30%", isUp: true },
+  { symbol: "NIFTY NEXT 50", name: "NSE Next 50", price: "73,207.25", change: "+0.44%", isUp: true },
+  { symbol: "NIFTY FIN", name: "NSE Financial", price: "28,871.20", change: "+2.02%", isUp: true },
   { symbol: "S&P 500", name: "US Large Cap", price: "5,983.99", change: "+0.74%", isUp: true },
   { symbol: "NASDAQ", name: "US Tech", price: "19,281.40", change: "+0.92%", isUp: true },
-  { symbol: "RELIANCE", name: "Energy & Retail", price: "₹1,337.30", change: "+0.97%", isUp: true },
-  { symbol: "TCS", name: "IT Services", price: "₹2,469.80", change: "-0.45%", isUp: false },
-  { symbol: "HDFCBANK", name: "Banking", price: "₹810.60", change: "+0.52%", isUp: true },
+  { symbol: "RELIANCE", name: "Energy & Retail", price: "₹1,377.50", change: "+0.97%", isUp: true },
+  { symbol: "TCS", name: "IT Services", price: "₹2,376.20", change: "+0.85%", isUp: true },
+  { symbol: "HDFCBANK", name: "Banking", price: "₹846.00", change: "+0.52%", isUp: true },
   { symbol: "NVDA", name: "Semiconductors", price: "$168.89", change: "+2.14%", isUp: true },
   { symbol: "AAPL", name: "Consumer Tech", price: "$348.50", change: "+0.85%", isUp: true },
   { symbol: "USD/INR", name: "Forex", price: "₹84.42", change: "+0.04%", isUp: true },

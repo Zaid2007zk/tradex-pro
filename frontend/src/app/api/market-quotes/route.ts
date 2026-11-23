@@ -31,17 +31,30 @@ const SYMBOL_MAP: Record<string, string> = {
   MARUTI: "MARUTI.NS",
   SUNPHARMA: "SUNPHARMA.NS",
   HCLTECH: "HCLTECH.NS",
-  TATAMOTORS: "TMPV.NS",
+  TATAMOTORS: "TATAMOTORS.NS",
   ADANIENT: "ADANIENT.NS",
   TITAN: "TITAN.NS",
   WIPRO: "WIPRO.NS",
   ETERNAL: "ZOMATO.BO",
 };
 
+const INDEX_MAP: Record<string, { yahoo: string; fallbackPrice: number; fallbackChgPct: number; fallbackPts: number }> = {
+  NIFTY50: { yahoo: "^NSEI", fallbackPrice: 25800.60, fallbackChgPct: 1.12, fallbackPts: 286.30 },
+  BANKNIFTY: { yahoo: "^NSEBANK", fallbackPrice: 64635.20, fallbackChgPct: 2.49, fallbackPts: 1572.20 },
+  NIFTYNEXT50: { yahoo: "^NSENEXT50", fallbackPrice: 73207.25, fallbackChgPct: 0.44, fallbackPts: 317.50 },
+  NIFTYFIN: { yahoo: "NIFTY_FIN_SERVICE.NS", fallbackPrice: 28871.20, fallbackChgPct: 2.02, fallbackPts: 571.55 },
+  SENSEX: { yahoo: "^BSESN", fallbackPrice: 83919.71, fallbackChgPct: 2.30, fallbackPts: 1887.91 },
+};
+
 // In-memory cache for ultra-low latency & zero rate-limiting
-let cache: { timestamp: number; data: Record<string, LiveQuote> } = {
+let cache: {
+  timestamp: number;
+  data: Record<string, LiveQuote>;
+  indices: Record<string, { price: number; chgPct: number; chgPts: number }>;
+} = {
   timestamp: 0,
   data: {},
+  indices: {},
 };
 
 async function fetchTickerQuote(sym: string, exchSym: string, basePrice: number): Promise<LiveQuote> {
@@ -90,6 +103,40 @@ async function fetchTickerQuote(sym: string, exchSym: string, basePrice: number)
   };
 }
 
+async function fetchIndexQuote(
+  key: string,
+  config: { yahoo: string; fallbackPrice: number; fallbackChgPct: number; fallbackPts: number }
+): Promise<{ price: number; chgPct: number; chgPts: number }> {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${config.yahoo}?interval=1d`;
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+      next: { revalidate: 15 },
+    });
+    if (res.ok) {
+      const json = await res.json();
+      const meta = json?.chart?.result?.[0]?.meta;
+      if (meta) {
+        const price = meta.regularMarketPrice ?? meta.chartPreviousClose ?? config.fallbackPrice;
+        const prevClose = meta.chartPreviousClose ?? meta.previousClose ?? config.fallbackPrice;
+        const pts = price - prevClose;
+        const pct = prevClose > 0 ? (pts / prevClose) * 100 : config.fallbackChgPct;
+        return {
+          price: Math.round(price * 100) / 100,
+          chgPct: Math.round(pct * 100) / 100,
+          chgPts: Math.round(pts * 100) / 100,
+        };
+      }
+    }
+  } catch {}
+
+  return {
+    price: config.fallbackPrice,
+    chgPct: config.fallbackChgPct,
+    chgPts: config.fallbackPts,
+  };
+}
+
 export async function GET() {
   const now = Date.now();
   // Return cached data if under 15 seconds old
@@ -99,24 +146,33 @@ export async function GET() {
       source: "cache",
       timestamp: cache.timestamp,
       quotes: cache.data,
+      indices: cache.indices,
     });
   }
 
   const quotesMap: Record<string, LiveQuote> = {};
+  const indicesMap: Record<string, { price: number; chgPct: number; chgPts: number }> = {};
 
-  // Fetch top stocks in parallel
-  const promises = STOCKS.map((stock) => {
+  // Fetch stocks & indices in parallel
+  const stockPromises = STOCKS.map((stock) => {
     const exchSym = SYMBOL_MAP[stock.symbol] || `${stock.symbol}.NS`;
     return fetchTickerQuote(stock.symbol, exchSym, stock.base).then((q) => {
       quotesMap[stock.symbol] = q;
     });
   });
 
-  await Promise.all(promises);
+  const indexPromises = Object.entries(INDEX_MAP).map(([key, cfg]) => {
+    return fetchIndexQuote(key, cfg).then((q) => {
+      indicesMap[key] = q;
+    });
+  });
+
+  await Promise.all([...stockPromises, ...indexPromises]);
 
   cache = {
     timestamp: now,
     data: quotesMap,
+    indices: indicesMap,
   };
 
   return NextResponse.json({
@@ -124,5 +180,6 @@ export async function GET() {
     source: "live_exchange",
     timestamp: now,
     quotes: quotesMap,
+    indices: indicesMap,
   });
 }

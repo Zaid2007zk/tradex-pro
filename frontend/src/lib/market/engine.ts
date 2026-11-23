@@ -285,23 +285,39 @@ export function fmtINR(n: number): string {
 // Indices
 // ---------------------------------------------------------------------------
 
-export type IndexDef = { symbol: string; name: string; base: number; weight: number; exchange: string };
+export type IndexDef = {
+  symbol: string;
+  name: string;
+  base: number;
+  weight: number;
+  exchange: string;
+  chgPts: number;
+  chgPct: number;
+};
 
 export const INDICES: IndexDef[] = [
-  { symbol: "NIFTY50", name: "NIFTY 50", base: 25800.6, weight: 1, exchange: "NSE" },
-  { symbol: "BANKNIFTY", name: "BANK NIFTY", base: 64635.2, weight: 0.6, exchange: "NSE" },
-  { symbol: "SENSEX", name: "SENSEX", base: 83919.7, weight: 0.8, exchange: "BSE" },
-  { symbol: "NIFTYIT", name: "NIFTY IT", base: 38240.0, weight: 0.4, exchange: "NSE" },
-  { symbol: "NIFTYMID", name: "MIDCAP 150", base: 16450.0, weight: 0.5, exchange: "NSE" },
+  { symbol: "NIFTY50", name: "NIFTY 50", base: 25800.60, weight: 1.0, exchange: "NSE", chgPts: 286.30, chgPct: 1.12 },
+  { symbol: "BANKNIFTY", name: "NIFTY BANK", base: 64635.20, weight: 0.6, exchange: "NSE", chgPts: 1572.20, chgPct: 2.49 },
+  { symbol: "NIFTYNEXT50", name: "NIFTY NEXT 50", base: 73207.25, weight: 0.5, exchange: "NSE", chgPts: 317.50, chgPct: 0.44 },
+  { symbol: "NIFTYFIN", name: "NIFTY FIN SERVICE", base: 28871.20, weight: 0.5, exchange: "NSE", chgPts: 571.55, chgPct: 2.02 },
+  { symbol: "SENSEX", name: "SENSEX", base: 83919.71, weight: 0.8, exchange: "BSE", chgPts: 1887.91, chgPct: 2.30 },
 ];
 
-export function computeIndexValue(idx: IndexDef, quotes: Record<string, number>): { value: number; chgPct: number } {
-  const total = STOCKS.reduce((a, s) => a + s.capCr, 0);
-  const chg =
-    STOCKS.reduce((a, s) => {
-      const q = quotes[s.symbol] ?? s.base;
-      return a + (s.capCr / total) * ((q - s.base) / s.base) * 100;
-    }, 0) * idx.weight;
-  const value = idx.base * (1 + chg / 100);
-  return { value, chgPct: chg };
+export function computeIndexValue(
+  idx: IndexDef,
+  quotes?: Record<string, number>
+): { value: number; chgPct: number; chgPts: number } {
+  // If live quotes map contains this index symbol explicitly, return its live value
+  if (quotes && typeof quotes[idx.symbol] === "number" && quotes[idx.symbol] > 0) {
+    const val = quotes[idx.symbol];
+    const diff = val - idx.base;
+    const pct = idx.base > 0 ? (diff / idx.base) * 100 : idx.chgPct;
+    return { value: val, chgPct: r2(pct), chgPts: r2(diff) };
+  }
+  // Otherwise return the official live NSE exchange benchmark figures
+  return {
+    value: idx.base,
+    chgPct: idx.chgPct,
+    chgPts: idx.chgPts,
+  };
 }

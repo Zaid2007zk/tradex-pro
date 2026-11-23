@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Bell, CandlestickChart, Command, Search, Wallet, Sparkles, Zap, Scale, User, ShieldCheck, SlidersHorizontal } from "lucide-react";
 import { INDICES, STOCKS, computeIndexValue, fmtPct, fmtPrice, fmtINR } from "@/lib/market/engine";
-import type { Quote } from "@/hooks/use-market";
+import { useIndices, type Quote } from "@/hooks/use-market";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import AiSettingsModal from "./ai-settings-modal";
 import BrokerGatewayModal from "./broker-gateway-modal";
@@ -24,17 +24,31 @@ export default function TopBar({ quotes, onSelect, balance }: Props) {
   const [brokerModalOpen, setBrokerModalOpen] = useState(false);
   const [shariahModalOpen, setShariahModalOpen] = useState(false);
 
-  const indexData = useMemo(
-    () =>
-      INDICES.slice(0, 3).map((idx) => ({
-        idx,
-        ...computeIndexValue(
+  const indexQuotes = useIndices();
+
+  const indexData = useMemo(() => {
+    return INDICES.slice(0, 4).map((idx) => {
+      const live = indexQuotes[idx.symbol];
+      if (live && live.price > 0) {
+        return {
           idx,
-          Object.fromEntries(Object.entries(quotes).map(([k, v]) => [k, v.price]))
-        ),
-      })),
-    [quotes]
-  );
+          value: live.price,
+          chgPts: typeof live.chgPts === "number" ? live.chgPts : (idx.chgPts ?? 0),
+          chgPct: typeof live.chgPct === "number" ? live.chgPct : (idx.chgPct ?? 0),
+        };
+      }
+      const computed = computeIndexValue(
+        idx,
+        Object.fromEntries(Object.entries(quotes).map(([k, v]) => [k, v.price]))
+      );
+      return {
+        idx,
+        value: computed.value,
+        chgPts: typeof computed.chgPts === "number" ? computed.chgPts : (idx.chgPts ?? 0),
+        chgPct: typeof computed.chgPct === "number" ? computed.chgPct : (idx.chgPct ?? 0),
+      };
+    });
+  }, [quotes, indexQuotes]);
 
   const results = useMemo(() => {
     const query = q.trim().toLowerCase();
@@ -76,7 +90,7 @@ export default function TopBar({ quotes, onSelect, balance }: Props) {
 
         {/* Index pills */}
         <div className="hidden items-center gap-2 xl:flex">
-          {indexData.map(({ idx, value, chgPct }) => (
+          {indexData.map(({ idx, value, chgPts, chgPct }) => (
             <div
               key={idx.symbol}
               className="flex items-center gap-2 rounded-lg border border-white/8 bg-white/3 px-3 py-1.5"
@@ -85,9 +99,16 @@ export default function TopBar({ quotes, onSelect, balance }: Props) {
                 <div className="text-[9.5px] font-semibold uppercase tracking-wider text-white/45">{idx.name}</div>
                 <div className="font-mono text-[12.5px] font-semibold tabular-nums">{fmtPrice(value)}</div>
               </div>
-              <span className={`font-mono text-[11px] font-medium tabular-nums ${chgColor(chgPct)}`}>
-                {fmtPct(chgPct)}
-              </span>
+              <div className="text-right">
+                <span className={`block font-mono text-[11px] font-medium tabular-nums ${chgColor(chgPct)}`}>
+                  {typeof chgPts === "number" && !isNaN(chgPts)
+                    ? (chgPts >= 0 ? `+${chgPts.toFixed(2)}` : chgPts.toFixed(2))
+                    : "+0.00"}
+                </span>
+                <span className={`block font-mono text-[9.5px] tabular-nums ${chgColor(chgPct)}`}>
+                  ({fmtPct(typeof chgPct === "number" && !isNaN(chgPct) ? chgPct : 0)})
+                </span>
+              </div>
             </div>
           ))}
         </div>

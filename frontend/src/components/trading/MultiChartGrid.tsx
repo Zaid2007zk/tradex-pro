@@ -31,7 +31,7 @@ const DEFAULT_PANES: ChartPaneConfig[] = [
 
 const MOCK_PANE_DATA: Record<string, { price: number; change: number; bars: number[] }> = {
   "RELIANCE.NS": { price: 1337.30, change: 0.97, bars: [1320, 1324, 1321, 1328, 1335, 1330, 1334, 1337] },
-  "NIFTY 50": { price: 25302.40, change: 0.65, bars: [25180, 25200, 25230, 25210, 25270, 25290, 25302] },
+  "NIFTY 50": { price: 25800.60, change: 1.12, bars: [25500, 25550, 25620, 25690, 25740, 25780, 25800.60] },
   "TCS.NS": { price: 3845.50, change: -0.42, bars: [3865, 3860, 3855, 3850, 3848, 3845] },
   "HDFCBANK.NS": { price: 1688.20, change: 1.15, bars: [1670, 1672, 1675, 1680, 1682, 1688] },
   "INFY.NS": { price: 1860.00, change: 1.40, bars: [1830, 1835, 1845, 1850, 1855, 1860] },

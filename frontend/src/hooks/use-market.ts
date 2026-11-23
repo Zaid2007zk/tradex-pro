@@ -46,6 +46,49 @@ function initialQuotes(): Record<string, Quote> {
 
 const TICK_MS = 1400;
 
+export type IndexQuote = {
+  price: number;
+  chgPct: number;
+  chgPts: number;
+};
+
+// Global cache for live index quotes
+let globalIndexQuotes: Record<string, IndexQuote> = {
+  NIFTY50: { price: 25800.60, chgPct: 1.12, chgPts: 286.30 },
+  BANKNIFTY: { price: 64635.20, chgPct: 2.49, chgPts: 1572.20 },
+  NIFTYNEXT50: { price: 73207.25, chgPct: 0.44, chgPts: 317.50 },
+  NIFTYFIN: { price: 28871.20, chgPct: 2.02, chgPts: 571.55 },
+  SENSEX: { price: 83919.71, chgPct: 2.30, chgPts: 1887.91 },
+};
+
+export function useIndices(): Record<string, IndexQuote> {
+  const [indices, setIndices] = useState<Record<string, IndexQuote>>(globalIndexQuotes);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchIndices = async () => {
+      try {
+        const res = await fetch("/api/market-quotes");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.ok && data.indices && mounted) {
+            globalIndexQuotes = data.indices;
+            setIndices(data.indices);
+          }
+        }
+      } catch {}
+    };
+    fetchIndices();
+    const interval = setInterval(fetchIndices, 15000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  return indices;
+}
+
 /** Live simulated quotes for every stock. Synced with real exchange + ticks continuously. */
 export function useMarket(): Record<string, Quote> {
   const [quotes, setQuotes] = useState<Record<string, Quote>>(initialQuotes);
@@ -61,6 +104,7 @@ export function useMarket(): Record<string, Quote> {
         if (res.ok) {
           const data = await res.json();
           if (data.ok && data.quotes && mounted) {
+            if (data.indices) globalIndexQuotes = data.indices;
             setQuotes((prev) => {
               const next = { ...prev };
               for (const [sym, lq] of Object.entries(data.quotes as Record<string, any>)) {
@@ -98,7 +142,8 @@ export function useMarket(): Record<string, Quote> {
     };
   }, []);
 
-  // 2. High-Frequency Real-time Sub-Second Micro Tick Engine (for live order book depth & trading feel)
+  // 2. High-Frequency Real-time Sub-Second Micro Tick Engine
+  // Tight sub-rupee micro-fluctuations (0.05% max) strictly pinned to the official NSE anchor price
   useEffect(() => {
     const id = setInterval(() => {
       setQuotes((prev) => {
@@ -106,15 +151,14 @@ export function useMarket(): Record<string, Quote> {
         for (const s of STOCKS) {
           const q = prev[s.symbol];
           const anchor = realBasesRef.current[s.symbol] || s.base;
-          const pull = (anchor - q.price) / anchor; // mean reversion toward true market anchor
-          const noise = (Math.random() - 0.5) * 0.0018 * s.volatility;
-          const momentum = q.tickDir === 1 ? 0.0003 : q.tickDir === -1 ? -0.0003 : 0;
-          const delta = q.price * (noise + pull * 0.06 + momentum);
+          const pull = (anchor - q.price) / anchor; // strong reversion to exact exchange price
+          const noise = (Math.random() - 0.5) * 0.0006 * s.volatility;
+          const delta = q.price * (noise + pull * 0.15);
           let price = r2(Math.max(1, q.price + delta));
 
-          // Clamp max drift to ±2% of true market quote
-          if (price > anchor * 1.02) price = r2(anchor * 1.02);
-          if (price < anchor * 0.98) price = r2(anchor * 0.98);
+          // Strict adherence to actual exchange price (max 0.1% micro-spread)
+          if (price > anchor * 1.002) price = r2(anchor * 1.002);
+          if (price < anchor * 0.998) price = r2(anchor * 0.998);
 
           const dir = price > q.price ? 1 : price < q.price ? -1 : 0;
           next[s.symbol] = {
@@ -122,7 +166,7 @@ export function useMarket(): Record<string, Quote> {
             price,
             dayHigh: Math.max(q.dayHigh, price),
             dayLow: Math.min(q.dayLow, price),
-            volume: q.volume + Math.round(Math.random() * 8000 + 400),
+            volume: q.volume + Math.round(Math.random() * 2000 + 100),
             chgPct: q.prevClose > 0 ? r2(((price - q.prevClose) / q.prevClose) * 100) : q.chgPct,
             history: [...q.history.slice(-47), price],
             tickDir: dir,
