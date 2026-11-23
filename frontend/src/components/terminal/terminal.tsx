@@ -257,7 +257,7 @@ export default function Terminal() {
             {workspace === "terminal" ? (
               <>
                 <div className="tx-panel shrink-0">
-                  <SymbolHeader symbol={symbol} quote={quote} />
+                  <SymbolHeader symbol={symbol} quote={quote} candles={candles} />
                 </div>
 
                 {/* Chart / Heatmap panel */}
@@ -405,6 +405,7 @@ export default function Terminal() {
                     balance={balance}
                     onExecute={onExecute}
                     defaultSide={orderSide}
+                    candles={candles}
                   />
                 </div>
                 <MarketDepth price={quote.price} />
@@ -437,7 +438,7 @@ export default function Terminal() {
               {mobileTab === "chart" && (
                 <div className="flex flex-col gap-2 flex-1 min-h-0">
                   <div className="tx-panel shrink-0">
-                    <SymbolHeader symbol={symbol} quote={quote} />
+                    <SymbolHeader symbol={symbol} quote={quote} candles={candles} />
                   </div>
 
                   <div className="tx-panel flex flex-col h-[400px] sm:h-[480px] overflow-hidden shrink-0">
@@ -532,6 +533,7 @@ export default function Terminal() {
                     balance={balance}
                     onExecute={onExecute}
                     defaultSide={orderSide}
+                    candles={candles}
                   />
                   <MarketDepth price={quote.price} />
                 </div>

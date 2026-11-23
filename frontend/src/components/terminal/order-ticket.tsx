@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Minus, Plus, Zap } from "lucide-react";
-import { STOCKS, fmtINR, fmtPrice, r2 } from "@/lib/market/engine";
+import { Minus, Plus, Zap, Sparkles, Target, ShieldAlert } from "lucide-react";
+import { STOCKS, fmtINR, fmtPrice, r2, computeSignals, type Candle } from "@/lib/market/engine";
 import type { Quote } from "@/hooks/use-market";
 import { useToast } from "@/hooks/use-toast";
 import { playOrderSound } from "@/lib/market/sound";
@@ -29,6 +29,7 @@ type Props = {
   balance: number;
   onExecute: (o: Omit<Order, "id" | "ts">) => void;
   defaultSide?: "BUY" | "SELL";
+  candles?: Candle[];
 };
 
 const PRODUCTS: { key: ProductType; hint: string }[] = [
@@ -37,10 +38,11 @@ const PRODUCTS: { key: ProductType; hint: string }[] = [
   { key: "MTF", hint: "Margin · 4x" },
 ];
 
-export default function OrderTicket({ symbol, quote, balance, onExecute, defaultSide = "BUY" }: Props) {
+export default function OrderTicket({ symbol, quote, balance, onExecute, defaultSide = "BUY", candles }: Props) {
   const def = STOCKS.find((s) => s.symbol === symbol) || STOCKS[0];
   const currSym = def.currency === "USD" ? "$" : "₹";
   const [side, setSide] = useState<"BUY" | "SELL">(defaultSide);
+  const sig = useMemo(() => (candles && candles.length ? computeSignals(candles) : null), [candles]);
 
   // Sync side if defaultSide changes externally (e.g. from mobile quick action)
   useEffect(() => {
@@ -212,6 +214,44 @@ export default function OrderTicket({ symbol, quote, balance, onExecute, default
         <Row label={`Margin (${leverage}x)`} value={fmtINR(margin)} strong />
         <Row label="Available funds" value={fmtINR(balance)} />
       </div>
+
+      {/* ARIA AI Neural Edge */}
+      {sig && (
+        <div className="mx-2.5 mt-2 rounded-lg border border-purple-500/30 bg-purple-500/10 p-2 font-mono text-[10px]">
+          <div className="flex items-center justify-between pb-1">
+            <div className="flex items-center gap-1.5">
+              <Sparkles className="h-3 w-3 text-purple-400 animate-pulse" />
+              <span className="font-sans font-bold text-purple-300">ARIA AI Signal</span>
+            </div>
+            <span
+              className={`rounded px-1.5 py-0.5 text-[9px] font-bold ${
+                sig.verdict.includes("BUY")
+                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                  : sig.verdict.includes("SELL")
+                  ? "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                  : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+              }`}
+            >
+              {sig.verdict} ({Math.abs(sig.score)}%)
+            </span>
+          </div>
+          <div className="flex items-center justify-between pt-0.5 text-[9.5px] text-white/55">
+            <span className="flex items-center gap-1">
+              <ShieldAlert className="h-2.5 w-2.5 text-rose-400" /> SL:{" "}
+              <strong className="text-rose-300">
+                {currSym}{fmtPrice(quote.price * (sig.verdict.includes("SELL") ? 1.015 : 0.985))}
+              </strong>
+            </span>
+            <span className="flex items-center gap-1">
+              <Target className="h-2.5 w-2.5 text-emerald-400" /> TGT:{" "}
+              <strong className="text-emerald-300">
+                {currSym}{fmtPrice(quote.price * (sig.verdict.includes("SELL") ? 0.97 : 1.03))}
+              </strong>
+            </span>
+            <span className="text-white/40">R:R 1:2</span>
+          </div>
+        </div>
+      )}
 
       {/* submit */}
       <div className="p-2.5 pt-1.5">

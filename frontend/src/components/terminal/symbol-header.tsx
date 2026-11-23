@@ -1,17 +1,19 @@
 "use client";
 
-import { ArrowDownRight, ArrowUpRight, Eye, Gauge, Layers, ShieldCheck } from "lucide-react";
-import { STOCKS, fmtCompact, fmtPct, fmtPrice, getInstrumentMarketStatus } from "@/lib/market/engine";
+import { useMemo } from "react";
+import { ArrowDownRight, ArrowUpRight, Eye, Gauge, Layers, ShieldCheck, Sparkles } from "lucide-react";
+import { STOCKS, computeSignals, fmtCompact, fmtPct, fmtPrice, getInstrumentMarketStatus, type Candle } from "@/lib/market/engine";
 import type { Quote } from "@/hooks/use-market";
 import { isShariahCompliant } from "./shariah-modal";
 
-export default function SymbolHeader({ symbol, quote }: { symbol: string; quote: Quote }) {
+export default function SymbolHeader({ symbol, quote, candles }: { symbol: string; quote: Quote; candles?: Candle[] }) {
   const def = STOCKS.find((s) => s.symbol === symbol) || STOCKS[0];
   const marketStatus = getInstrumentMarketStatus(def);
   const isHalal = isShariahCompliant(symbol);
   const up = quote.chgPct >= 0;
   const dayRange = quote.dayHigh - quote.dayLow || 1;
   const posInRange = Math.min(100, Math.max(0, ((quote.price - quote.dayLow) / dayRange) * 100));
+  const sig = useMemo(() => (candles && candles.length ? computeSignals(candles) : null), [candles]);
 
   return (
     <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-3.5 py-2">
@@ -40,6 +42,16 @@ export default function SymbolHeader({ symbol, quote }: { symbol: string; quote:
             ) : (
               <span className="rounded border border-rose-500/35 bg-rose-500/15 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-rose-300">
                 NON-PERMISSIBLE
+              </span>
+            )}
+            {sig && (
+              <span className="flex items-center gap-1 rounded border border-purple-500/35 bg-purple-500/15 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-purple-200">
+                <Sparkles className="h-2.5 w-2.5 text-purple-400" />
+                <span className="text-white/50">AI:</span>
+                <span className={sig.verdict.includes("BUY") ? "text-emerald-300 font-bold" : sig.verdict.includes("SELL") ? "text-rose-300 font-bold" : "text-amber-300 font-bold"}>
+                  {sig.verdict}
+                </span>
+                <span className="text-white/40 font-mono">({Math.abs(sig.score)}%)</span>
               </span>
             )}
           </div>
