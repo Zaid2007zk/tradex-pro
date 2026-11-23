@@ -242,7 +242,7 @@ export default function Terminal() {
           </div>
 
           {/* Center Column (Chart & Bottom Tabs OR Specialized Workspace) */}
-          <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 overflow-hidden">
+          <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-hidden">
             {workspace === "terminal" ? (
               <>
                 <div className="tx-panel shrink-0">
@@ -250,7 +250,7 @@ export default function Terminal() {
                 </div>
 
                 {/* Chart / Heatmap panel */}
-                <div className="tx-panel flex flex-1 min-h-[280px] sm:min-h-[320px] flex-col overflow-hidden">
+                <div className="tx-panel flex flex-1 min-h-[170px] flex-col overflow-hidden">
                   <div className="tx-panel-head flex items-center justify-between px-3 py-2 shrink-0">
                     <div className="flex items-center gap-1">
                       <button
@@ -314,7 +314,7 @@ export default function Terminal() {
                 </div>
 
                 {/* Bottom Tabs (Positions & Orders) */}
-                <div className="h-56 xl:h-60 shrink-0">
+                <div className="h-36 sm:h-40 xl:h-44 shrink-0">
                   <BottomTabs positions={livePositions} orders={orders} />
                 </div>
               </>

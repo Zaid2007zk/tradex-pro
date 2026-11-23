@@ -14,10 +14,10 @@ export default function BottomTabs({ positions, orders }: Props) {
     <div className="flex h-full min-h-0 flex-col">
       <div className="grid flex-1 grid-cols-1 min-h-0 lg:grid-cols-2 lg:gap-2">
         {/* Positions */}
-        <div className="tx-panel flex min-h-0 flex-col overflow-hidden">
-          <div className="tx-panel-head flex items-center justify-between px-3.5 py-2.5">
-            <span className="text-[12.5px] font-semibold tracking-wide">Positions</span>
-            <span className="rounded bg-white/8 px-1.5 py-0.5 font-mono text-[9.5px] text-white/50">
+        <div className="tx-panel flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="tx-panel-head flex items-center justify-between px-3 py-1.5 shrink-0">
+            <span className="text-[12px] font-semibold tracking-wide">Positions</span>
+            <span className="rounded bg-white/8 px-1.5 py-0.5 font-mono text-[9px] text-white/50">
               {positions.length}
             </span>
           </div>
@@ -57,7 +57,7 @@ export default function BottomTabs({ positions, orders }: Props) {
                 })}
                 {positions.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-3 py-6 text-center font-sans text-[11.5px] text-white/35">
+                    <td colSpan={6} className="px-3 py-3 text-center font-sans text-[11px] text-white/35">
                       No open positions — execute an order to start paper trading
                     </td>
                   </tr>
@@ -68,10 +68,10 @@ export default function BottomTabs({ positions, orders }: Props) {
         </div>
 
         {/* Orders */}
-        <div className="tx-panel hidden min-h-0 flex-col overflow-hidden lg:flex">
-          <div className="tx-panel-head flex items-center justify-between px-3.5 py-2.5">
-            <span className="text-[12.5px] font-semibold tracking-wide">Order History</span>
-            <span className="rounded bg-white/8 px-1.5 py-0.5 font-mono text-[9.5px] text-white/50">{orders.length}</span>
+        <div className="tx-panel hidden min-h-0 flex-1 flex-col overflow-hidden lg:flex">
+          <div className="tx-panel-head flex items-center justify-between px-3 py-1.5 shrink-0">
+            <span className="text-[12px] font-semibold tracking-wide">Order History</span>
+            <span className="rounded bg-white/8 px-1.5 py-0.5 font-mono text-[9px] text-white/50">{orders.length}</span>
           </div>
           <div className="tx-scroll min-h-0 flex-1 overflow-y-auto">
             <table className="w-full text-left font-mono text-[11px] tabular-nums">
@@ -106,7 +106,7 @@ export default function BottomTabs({ positions, orders }: Props) {
                 ))}
                 {orders.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-3 py-6 text-center font-sans text-[11.5px] text-white/35">
+                    <td colSpan={6} className="px-3 py-3 text-center font-sans text-[11px] text-white/35">
                       Executed orders will appear here
                     </td>
                   </tr>

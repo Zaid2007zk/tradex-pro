@@ -13,15 +13,15 @@ export default function SymbolHeader({ symbol, quote }: { symbol: string; quote:
   const posInRange = Math.min(100, Math.max(0, ((quote.price - quote.dayLow) / dayRange) * 100));
 
   return (
-    <div className="flex flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
+    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-3.5 py-2">
       {/* identity + price */}
-      <div className="flex items-center gap-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-[11px] font-bold text-amber-300">
+      <div className="flex items-center gap-3">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[10px] font-bold text-amber-300">
           {def.symbol.slice(0, 4)}
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-lg font-bold tracking-tight">{symbol}</h1>
+            <h1 className="text-base font-bold tracking-tight">{symbol}</h1>
             <span className="rounded border border-white/12 bg-white/6 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-white/55">
               NSE
             </span>
@@ -42,27 +42,27 @@ export default function SymbolHeader({ symbol, quote }: { symbol: string; quote:
               </span>
             )}
           </div>
-          <div className="mt-0.5 text-[11.5px] text-white/45">
+          <div className="text-[11px] text-white/45">
             {def.name} · {def.sector}
           </div>
         </div>
       </div>
 
-      <div className="flex items-end gap-3">
+      <div className="flex items-end gap-2.5">
         <div
           key={quote.price}
-          className={`rounded-lg px-1 font-mono text-[30px] font-bold leading-none tracking-tight tabular-nums ${
+          className={`rounded-lg px-1 font-mono text-[24px] xl:text-[28px] font-bold leading-none tracking-tight tabular-nums ${
             quote.tickDir === 1 ? "tx-flash-up text-emerald-400" : quote.tickDir === -1 ? "tx-flash-down text-rose-400" : "text-white"
           }`}
         >
           ₹{fmtPrice(quote.price)}
         </div>
         <div
-          className={`mb-0.5 flex items-center gap-1 rounded-md px-2 py-1 font-mono text-[13px] font-semibold tabular-nums ${
+          className={`mb-0.5 flex items-center gap-1 rounded-md px-2 py-0.5 font-mono text-[12px] font-semibold tabular-nums ${
             up ? "bg-emerald-500/12 text-emerald-400" : "bg-rose-500/12 text-rose-400"
           }`}
         >
-          {up ? <ArrowUpRight className="h-3.5 w-3.5" /> : <ArrowDownRight className="h-3.5 w-3.5" />}
+          {up ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
           {fmtPct(quote.chgPct)}
         </div>
       </div>

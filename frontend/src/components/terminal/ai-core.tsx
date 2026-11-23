@@ -311,7 +311,7 @@ export default function AiCore({
       {/* floating launcher */}
       <button
         onClick={() => setOpen((o) => !o)}
-        className="fixed bottom-12 left-5 z-40 flex items-center gap-2 rounded-full border border-fuchsia-400/50 bg-gradient-to-b from-fuchsia-500 to-purple-700 px-4 py-2.5 text-[13px] font-bold text-white shadow-[0_6px_24px_rgba(192,38,211,0.35)] transition hover:brightness-110 active:scale-95"
+        className="fixed bottom-9 right-6 z-40 flex items-center gap-2 rounded-full border border-fuchsia-400/50 bg-gradient-to-b from-fuchsia-500 to-purple-700 px-3.5 py-2 text-[12px] font-bold text-white shadow-[0_6px_24px_rgba(192,38,211,0.35)] transition hover:brightness-110 active:scale-95"
         aria-label="Open ARIA CORE — full AI"
       >
         {open ? <X className="h-4 w-4" /> : <BrainCircuit className="h-4 w-4" />}
@@ -320,7 +320,7 @@ export default function AiCore({
       </button>
 
       <div
-        className={`fixed bottom-36 left-5 z-40 flex h-105 w-[min(430px,calc(100vw-40px))] flex-col overflow-hidden rounded-2xl border border-fuchsia-500/25 bg-[#0d1016]/95 shadow-2xl backdrop-blur-xl ${
+        className={`fixed bottom-20 right-6 z-40 flex h-105 max-h-[calc(100vh-120px)] w-[min(430px,calc(100vw-30px))] flex-col overflow-hidden rounded-2xl border border-fuchsia-500/25 bg-[#0d1016]/95 shadow-2xl backdrop-blur-xl ${
           open ? "" : "hidden"
         }`}
       >
