@@ -1,5 +1,7 @@
 # TradeX PRO — Quantum Trading Terminal
 
+![TradeX PRO AI Terminal](./frontend/public/og-image.jpg)
+
 NSE/BSE-style dark trading terminal with a full AI layer. Next.js 16 + TypeScript + Tailwind v4 + shadcn/ui + Bun.
 
 ## Quick start

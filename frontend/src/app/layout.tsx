@@ -14,17 +14,33 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://tradex-pro-ai.vercel.app"),
   title: "TradeX PRO — Quantum Trading Terminal",
   description:
     "Institutional-grade trading terminal for Indian markets: live charts, market depth, AI signals, sector heatmap and paper trading with ₹10L virtual funds.",
   keywords: ["trading terminal", "NSE", "BSE", "paper trading", "charts", "AI signals", "TradeX PRO"],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/logo.svg",
   },
   openGraph: {
     title: "TradeX PRO — Quantum Trading Terminal",
     description: "Live charts, depth, AI signals and paper trading for NSE / BSE markets",
     type: "website",
+    url: "https://tradex-pro-ai.vercel.app",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 882,
+        height: 582,
+        alt: "TradeX Pro AI Terminal Interface",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TradeX PRO — Quantum Trading Terminal",
+    description: "Live charts, depth, AI signals and paper trading for NSE / BSE markets",
+    images: ["/og-image.jpg"],
   },
 };
 
