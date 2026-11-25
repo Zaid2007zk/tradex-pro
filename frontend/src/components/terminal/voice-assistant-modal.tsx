@@ -26,9 +26,11 @@ export default function VoiceAssistantModal({
 }: Props) {
   const [listening, setListening] = useState(false);
   const [transcript, setTranscript] = useState("");
+  const [manualCmd, setManualCmd] = useState("");
   const [response, setResponse] = useState("");
   const [status, setStatus] = useState<"idle" | "listening" | "success" | "error">("idle");
   const recognitionRef = useRef<any>(null);
+  const abortedRef = useRef(false);
 
   // Speak response using Web Speech Synthesis
   const speak = (text: string) => {
@@ -159,20 +161,53 @@ export default function VoiceAssistantModal({
     speak(fallbackMsg);
   };
 
-  const startListening = () => {
+  const stopListening = () => {
+    abortedRef.current = true;
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.abort();
+      } catch {}
+      recognitionRef.current = null;
+    }
+    setListening(false);
+  };
+
+  const startListening = async () => {
     if (typeof window === "undefined") return;
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       setStatus("error");
-      setResponse("Speech recognition not supported in this browser. Please use Chrome/Edge.");
+      setResponse("Speech recognition not supported in this browser. Use Chrome/Edge or type a command below.");
       return;
     }
 
+    // Stop any previous instance cleanly without showing aborted error
+    stopListening();
+    abortedRef.current = false;
+
     try {
+      // Prompt mic permission explicitly if supported so browser doesn't silently reject
+      if (navigator.mediaDevices?.getUserMedia) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          stream.getTracks().forEach((t) => t.stop());
+        } catch (permErr: any) {
+          setListening(false);
+          setStatus("error");
+          if (permErr?.name === "NotFoundError") {
+            setResponse("No microphone detected. Check your mic or type a command below.");
+          } else {
+            setResponse("Mic permission denied. Allow microphone in browser address bar or type below.");
+          }
+          return;
+        }
+      }
+
       const recognition = new SpeechRecognition();
-      recognition.lang = "en-IN";
+      const savedLang = typeof window !== "undefined" ? localStorage.getItem("tradex_ai_lang") : null;
+      recognition.lang = savedLang === "hindi" ? "hi-IN" : "en-IN";
       recognition.continuous = false;
-      recognition.interimResults = false;
+      recognition.interimResults = true;
 
       recognition.onstart = () => {
         setListening(true);
@@ -182,14 +217,38 @@ export default function VoiceAssistantModal({
       };
 
       recognition.onresult = (event: any) => {
-        const speechResult = event.results[0][0].transcript;
-        processCommand(speechResult);
+        let interim = "";
+        let finalText = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const t = event.results[i][0].transcript;
+          if (event.results[i].isFinal) finalText += t;
+          else interim += t;
+        }
+        if (interim) setTranscript(interim);
+        if (finalText.trim()) {
+          processCommand(finalText.trim());
+        }
       };
 
-      recognition.onerror = () => {
+      recognition.onerror = (event: any) => {
+        if (abortedRef.current || event?.error === "aborted") {
+          setListening(false);
+          return;
+        }
         setListening(false);
         setStatus("error");
-        setResponse("Could not hear clearly. Please try speaking again.");
+        const err = event?.error;
+        if (err === "not-allowed" || err === "service-not-allowed") {
+          setResponse("Microphone blocked. Allow mic permission in browser address bar or type below.");
+        } else if (err === "audio-capture") {
+          setResponse("No microphone found. Connect a mic or type a command below.");
+        } else if (err === "network") {
+          setResponse("Browser voice service unreachable (network/Brave block). Use Chrome/Edge or type below.");
+        } else if (err === "no-speech") {
+          setResponse("No speech detected. Tap the mic and speak clearly, or type below.");
+        } else {
+          setResponse("Could not hear clearly. Tap mic to retry or type a command below.");
+        }
       };
 
       recognition.onend = () => {
@@ -201,27 +260,27 @@ export default function VoiceAssistantModal({
     } catch {
       setListening(false);
       setStatus("error");
-      setResponse("Microphone access error. Please grant mic permission.");
+      setResponse("Microphone access error. Please grant mic permission or type below.");
     }
-  };
-
-  const stopListening = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-    }
-    setListening(false);
   };
 
   useEffect(() => {
     if (isOpen) {
-      startListening();
+      // Slight delay avoids React StrictMode double-mount abort race
+      const timer = setTimeout(() => {
+        void startListening();
+      }, 150);
+      return () => {
+        clearTimeout(timer);
+        stopListening();
+      };
     } else {
       stopListening();
       if (typeof window !== "undefined" && "speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
     }
-    return () => stopListening();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   if (!isOpen) return null;
@@ -316,6 +375,31 @@ export default function VoiceAssistantModal({
             </button>
           ))}
         </div>
+
+        {/* Fallback Command Input (works even if mic is unavailable/blocked) */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!manualCmd.trim()) return;
+            processCommand(manualCmd.trim());
+            setManualCmd("");
+          }}
+          className="mt-3 flex items-center gap-2 border-t border-white/10 pt-3"
+        >
+          <input
+            value={manualCmd}
+            onChange={(e) => setManualCmd(e.target.value)}
+            placeholder="Or type command (e.g. Buy 5 HDFC, Tata Motors kholo)…"
+            className="h-8 flex-1 rounded-lg border border-white/12 bg-black/40 px-3 text-[11.5px] text-white placeholder:text-white/35 outline-none focus:border-purple-500/50"
+          />
+          <button
+            type="submit"
+            disabled={!manualCmd.trim()}
+            className="h-8 rounded-lg bg-purple-500/25 border border-purple-500/40 px-3 text-[11px] font-semibold text-purple-200 hover:bg-purple-500/35 disabled:opacity-40 transition"
+          >
+            Run
+          </button>
+        </form>
       </div>
     </div>
   );
