@@ -84,6 +84,77 @@ const TABS: { key: Tab; label: string; icon: typeof Sparkles }[] = [
   { key: "autopilot", label: "Autopilot", icon: Bot },
 ];
 
+function stripMarkdownForSpeech(text: string): string {
+  return text
+    .replace(/#{1,6}\s*/g, "")
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/\*(.*?)\*/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/[•▪◦]/g, "")
+    .replace(/₹/g, "rupees ")
+    .replace(/\$/g, "dollars ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function renderInlineFormatted(line: string) {
+  // Split by **bold** or `code`, stripping any stray * or #
+  const tokens = line.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
+  return tokens.map((tok, idx) => {
+    if (tok.startsWith("**") && tok.endsWith("**") && tok.length > 4) {
+      return (
+        <strong key={idx} className="font-semibold text-white">
+          {tok.slice(2, -2)}
+        </strong>
+      );
+    }
+    if (tok.startsWith("`") && tok.endsWith("`") && tok.length > 2) {
+      return (
+        <code key={idx} className="rounded bg-white/10 px-1 py-0.5 font-mono text-[11px] text-amber-200">
+          {tok.slice(1, -1)}
+        </code>
+      );
+    }
+    return <span key={idx}>{tok.replace(/\*\*/g, "")}</span>;
+  });
+}
+
+function FormattedAiText({ text }: { text: string }) {
+  const lines = text.split("\n");
+  return (
+    <div className="space-y-1.5">
+      {lines.map((raw, i) => {
+        const line = raw.trim();
+        if (!line) return <div key={i} className="h-1" />;
+
+        // Headings: ### or ## or #
+        if (/^#{1,6}\s+/.test(line)) {
+          const clean = line.replace(/^#{1,6}\s+/, "");
+          return (
+            <div key={i} className="pt-1 text-[12.5px] font-bold text-amber-300">
+              {renderInlineFormatted(clean)}
+            </div>
+          );
+        }
+
+        // Bullets: • or - or *
+        if (/^(?:[•\-*]|\d+\.)\s+/.test(line)) {
+          const isNum = /^\d+\.\s+/.test(line);
+          const clean = line.replace(/^[•\-*]\s+/, "");
+          return (
+            <div key={i} className="flex items-start gap-2 pl-0.5">
+              {!isNum && <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-fuchsia-400/80" />}
+              <div className="flex-1">{renderInlineFormatted(clean)}</div>
+            </div>
+          );
+        }
+
+        return <div key={i}>{renderInlineFormatted(line)}</div>;
+      })}
+    </div>
+  );
+}
+
 function Skeleton({ lines }: { lines: number }) {
   return (
     <div className="space-y-2.5 px-1 py-1">
@@ -169,32 +240,65 @@ export default function AiCore({
     chatRef.current?.scrollTo({ top: 999999, behavior: "smooth" });
   }, [msgs, chatBusy]);
 
-  const speak = useCallback(async (text: string) => {
+  const speakWithBrowser = useCallback((cleanText: string) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      setSpeaking(false);
+      return;
+    }
     try {
-      setSpeaking(true);
-      const res = await fetch("/api/ai-tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
-      if (!res.ok) throw new Error("tts failed");
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      audioRef.current?.pause();
-      const audio = new Audio(url);
-      audioRef.current = audio;
-      audio.onended = () => {
-        URL.revokeObjectURL(url);
-        setSpeaking(false);
-      };
-      await audio.play();
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      const voices = window.speechSynthesis.getVoices();
+      const preferred =
+        voices.find((v) => v.lang.includes("en-IN")) ||
+        voices.find((v) => v.lang.includes("en-GB")) ||
+        voices.find((v) => v.lang.includes("en"));
+      if (preferred) utterance.voice = preferred;
+      utterance.rate = 1.05;
+      utterance.pitch = 1.0;
+      utterance.onend = () => setSpeaking(false);
+      utterance.onerror = () => setSpeaking(false);
+      window.speechSynthesis.speak(utterance);
     } catch {
-      setSpeaking(false); // voice is best-effort; text remains available
+      setSpeaking(false);
     }
   }, []);
 
+  const speak = useCallback(
+    async (text: string) => {
+      const cleanText = stripMarkdownForSpeech(text);
+      if (!cleanText) return;
+      try {
+        setSpeaking(true);
+        const res = await fetch("/api/ai-tts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: cleanText }),
+        });
+        if (!res.ok) throw new Error("tts failed");
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        audioRef.current?.pause();
+        const audio = new Audio(url);
+        audioRef.current = audio;
+        audio.onended = () => {
+          URL.revokeObjectURL(url);
+          setSpeaking(false);
+        };
+        await audio.play();
+      } catch {
+        // Fallback immediately to native browser SpeechSynthesis (works on Vercel & offline)
+        speakWithBrowser(cleanText);
+      }
+    },
+    [speakWithBrowser]
+  );
+
   const stopSpeaking = useCallback(() => {
     audioRef.current?.pause();
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
     setSpeaking(false);
   }, []);
 
@@ -214,6 +318,9 @@ export default function AiCore({
       setMicErr("Mic dictation needs Chrome or Edge. Type your question instead.");
       return;
     }
+    // Automatically enable voice output when user speaks via mic
+    setVoiceOut(true);
+    voiceOutRef.current = true;
     setMicErr(null);
     setMicState("listening");
     const rec = new Ctor();
@@ -385,13 +492,28 @@ export default function AiCore({
                 {msgs.map((m, i) => (
                   <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                     <div
-                      className={`max-w-[88%] whitespace-pre-line rounded-2xl px-3.5 py-2.5 text-[12px] leading-relaxed ${
+                      className={`group relative max-w-[88%] rounded-2xl px-3.5 py-2.5 text-[12px] leading-relaxed ${
                         m.role === "user"
-                          ? "rounded-br-sm bg-fuchsia-500/20 text-fuchsia-100"
+                          ? "whitespace-pre-line rounded-br-sm bg-fuchsia-500/20 text-fuchsia-100"
                           : "rounded-bl-sm border border-white/10 bg-white/6 text-white/80"
                       }`}
                     >
-                      {m.text}
+                      {m.role === "aria" ? (
+                        <>
+                          <FormattedAiText text={m.text} />
+                          <button
+                            type="button"
+                            onClick={() => (speaking ? stopSpeaking() : void speak(m.text))}
+                            title={speaking ? "Stop speaking" : "Listen to reply"}
+                            className="mt-1.5 inline-flex items-center gap-1 rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[9.5px] text-white/45 transition hover:border-fuchsia-500/40 hover:text-fuchsia-200"
+                          >
+                            <Volume2 className="h-2.5 w-2.5" />
+                            <span>{speaking ? "Stop" : "Speak"}</span>
+                          </button>
+                        </>
+                      ) : (
+                        m.text
+                      )}
                     </div>
                   </div>
                 ))}
@@ -612,8 +734,8 @@ export default function AiCore({
               {reportBusy && !report[symbol] && <Skeleton lines={9} />}
               {reportErr && <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-[11.5px] text-rose-200">{reportErr}</div>}
               {report[symbol] && (
-                <div className="whitespace-pre-line rounded-xl border border-white/10 bg-white/4 p-3.5 text-[12px] leading-relaxed text-white/75">
-                  {report[symbol]}
+                <div className="rounded-xl border border-white/10 bg-white/4 p-3.5 text-[12px] leading-relaxed text-white/75">
+                  <FormattedAiText text={report[symbol]} />
                 </div>
               )}
               {!reportBusy && !report[symbol] && !reportErr && (

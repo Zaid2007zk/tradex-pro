@@ -30,12 +30,19 @@ export default function VoiceAssistantModal({
   const [status, setStatus] = useState<"idle" | "listening" | "success" | "error">("idle");
   const recognitionRef = useRef<any>(null);
 
-  // Speak response using Web Speech Synthesis with fallback
+  // Speak response using Web Speech Synthesis
   const speak = (text: string) => {
     if (typeof window === "undefined") return;
     if ("speechSynthesis" in window) {
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
+      const clean = text.replace(/₹/g, "rupees ").replace(/\$/g, "dollars ");
+      const utterance = new SpeechSynthesisUtterance(clean);
+      const voices = window.speechSynthesis.getVoices();
+      const preferred =
+        voices.find((v) => v.lang.includes("en-IN")) ||
+        voices.find((v) => v.lang.includes("en-GB")) ||
+        voices.find((v) => v.lang.includes("en"));
+      if (preferred) utterance.voice = preferred;
       utterance.rate = 1.05;
       utterance.pitch = 1.0;
       window.speechSynthesis.speak(utterance);
@@ -146,8 +153,10 @@ export default function VoiceAssistantModal({
       }
     }
 
-    setResponse("Command not recognized. Try saying 'Reliance kholo', 'Buy 10 TCS', or 'Market summary'.");
+    const fallbackMsg = "Command not recognized. Try saying Reliance kholo, Buy 10 TCS, or Market summary.";
+    setResponse(fallbackMsg);
     setStatus("error");
+    speak(fallbackMsg);
   };
 
   const startListening = () => {
