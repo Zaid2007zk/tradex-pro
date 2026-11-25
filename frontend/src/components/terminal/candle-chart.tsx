@@ -70,16 +70,18 @@ export default function CandleChart({ symbol, candles, timeframe, price }: Props
 
     const W = size.w;
     const H = size.h;
-    const padR = 56;
-    const padT = 8;
-    const volH = Math.min(36, H * 0.12);
-    const padB = volH + 16;
-    const chartW = W - padR - 6;
+    const padR = 74; // Dedicated width for Y-axis price scale
+    const padT = 12; // Breathing room on top
+    const volH = Math.min(26, H * 0.10); // Compact volume bars
+    const padB = volH + 20; // Clear separation above volume
+    const chartW = W - padR; // Right boundary of chart grid
+    const rightOffset = Math.max(38, Math.min(54, chartW * 0.08)); // TradingView-style breathing room after latest candle
+    const candleAreaW = chartW - rightOffset;
 
     const view = candles;
     const n = view.length;
-    const step = chartW / n;
-    const bodyW = Math.max(2, Math.min(10, step * 0.62));
+    const step = candleAreaW / n;
+    const bodyW = Math.max(2.5, Math.min(8.5, step * 0.65));
 
     let lo = Infinity;
     let hi = -Infinity;
@@ -91,75 +93,120 @@ export default function CandleChart({ symbol, candles, timeframe, price }: Props
       for (const v of maSeries.ma20) if (v) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
       for (const v of maSeries.ma50) if (v) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
     }
-    const pad = (hi - lo) * 0.05;
+    if (price > 0) {
+      lo = Math.min(lo, price);
+      hi = Math.max(hi, price);
+    }
+    if (showAiLevels && patternResult) {
+      if (patternResult.resistance > 0) hi = Math.max(hi, patternResult.resistance);
+      if (patternResult.support > 0) lo = Math.min(lo, patternResult.support);
+    }
+
+    // Comfortable 12% vertical margin so candles never hit top or bottom bounds
+    const pad = Math.max((hi - lo) * 0.12, 1.0);
     lo -= pad;
     hi += pad;
     const y = (p: number) => padT + ((hi - p) / (hi - lo)) * (H - padT - padB);
-    const maxVol = Math.max(...view.map((c) => c.volume));
-    const vy = (v: number) => H - 24 - (v / maxVol) * volH;
+    const maxVol = Math.max(...view.map((c) => c.volume), 1);
+    const vy = (v: number) => H - 18 - (v / maxVol) * volH;
 
     ctx.clearRect(0, 0, W, H);
 
-    // watermark
-    ctx.font = "700 34px var(--font-geist-sans), sans-serif";
-    ctx.fillStyle = "rgba(255,255,255,0.035)";
-    ctx.textAlign = "center";
-    ctx.fillText(`${symbol} · NSE`, chartW / 2, H / 2 - 12);
-    ctx.font = "500 12px var(--font-geist-mono), monospace";
-    ctx.fillText(`${timeframe} · CANDLES`, chartW / 2, H / 2 + 12);
+    // Dedicated right-side Y-axis background strip
+    ctx.fillStyle = "rgba(10, 13, 20, 0.45)";
+    ctx.fillRect(chartW, 0, padR, H);
 
-    // horizontal grid + price axis
+    // Subtle vertical separator line between chart and price scale
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(chartW, 0);
+    ctx.lineTo(chartW, H);
+    ctx.stroke();
+
+    // Subtle watermark centered in candle area
+    ctx.font = "700 32px var(--font-geist-sans), sans-serif";
+    ctx.fillStyle = "rgba(255,255,255,0.025)";
+    ctx.textAlign = "center";
+    ctx.fillText(`${symbol} · NSE`, candleAreaW / 2, H / 2 - 12);
+    ctx.font = "500 11px var(--font-geist-mono), monospace";
+    ctx.fillText(`${timeframe} · CANDLES`, candleAreaW / 2, H / 2 + 10);
+
+    // Badge Y positions for smart collision detection
+    const lp = y(price);
+    const hasLp = lp >= padT && lp <= H - padB;
+    const ry = (showAiLevels && patternResult && patternResult.resistance > 0) ? y(patternResult.resistance) : null;
+    const hasRy = ry !== null && ry >= padT && ry <= H - padB;
+    const sy = (showAiLevels && patternResult && patternResult.support > 0) ? y(patternResult.support) : null;
+    const hasSy = sy !== null && sy >= padT && sy <= H - padB;
+
+    // Horizontal grid lines across chart & collision-free labels on Y-axis
     ctx.font = "400 10.5px var(--font-geist-mono), monospace";
     ctx.textAlign = "left";
-    const gridN = 6;
+    const gridN = Math.max(3, Math.min(5, Math.floor((H - padT - padB) / 60)));
     for (let i = 0; i <= gridN; i++) {
       const p = lo + ((hi - lo) * i) / gridN;
       const gy = y(p);
+
+      // Grid line only across chart area
       ctx.strokeStyle = GRID;
       ctx.beginPath();
       ctx.moveTo(0, gy);
       ctx.lineTo(chartW, gy);
       ctx.stroke();
-      ctx.fillStyle = TEXT;
-      ctx.fillText(p.toFixed(p > 1000 ? 1 : 2), chartW + 6, gy + 3.5);
+
+      // Smart collision suppression: Skip grid label if within 15px of any active badge
+      const nearLp = hasLp && Math.abs(gy - lp) < 15;
+      const nearRy = hasRy && Math.abs(gy - ry!) < 15;
+      const nearSy = hasSy && Math.abs(gy - sy!) < 15;
+
+      if (!nearLp && !nearRy && !nearSy) {
+        ctx.fillStyle = TEXT;
+        ctx.fillText(p.toFixed(p > 1000 ? 1 : 2), chartW + 8, gy + 3.5);
+      }
     }
 
-    // vertical grid lines every ~10 candles
+    // Vertical grid lines every 10 candles
     for (let i = 0; i < n; i += 10) {
       const gx = i * step + step / 2;
       ctx.strokeStyle = "rgba(255,255,255,0.03)";
       ctx.beginPath();
       ctx.moveTo(gx, padT);
-      ctx.lineTo(gx, H - 24);
+      ctx.lineTo(gx, H - 18);
       ctx.stroke();
     }
 
-    // candles + volume
+    // Candles + Volume
     view.forEach((c, i) => {
       const cx = i * step + step / 2;
       const up = c.close >= c.open;
       const col = up ? UP : DOWN;
-      // volume
-      ctx.fillStyle = up ? "rgba(14,203,129,0.28)" : "rgba(246,70,93,0.28)";
+
+      // Volume bar
+      ctx.fillStyle = up ? "rgba(14,203,129,0.22)" : "rgba(246,70,93,0.22)";
       const vy0 = vy(c.volume);
-      ctx.fillRect(cx - bodyW / 2, vy0, bodyW, H - 24 - vy0);
-      // wick
+      ctx.fillRect(cx - bodyW / 2, vy0, bodyW, H - 18 - vy0);
+
+      // Wick
       ctx.strokeStyle = col;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(cx, y(c.high));
       ctx.lineTo(cx, y(c.low));
       ctx.stroke();
-      // body
+
+      // Body with subtle roundness
       const yo = y(c.open);
       const yc = y(c.close);
       const top = Math.min(yo, yc);
       const hgt = Math.max(1.5, Math.abs(yc - yo));
       ctx.fillStyle = col;
-      ctx.fillRect(cx - bodyW / 2, top, bodyW, hgt);
+      ctx.beginPath();
+      ctx.roundRect(cx - bodyW / 2, top, bodyW, hgt, 0.8);
+      ctx.fill();
     });
 
-    // moving averages
+    // Moving averages
     const drawLine = (series: (number | null)[], color: string, width: number) => {
       ctx.strokeStyle = color;
       ctx.lineWidth = width;
@@ -181,85 +228,104 @@ export default function CandleChart({ symbol, candles, timeframe, price }: Props
       drawLine(maSeries.ma50, "rgba(230,233,239,0.4)", 1.2);
     }
 
-    // last price line + tag
-    const lp = y(price);
-    if (lp > padT && lp < H - padB) {
-      ctx.strokeStyle = "rgba(240,185,11,0.65)";
-      ctx.setLineDash([5, 4]);
+    // Last price line extending smoothly across empty gap to badge
+    if (hasLp) {
+      ctx.strokeStyle = "rgba(240,185,11,0.7)";
+      ctx.setLineDash([4, 4]);
       ctx.beginPath();
       ctx.moveTo(0, lp);
       ctx.lineTo(chartW, lp);
       ctx.stroke();
       ctx.setLineDash([]);
-      ctx.fillStyle = "#f0b90b";
+
+      // Solid yellow badge on Y-axis
       const label = price.toFixed(2);
-      ctx.font = "600 10.5px var(--font-geist-mono), monospace";
-      const tw = ctx.measureText(label).width + 10;
+      ctx.font = "700 10.5px var(--font-geist-mono), monospace";
+      const tw = ctx.measureText(label).width + 12;
+      const bw = Math.max(tw, padR - 8);
+      ctx.fillStyle = "#f0b90b";
       ctx.beginPath();
-      ctx.roundRect(chartW + 2, lp - 9, Math.max(tw, padR - 6), 18, 4);
+      ctx.roundRect(chartW + 4, lp - 9, bw, 18, 4);
       ctx.fill();
-      ctx.fillStyle = "#0a0c10";
-      ctx.fillText(label, chartW + 7, lp + 3.5);
+      ctx.fillStyle = "#090c12";
+      ctx.fillText(label, chartW + 9, lp + 3.5);
     }
 
-    // AI Support & Resistance Levels
+    // AI Support & Resistance Levels (Solid high-contrast containers with zero bleed-through)
     if (showAiLevels && patternResult) {
-      if (patternResult.resistance > 0) {
-        const ry = y(patternResult.resistance);
-        if (ry > padT && ry < H - padB) {
-          ctx.strokeStyle = "rgba(246,70,93,0.55)";
-          ctx.setLineDash([4, 4]);
-          ctx.beginPath();
-          ctx.moveTo(0, ry);
-          ctx.lineTo(chartW, ry);
-          ctx.stroke();
-          ctx.setLineDash([]);
-          ctx.fillStyle = "rgba(246,70,93,0.18)";
-          ctx.strokeStyle = "rgba(246,70,93,0.6)";
-          ctx.beginPath();
-          ctx.roundRect(chartW + 2, ry - 8, Math.max(padR - 4, 58), 16, 3);
-          ctx.fill();
-          ctx.stroke();
-          ctx.fillStyle = "#fca5a5";
-          ctx.font = "600 9px var(--font-geist-mono), monospace";
-          ctx.fillText(`RES ${currSym}${patternResult.resistance}`, chartW + 4, ry + 3.5);
-        }
+      if (hasRy && ry !== null) {
+        ctx.strokeStyle = "rgba(246,70,93,0.65)";
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(0, ry);
+        ctx.lineTo(chartW, ry);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Solid opaque dark-red background
+        ctx.fillStyle = "#200b11";
+        ctx.strokeStyle = "rgba(248,113,113,0.85)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(chartW + 4, ry - 8.5, padR - 8, 17, 3);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#fca5a5";
+        ctx.font = "700 9px var(--font-geist-mono), monospace";
+        ctx.fillText(`RES ${currSym}${patternResult.resistance}`, chartW + 7, ry + 3.5);
       }
-      if (patternResult.support > 0) {
-        const sy = y(patternResult.support);
-        if (sy > padT && sy < H - padB) {
-          ctx.strokeStyle = "rgba(14,203,129,0.55)";
-          ctx.setLineDash([4, 4]);
-          ctx.beginPath();
-          ctx.moveTo(0, sy);
-          ctx.lineTo(chartW, sy);
-          ctx.stroke();
-          ctx.setLineDash([]);
-          ctx.fillStyle = "rgba(14,203,129,0.18)";
-          ctx.strokeStyle = "rgba(14,203,129,0.6)";
-          ctx.beginPath();
-          ctx.roundRect(chartW + 2, sy - 8, Math.max(padR - 4, 58), 16, 3);
-          ctx.fill();
-          ctx.stroke();
-          ctx.fillStyle = "#86efac";
-          ctx.font = "600 9px var(--font-geist-mono), monospace";
-          ctx.fillText(`SUP ${currSym}${patternResult.support}`, chartW + 4, sy + 3.5);
-        }
+
+      if (hasSy && sy !== null) {
+        ctx.strokeStyle = "rgba(14,203,129,0.65)";
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(0, sy);
+        ctx.lineTo(chartW, sy);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Solid opaque dark-green background
+        ctx.fillStyle = "#081d13";
+        ctx.strokeStyle = "rgba(74,222,128,0.85)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(chartW + 4, sy - 8.5, padR - 8, 17, 3);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#86efac";
+        ctx.font = "700 9px var(--font-geist-mono), monospace";
+        ctx.fillText(`SUP ${currSym}${patternResult.support}`, chartW + 7, sy + 3.5);
       }
     }
 
-    // crosshair
+    // Crosshair with price pill on Y-axis
     if (hover) {
       const cx = hover.index * step + step / 2;
-      ctx.strokeStyle = "rgba(255,255,255,0.25)";
+      ctx.strokeStyle = "rgba(255,255,255,0.28)";
       ctx.setLineDash([3, 3]);
       ctx.beginPath();
       ctx.moveTo(cx, padT);
-      ctx.lineTo(cx, H - 24);
+      ctx.lineTo(cx, H - 18);
       ctx.moveTo(0, hover.y);
       ctx.lineTo(chartW, hover.y);
       ctx.stroke();
       ctx.setLineDash([]);
+
+      // Draw hover price pill on Y-axis if within chart bounds
+      if (hover.y >= padT && hover.y <= H - padB) {
+        const hoverPrice = hi - ((hover.y - padT) / (H - padT - padB)) * (hi - lo);
+        const hpLabel = hoverPrice.toFixed(hoverPrice > 1000 ? 1 : 2);
+        ctx.fillStyle = "#1e2430";
+        ctx.strokeStyle = "rgba(255,255,255,0.4)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(chartW + 4, hover.y - 8, padR - 8, 16, 3);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "600 9px var(--font-geist-mono), monospace";
+        ctx.fillText(hpLabel, chartW + 8, hover.y + 3.5);
+      }
     }
   }, [candles, size, hover, price, symbol, timeframe, maSeries, showMa, showAiLevels, patternResult, currSym]);
 
@@ -267,11 +333,20 @@ export default function CandleChart({ symbol, candles, timeframe, price }: Props
     const canvas = canvasRef.current;
     if (!canvas || !candles.length) return;
     const rect = canvas.getBoundingClientRect();
-    const chartW = rect.width - 72;
+    const padR = 74;
+    const chartW = rect.width - padR;
+    const rightOffset = Math.max(38, Math.min(54, chartW * 0.08));
+    const candleAreaW = chartW - rightOffset;
     const x = e.clientX - rect.left;
     const yv = e.clientY - rect.top;
-    const idx = Math.max(0, Math.min(candles.length - 1, Math.floor((x / chartW) * candles.length)));
-    setHover({ index: idx, x, y: yv });
+
+    if (x > candleAreaW + 15) {
+      setHover(null);
+      return;
+    }
+    const clampedX = Math.max(0, Math.min(candleAreaW, x));
+    const idx = Math.max(0, Math.min(candles.length - 1, Math.floor((clampedX / candleAreaW) * candles.length)));
+    setHover({ index: idx, x: clampedX, y: yv });
   };
 
   const hoverCandle = hover ? candles[hover.index] : null;
@@ -283,7 +358,7 @@ export default function CandleChart({ symbol, candles, timeframe, price }: Props
       <canvas ref={canvasRef} className="h-full w-full cursor-crosshair" />
 
       {/* Top Legend Bar (TradingView style: clean, horizontal, never covers candles or price axis!) */}
-      <div className="pointer-events-none absolute left-3 top-2 right-[190px] flex items-center gap-3 text-[10.5px] font-mono z-10 overflow-hidden">
+      <div className="pointer-events-none absolute left-3 top-2 right-[215px] flex items-center gap-3 text-[10.5px] font-mono z-10 overflow-hidden">
         {showMa && (
           <div className="flex items-center gap-1.5 text-[9.5px] shrink-0">
             <span className="text-amber-400 font-semibold">MA20</span>
@@ -328,8 +403,8 @@ export default function CandleChart({ symbol, candles, timeframe, price }: Props
         ) : null}
       </div>
 
-      {/* Control Buttons (Right aligned, never obstructed) */}
-      <div className="absolute right-[76px] top-2 flex items-center gap-1.5 z-10">
+      {/* Control Buttons (Right aligned outside the Y-axis scale) */}
+      <div className="absolute right-[82px] top-2 flex items-center gap-1.5 z-10">
         <button
           onClick={() => setShowAiLevels((s) => !s)}
           className={`rounded border px-2 py-0.5 text-[10px] font-semibold backdrop-blur transition ${
