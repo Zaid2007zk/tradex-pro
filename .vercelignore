@@ -1,0 +1,19 @@
+# Ignore large ML models and caches
+*.joblib
+*.pkl
+*.h5
+*.ipynb
+*.bat
+backend/
+data/
+docs/
+temp/
+tests/
+_bmad/
+_bmad-output/
+frontend_backup/
+.npm-cache/
+.pytest_cache/
+node_modules/
+.venv/
+__pycache__/
