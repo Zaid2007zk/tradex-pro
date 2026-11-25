@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { generateCandles, liveCandle, fmtINR, fmtPrice, type Timeframe } from "@/lib/market/engine";
 import { useMarket } from "@/hooks/use-market";
-import { TIMEFRAMES } from "@/lib/market/engine";
+import { TIMEFRAMES, STOCKS } from "@/lib/market/engine";
 import TopBar from "./top-bar";
 import TickerTape from "./ticker-tape";
 import WorkspaceTabs, { type Workspace } from "./workspace-tabs";
@@ -71,11 +71,13 @@ export default function Terminal() {
 
   const handleApplyAiLevels = useCallback(
     (appliedSide: "BUY" | "SELL", sl: number, tgt: number) => {
+      const def = STOCKS.find((s) => s.symbol === symbol);
+      const currSym = def?.currency === "USD" ? "$" : "₹";
       setOrderSide(appliedSide);
       setPrefilledBracket({ sl, tgt, side: appliedSide });
       toast({
         title: `⚡ AI Setup Applied to Order Ticket`,
-        description: `${symbol} ${appliedSide} · Target ₹${tgt} | Stop Loss ₹${sl}`,
+        description: `${symbol} ${appliedSide} · Target ${currSym}${tgt} | Stop Loss ${currSym}${sl}`,
       });
     },
     [symbol, toast]

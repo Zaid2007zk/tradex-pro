@@ -82,6 +82,15 @@ export default function OrderTicket({ symbol, quote, balance, onExecute, default
   const [limit, setLimit] = useState(quote.price);
   const { toast } = useToast();
 
+  // Reset limit price & bracket state when switching stocks
+  useEffect(() => {
+    setLimit(quote.price);
+    setIsBracket(false);
+    setStopLoss(undefined);
+    setTakeProfit(undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [symbol]);
+
   const price = orderType === "MARKET" ? quote.price : limit;
   const leverage = product === "MIS" ? 5 : product === "MTF" ? 4 : 1;
   const total = price * qty;

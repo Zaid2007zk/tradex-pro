@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { BrainCircuit, Sparkles, Zap, Target, ShieldAlert, ArrowUpRight, ArrowDownRight } from "lucide-react";
-import { computeSignals, type Candle } from "@/lib/market/engine";
+import { computeSignals, STOCKS, type Candle } from "@/lib/market/engine";
 
 type Props = {
   symbol: string;
@@ -12,6 +12,8 @@ type Props = {
 
 export default function AiPanel({ symbol, candles, onApplyLevels }: Props) {
   const sig = useMemo(() => computeSignals(candles), [candles]);
+  const def = useMemo(() => STOCKS.find((s) => s.symbol === symbol) || STOCKS[0], [symbol]);
+  const currSym = def.currency === "USD" ? "$" : "₹";
 
   const verdictColor =
     sig.score >= 25
@@ -128,7 +130,7 @@ export default function AiPanel({ symbol, candles, onApplyLevels }: Props) {
               </span>
               <span className="text-[8px] text-emerald-400/50 group-hover:text-emerald-300">+2.5%</span>
             </div>
-            <div className="mt-1 font-bold text-emerald-300 text-[12px]">₹{target}</div>
+            <div className="mt-1 font-bold text-emerald-300 text-[12px]">{currSym}{target}</div>
           </button>
 
           <button
@@ -143,7 +145,7 @@ export default function AiPanel({ symbol, candles, onApplyLevels }: Props) {
               </span>
               <span className="text-[8px] text-rose-400/50 group-hover:text-rose-300">−1.5%</span>
             </div>
-            <div className="mt-1 font-bold text-rose-300 text-[12px]">₹{stopLoss}</div>
+            <div className="mt-1 font-bold text-rose-300 text-[12px]">{currSym}{stopLoss}</div>
           </button>
         </div>
 
