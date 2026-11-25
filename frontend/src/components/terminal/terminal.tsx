@@ -409,9 +409,9 @@ export default function Terminal() {
                   </div>
                 </div>
 
-                {/* Bottom Tabs (Positions & Orders - Compact height for maximum chart view) */}
+                {/* Bottom Tabs (Positions & Orders - Balanced height for clear visibility of tables & trades) */}
                 {!chartExpanded && (
-                  <div className="h-28 xl:h-32 shrink-0 overflow-hidden">
+                  <div className="h-44 xl:h-48 2xl:h-52 shrink-0 overflow-hidden">
                     <BottomTabs positions={livePositions} orders={orders} />
                   </div>
                 )}

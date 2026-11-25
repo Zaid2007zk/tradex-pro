@@ -16,7 +16,7 @@ export default function SymbolHeader({ symbol, quote, candles }: { symbol: strin
   const sig = useMemo(() => (candles && candles.length ? computeSignals(candles) : null), [candles]);
 
   return (
-    <div className="flex items-center justify-between gap-x-4 gap-y-1 px-3 py-1.5 overflow-x-auto tx-scroll flex-nowrap shrink-0">
+    <div className="flex items-center justify-between gap-x-3 gap-y-1 px-3 py-1.5 overflow-hidden flex-nowrap shrink-0">
       {/* identity + price */}
       <div className="flex items-center gap-2.5 shrink-0">
         <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[9.5px] font-bold text-amber-300">
@@ -77,7 +77,7 @@ export default function SymbolHeader({ symbol, quote, candles }: { symbol: strin
       </div>
 
       {/* day range */}
-      <div className="hidden lg:block min-w-36 max-w-56 flex-1 shrink-0">
+      <div className="hidden xl:block min-w-28 max-w-44 flex-1 shrink-0">
         <div className="mb-0.5 flex items-center justify-between font-mono text-[9px] text-white/40">
           <span>L {def.currency === "USD" ? "$" : "₹"}{fmtPrice(quote.dayLow)}</span>
           <span className="uppercase tracking-wider">Day Range</span>
@@ -92,7 +92,7 @@ export default function SymbolHeader({ symbol, quote, candles }: { symbol: strin
       </div>
 
       {/* stats */}
-      <div className="hidden items-center gap-5 md:flex">
+      <div className="hidden items-center gap-4 2xl:flex">
         <Stat icon={<Layers className="h-3.5 w-3.5" />} label="Volume" value={fmtCompact(quote.volume)} />
         <Stat icon={<Gauge className="h-3.5 w-3.5" />} label="Prev Close" value={fmtPrice(quote.prevClose)} />
         <Stat icon={<Eye className="h-3.5 w-3.5" />} label="Mkt Cap" value={`₹${fmtCompact(def.capCr)} Cr`} />
