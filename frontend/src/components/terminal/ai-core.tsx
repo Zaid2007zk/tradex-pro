@@ -8,6 +8,7 @@ import Autopilot from "./autopilot";
 
 type Msg = { role: "user" | "aria"; text: string };
 type Tab = "chat" | "ideas" | "news" | "report" | "autopilot";
+type AiLanguage = "english" | "hinglish" | "hindi";
 
 /* minimal typings for the browser SpeechRecognition API (Chrome/Edge) */
 type SpeechRec = {
@@ -215,7 +216,8 @@ export default function AiCore({
   const [reportBusy, setReportBusy] = useState(false);
   const [reportErr, setReportErr] = useState<string | null>(null);
 
-  // voice state
+  // voice & language state
+  const [lang, setLang] = useState<AiLanguage>("hinglish");
   const [voiceOut, setVoiceOut] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [micState, setMicState] = useState<"idle" | "listening" | "processing">("idle");
@@ -229,6 +231,19 @@ export default function AiCore({
       typeof window !== "undefined" &&
         ("SpeechRecognition" in window || "webkitSpeechRecognition" in window)
     );
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("tradex_ai_lang") as AiLanguage | null;
+      if (saved === "english" || saved === "hinglish" || saved === "hindi") {
+        setLang(saved);
+      }
+    }
+  }, []);
+
+  const changeLang = useCallback((next: AiLanguage) => {
+    setLang(next);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("tradex_ai_lang", next);
+    }
   }, []);
 
   const priceSnapshot = useCallback(
@@ -240,29 +255,35 @@ export default function AiCore({
     chatRef.current?.scrollTo({ top: 999999, behavior: "smooth" });
   }, [msgs, chatBusy]);
 
-  const speakWithBrowser = useCallback((cleanText: string) => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-      setSpeaking(false);
-      return;
-    }
-    try {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-      const voices = window.speechSynthesis.getVoices();
-      const preferred =
-        voices.find((v) => v.lang.includes("en-IN")) ||
-        voices.find((v) => v.lang.includes("en-GB")) ||
-        voices.find((v) => v.lang.includes("en"));
-      if (preferred) utterance.voice = preferred;
-      utterance.rate = 1.05;
-      utterance.pitch = 1.0;
-      utterance.onend = () => setSpeaking(false);
-      utterance.onerror = () => setSpeaking(false);
-      window.speechSynthesis.speak(utterance);
-    } catch {
-      setSpeaking(false);
-    }
-  }, []);
+  const speakWithBrowser = useCallback(
+    (cleanText: string) => {
+      if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+        setSpeaking(false);
+        return;
+      }
+      try {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = lang === "hindi" ? "hi-IN" : "en-IN";
+        const voices = window.speechSynthesis.getVoices();
+        const preferred =
+          lang === "hindi"
+            ? voices.find((v) => v.lang.includes("hi-IN")) || voices.find((v) => v.lang.includes("en-IN"))
+            : voices.find((v) => v.lang.includes("en-IN")) ||
+              voices.find((v) => v.lang.includes("en-GB")) ||
+              voices.find((v) => v.lang.includes("en"));
+        if (preferred) utterance.voice = preferred;
+        utterance.rate = 1.05;
+        utterance.pitch = 1.0;
+        utterance.onend = () => setSpeaking(false);
+        utterance.onerror = () => setSpeaking(false);
+        window.speechSynthesis.speak(utterance);
+      } catch {
+        setSpeaking(false);
+      }
+    },
+    [lang]
+  );
 
   const speak = useCallback(
     async (text: string) => {
@@ -324,7 +345,7 @@ export default function AiCore({
     setMicErr(null);
     setMicState("listening");
     const rec = new Ctor();
-    rec.lang = "en-IN";
+    rec.lang = lang === "hindi" ? "hi-IN" : "en-IN";
     rec.interimResults = false;
     rec.maxAlternatives = 1;
     rec.onresult = (e) => {
@@ -337,7 +358,7 @@ export default function AiCore({
     rec.onend = () => setMicState("idle");
     rec.onerror = () => setMicState("idle");
     rec.start();
-  }, [micState]);
+  }, [micState, lang]);
 
   const sendChat = async (text: string) => {
     const q = text.trim();
@@ -348,7 +369,7 @@ export default function AiCore({
     setMsgs((m) => [...m, { role: "user", text: q }]);
     setChatBusy(true);
     try {
-      const data = await callAi({ task: "chat", question: q, history, symbol, prices: priceSnapshot() });
+      const data = await callAi({ task: "chat", question: q, history, symbol, prices: priceSnapshot(), language: lang });
       const reply = data.text ?? "…";
       setMsgs((m) => [...m, { role: "aria", text: reply }]);
       if (voiceOutRef.current) void speak(reply);
@@ -528,8 +549,29 @@ export default function AiCore({
                   </div>
                 )}
               </div>
-              <div className="flex items-center justify-between px-3.5 pb-1">
-                <span className="text-[9px] font-semibold uppercase tracking-wider text-white/30">Voice mode</span>
+              <div className="flex flex-wrap items-center justify-between gap-2 px-3.5 pb-1.5">
+                <div className="flex items-center gap-1 rounded-full border border-white/10 bg-white/4 p-0.5">
+                  {(
+                    [
+                      { key: "english", label: "English" },
+                      { key: "hinglish", label: "Hinglish" },
+                      { key: "hindi", label: "हिन्दी" },
+                    ] as const
+                  ).map((item) => (
+                    <button
+                      key={item.key}
+                      type="button"
+                      onClick={() => changeLang(item.key)}
+                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold transition ${
+                        lang === item.key
+                          ? "bg-fuchsia-500/25 text-fuchsia-200 border border-fuchsia-500/40"
+                          : "text-white/45 hover:text-white/80"
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
                 <button
                   type="button"
                   onClick={toggleVoice}

@@ -4,6 +4,7 @@ import { STOCKS, INDICES, generateCandles, liveCandle, computeSignals, computeIn
 export const maxDuration = 60;
 
 type Task = "chat" | "ideas" | "news" | "report" | "test-key";
+type Language = "english" | "hinglish" | "hindi";
 type ChatMsg = { role: "user" | "assistant" | "system"; content: string };
 
 // -----------------------------------------------------------------------------
@@ -306,7 +307,8 @@ function generateAutonomousResponse(
   task: Task,
   question: string,
   symbol: string,
-  prices: Record<string, number>
+  prices: Record<string, number>,
+  language?: Language
 ) {
   const targetStock = extractTargetStock(question, symbol);
   const px = prices[targetStock.symbol] || targetStock.base;
@@ -316,7 +318,12 @@ function generateAutonomousResponse(
   const chgPct = ((px - prevClose) / prevClose) * 100;
   const sig = computeSignals(candles);
 
-  const isHindi = /[क-ह]|bhai|kya|kare|karu|krne|karna|konsa|sahi|hai|nhi|chahiye|bataye|batao|kharidu|bechu|rok|kaisa|kesa|rahega|lena|lu|milega|kitna|accha|acha/i.test(question);
+  const detectedHindiScript = /[क-ह]/.test(question);
+  const detectedHinglish = /bhai|kya|kare|karu|krne|karna|konsa|sahi|hai|nhi|chahiye|bataye|batao|kharidu|bechu|rok|kaisa|kesa|rahega|lena|lu|milega|kitna|accha|acha/i.test(question);
+  const effectiveLang: Language =
+    language || (detectedHindiScript ? "hindi" : detectedHinglish ? "hinglish" : "english");
+  const isPureHindi = effectiveLang === "hindi";
+  const isHindi = effectiveLang === "hinglish";
   const isOverbought = sig.rsi > 68;
   const isOversold = sig.rsi < 35;
 
@@ -329,12 +336,23 @@ function generateAutonomousResponse(
     const qLower = question.toLowerCase();
 
     // 1. Intent: Full market brief in 5 bullets
-    if (/market brief|brief in 5|overall market|nifty kaisa|aaj ka market/i.test(qLower)) {
+    if (/market brief|brief in 5|overall market|nifty kaisa|aaj ka market|बाजार/i.test(qLower)) {
       const nifty = INDICES[0];
       const sensex = INDICES[2];
       const bankNifty = INDICES[1];
       const advCount = STOCKS.filter((s) => (prices[s.symbol] ?? s.base) >= s.base).length;
       const decCount = STOCKS.length - advCount;
+
+      if (isPureHindi) {
+        return (
+          `### 📊 ट्रेडएक्स मार्केट ब्रीफ (5 मुख्य बिंदु)\n\n` +
+          `• **1. मुख्य इंडेक्स:** निफ्टी 50 अभी **${Math.round(nifty.base).toLocaleString("en-IN")}** के आसपास और सेंसेक्स **${Math.round(sensex.base).toLocaleString("en-IN")}** पर कारोबार कर रहा है।\n` +
+          `• **2. मार्केट ब्रेड्थ:** प्रमुख शेयरों में **${advCount} बढ़त / ${decCount} गिरावट** के साथ संतुलित भागीदारी दिख रही है।\n` +
+          `• **3. सेक्टर लीडरशिप:** बैंकिंग (${bankNifty.name} **${Math.round(bankNifty.base).toLocaleString("en-IN")}** पर) और लार्ज-कैप आईटी सेक्टर बाजार को दिशा दे रहे हैं।\n` +
+          `• **4. मुख्य स्तर:** निफ्टी का नजदीकी रेजिस्टेंस **${Math.round(nifty.base * 1.008)}** और मजबूत सपोर्ट **${Math.round(nifty.base * 0.992)}** पर है।\n` +
+          `• **5. क्वांट सलाह:** बाजार का रुझान मजबूत है — गिरावट पर खरीदारी (Buy-on-Dips) और सख्त स्टॉप-लॉस के साथ ट्रेड करें।`
+        );
+      }
 
       if (isHindi) {
         return (
@@ -358,10 +376,19 @@ function generateAutonomousResponse(
     }
 
     // 2. Intent: Riskiest stock today
-    if (/riskiest|most risky|high risk|volatil/i.test(qLower)) {
+    if (/riskiest|most risky|high risk|volatil|जोखिम/i.test(qLower)) {
       const sorted = [...STOCKS].sort((a, b) => b.volatility - a.volatility);
       const topRisky = sorted[0];
       const secondRisky = sorted[1];
+
+      if (isPureHindi) {
+        return (
+          `### ⚠️ हाई-रिस्क वोलैटिलिटी अलर्ट: आज के सबसे जोखिम भरे शेयर\n\n` +
+          `• **#1 सबसे ज्यादा उतार-चढ़ाव:** **${topRisky.symbol}** (${topRisky.name}) — इसका वोलैटिलिटी फैक्टर **${topRisky.volatility.toFixed(1)}x** है, जिसमें तेज मूवमेंट आता है।\n` +
+          `• **#2 दूसरा जोखिम भरा शेयर:** **${secondRisky.symbol}** (${secondRisky.name}) **${secondRisky.volatility.toFixed(1)}x** वोलैटिलिटी के साथ।\n\n` +
+          `💡 जोखिम सलाह: ऐसे शेयरों में अपनी पूंजी का अधिकतम 1-2% ही जोखिम लें और हमेशा स्टॉप-लॉस लगाएं।`
+        );
+      }
 
       if (isHindi) {
         return (
@@ -381,7 +408,17 @@ function generateAutonomousResponse(
     }
 
     // 3. Intent: Intraday plan
-    if (/intraday plan|intraday strategy|day trading|intraday setup/i.test(qLower)) {
+    if (/intraday plan|intraday strategy|day trading|intraday setup|इंट्राडे/i.test(qLower)) {
+      if (isPureHindi) {
+        return (
+          `### ⚡ ट्रेडएक्स इंट्राडे ट्रेडिंग प्लान\n\n` +
+          `• **चरण 1 (09:15 - 09:30 AM):** 15 मिनट की ओपनिंग रेंज (ORH/ORL) मार्क करें। शुरुआती 15 मिनट में जल्दबाजी से बचें।\n` +
+          `• **चरण 2 (ब्रेकआउट कन्फर्मेशन):** जब 5 मिनट की कैंडल 1.5x वॉल्यूम और RSI > 55 के साथ रेंज तोड़े, तभी ट्रेड लें।\n` +
+          `• **चरण 3 (एक्जीक्यूशन):** ऑर्डर टिकट से 5x MIS मार्जिन चुनें और तुरंत स्टॉप-लॉस लगाएं।\n` +
+          `• **चरण 4 (लक्ष्य और जोखिम):** 1:2 रिस्क-रिवार्ड अनुपात रखें — लक्ष्य +2.0% से +2.5% और स्टॉप-लॉस -1.0% पर सेट करें।`
+        );
+      }
+
       if (isHindi) {
         return (
           `### ⚡ TradeX Institutional Intraday Execution Playbook\n\n` +
@@ -402,7 +439,18 @@ function generateAutonomousResponse(
     }
 
     // 4. Intent: Buy / Entry timing specifically
-    if (/buy|kharid|entry|best time|kab lena|lena chahiye|timing|kab buy|kab enter/i.test(qLower)) {
+    if (/buy|kharid|entry|best time|kab lena|lena chahiye|timing|kab buy|kab enter|खरीद/i.test(qLower)) {
+      if (isPureHindi) {
+        return (
+          `### ⏰ खरीदारी का सही समय और स्तर: ${targetStock.symbol} (${targetStock.name})\n\n` +
+          `• **1. सही ट्रेडिंग समय:** इंट्राडे के लिए **09:45 AM - 10:45 AM** और **01:30 PM - 02:45 PM** सबसे बेहतर समय है। शुरुआती अस्थिरता से बचें।\n` +
+          `• **2. मौजूदा कीमत (LTP):** ₹${px.toFixed(2)} (${chgPct >= 0 ? "+" : ""}${chgPct.toFixed(2)}%) · RSI स्तर ${sig.rsi.toFixed(1)} (${isOverbought ? "ओवरबॉट चेतावनी — थोड़ा नीचे आने का इंतजार करें" : isOversold ? "ओवरसोल्ड — बाउंस की संभावना" : "संतुलित मोमेंटम"})।\n` +
+          `• **3. उचित एंट्री ज़ोन:** ₹${pullbackEntry} से ₹${px.toFixed(2)} के बीच एंट्री बेहतर रहेगी।\n` +
+          `• **4. लक्ष्य और स्टॉप-लॉस:** टारगेट 1: **₹${target1}** (+2.5%) | टारगेट 2: **₹${target2}** (+4.5%) | सख्त स्टॉप-लॉस: **₹${stopLoss}** (-1.5%)।\n\n` +
+          `निर्णय: **${sig.verdict.toUpperCase()}**। ऑर्डर टिकट से 1-क्लिक में ट्रेड कर सकते हैं।`
+        );
+      }
+
       if (isHindi) {
         if (isOverbought) {
           return (
@@ -446,6 +494,19 @@ function generateAutonomousResponse(
     }
 
     // 5. Default General Inquiry about targetStock (e.g. "tell me about TCS", "TCS kaisa hai", "analyze INFY")
+    if (isPureHindi) {
+      return (
+        `### 🤖 ARIA क्वांट विश्लेषण: ${targetStock.symbol} (${targetStock.name})\n\n` +
+        `• **मौजूदा कीमत (LTP):** ₹${px.toFixed(2)} (${chgPct >= 0 ? "+" : ""}${chgPct.toFixed(2)}% आज) · सेक्टर: **${targetStock.sector}**।\n` +
+        `• **ट्रेंड और मूविंग एवरेज:** कीमत 50-SMA के **${sig.aboveMa50 ? "ऊपर मजबूत है" : "नीचे कंसोलिडेट कर रही है"}**।\n` +
+        `• **तकनीकी मोमेंटम:** RSI **${sig.rsi.toFixed(1)}** · MACD **${sig.macdBull ? "बुलिश (सकारात्मक)" : "न्यूट्रल/मंदा"}** है।\n` +
+        `• **खरीदारी ज़ोन:** ₹${pullbackEntry} - ₹${px.toFixed(2)}।\n` +
+        `• **मुख्य स्तर:** टारगेट: **₹${target1}** (+2.5%) | स्टॉप-लॉस: **₹${stopLoss}** (-1.5%)।\n` +
+        `• **निर्णय:** ${sig.verdict.toUpperCase()} सेटअप। आप ऑर्डर टिकट से CNC या MIS ऑर्डर लगा सकते हैं।\n\n` +
+        `⚠️ अस्वीकरण: यह विश्लेषण केवल शैक्षिक पेपर-ट्रेडिंग सिमुलेशन के लिए है।`
+      );
+    }
+
     if (isHindi) {
       return (
         `### 🤖 ARIA Quant Analysis: ${targetStock.symbol} (${targetStock.name})\n\n` +
@@ -585,6 +646,7 @@ export async function POST(req: Request) {
     provider?: "groq" | "gemini" | "autonomous" | "zai" | "nvidia";
     apiKey?: string;
     model?: string;
+    language?: Language;
   };
 
   try {
@@ -605,6 +667,16 @@ export async function POST(req: Request) {
   const provider = body.provider ?? "autonomous";
   const apiKey = (body.apiKey || "").trim();
   const model = (body.model || "").trim();
+  const language = body.language;
+
+  const langRule =
+    language === "hindi"
+      ? "CRITICAL LANGUAGE RULE: Reply strictly in natural Hindi using Devanagari script (हिन्दी) with clear market numbers."
+      : language === "hinglish"
+      ? "CRITICAL LANGUAGE RULE: Reply strictly in natural conversational Indian Hinglish (Roman script, e.g. 'Abhi stock ₹846 par trade kar raha hai...')."
+      : language === "english"
+      ? "CRITICAL LANGUAGE RULE: Reply strictly in crisp institutional English."
+      : "Language Protocol: If the user writes in Hindi or Hinglish, reply in natural financial Hinglish/Hindi.";
 
   // Test API key endpoint for modal validation
   if (task === "test-key") {
@@ -662,7 +734,7 @@ Rules:
 - Specific Stock Inquiries: If the user asks about a specific stock (e.g. TCS, INFY, HDFC, SBIN), answer SPECIFICALLY about that stock! Currently the user is asking about: ${symbol} (${targetStock.name}) at CMP ₹${px.toFixed(2)}.
 - Always include suggested Entry, Target, Stop Loss, and Risk/Reward ratio (e.g. 1:1.7).
 - Compliance: Always include educational disclaimer: "For educational paper-trading simulation only. Not registered SEBI investment advice."
-- Language Protocol: If the user writes in Hindi or Hinglish (e.g. 'konsa', 'kya', 'buy krne ka', 'batao', 'kab lena hai', 'sahi time'), YOU MUST ALWAYS REPLY IN NATURAL FINANCIAL HINGLISH/HINDI with exact levels (LTP, Entry, Target, Stop Loss). Never reply in pure English if the user asked in Hinglish!
+- ${langRule}
 - Keep answers tight (max ~180 words) unless a report is requested. Use bullets for clarity.
 - This is a paper trading terminal — mention risk discipline and levels.
 
@@ -710,8 +782,8 @@ ${context}`;
         ]);
         return NextResponse.json({ ok: true, text });
       } catch {
-        // High quality autonomous response calibrated to targetStock
-        const fallback = generateAutonomousResponse("chat", questionRaw, symbol, prices) as string;
+        // High quality autonomous response calibrated to targetStock & language
+        const fallback = generateAutonomousResponse("chat", questionRaw, symbol, prices, language) as string;
         return NextResponse.json({ ok: true, text: fallback });
       }
     }
