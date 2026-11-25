@@ -16,32 +16,32 @@ export default function SymbolHeader({ symbol, quote, candles }: { symbol: strin
   const sig = useMemo(() => (candles && candles.length ? computeSignals(candles) : null), [candles]);
 
   return (
-    <div className="flex items-center justify-between gap-x-3 gap-y-1 px-3 py-1.5 overflow-hidden flex-nowrap shrink-0">
-      {/* identity + price */}
-      <div className="flex items-center gap-2.5 shrink-0">
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[9.5px] font-bold text-amber-300">
+    <div className="flex items-center justify-between gap-x-2 gap-y-1 px-3 py-1.5 overflow-hidden flex-nowrap shrink-0">
+      {/* identity + symbol + badges */}
+      <div className="flex items-center gap-2.5 min-w-0 shrink">
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[9.5px] font-bold text-amber-300 shrink-0">
           {def.symbol.slice(0, 4)}
         </div>
-        <div>
-          <div className="flex items-center gap-1.5">
-            <h1 className="text-[14px] font-bold tracking-tight">{symbol}</h1>
-            <span className="rounded border border-white/12 bg-white/6 px-1.5 py-0.5 text-[8.5px] font-bold tracking-wider text-white/55">
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5 flex-nowrap">
+            <h1 className="text-[14px] font-bold tracking-tight shrink-0">{symbol}</h1>
+            <span className="rounded border border-white/12 bg-white/6 px-1.5 py-0.5 text-[8.5px] font-bold tracking-wider text-white/55 shrink-0">
               {def.exchange || "NSE"}
             </span>
-            <span className="rounded border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-0.5 text-[8.5px] font-bold tracking-wider text-emerald-300">
+            <span className="rounded border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-0.5 text-[8.5px] font-bold tracking-wider text-emerald-300 shrink-0">
               {def.exchange === "CRYPTO" ? "SPOT" : def.exchange === "MCX" ? "COMMODITY" : def.exchange === "FOREX" ? "CDS" : def.exchange === "GLOBAL" ? "US TECH" : def.exchange === "BONDS" ? "G-SEC" : "EQ"}
             </span>
-            <span className={`hidden sm:flex items-center gap-1 rounded border px-1.5 py-0.5 text-[8.5px] font-bold tracking-wider ${marketStatus.badgeClass}`}>
+            <span className={`hidden sm:inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[8.5px] font-bold tracking-wider shrink-0 ${marketStatus.badgeClass}`}>
               <span className={`h-1.5 w-1.5 rounded-full ${marketStatus.isOpen ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
-              {marketStatus.label}
+              {marketStatus.isOpen ? "OPEN" : "CLOSED"}
             </span>
             {isHalal ? (
-              <span className="hidden sm:inline-block rounded border border-emerald-500/35 bg-emerald-500/15 px-1.5 py-0.5 text-[8.5px] font-bold tracking-wider text-emerald-300">
+              <span className="hidden xl:inline-block rounded border border-emerald-500/35 bg-emerald-500/15 px-1.5 py-0.5 text-[8.5px] font-bold tracking-wider text-emerald-300 shrink-0">
                 ✓ HALAL
               </span>
             ) : null}
             {sig && (
-              <span className="hidden md:flex items-center gap-1 rounded border border-purple-500/35 bg-purple-500/15 px-1.5 py-0.5 text-[8.5px] font-bold tracking-wider text-purple-200">
+              <span className="hidden 2xl:inline-flex items-center gap-1 rounded border border-purple-500/35 bg-purple-500/15 px-1.5 py-0.5 text-[8.5px] font-bold tracking-wider text-purple-200 shrink-0">
                 <Sparkles className="h-2.5 w-2.5 text-purple-400" />
                 <span className="text-white/50">AI:</span>
                 <span className={sig.verdict.includes("BUY") ? "text-emerald-300 font-bold" : sig.verdict.includes("SELL") ? "text-rose-300 font-bold" : "text-amber-300 font-bold"}>
@@ -51,23 +51,24 @@ export default function SymbolHeader({ symbol, quote, candles }: { symbol: strin
               </span>
             )}
           </div>
-          <div className="text-[10px] text-white/45">
+          <div className="text-[10px] text-white/45 truncate">
             {def.name} · {def.sector}
           </div>
         </div>
       </div>
 
-      <div className="flex items-end gap-2 shrink-0">
+      {/* price + % change - ALWAYS visible on right */}
+      <div className="flex items-baseline gap-2 shrink-0 ml-auto">
         <div
           key={quote.price}
-          className={`rounded px-1 font-mono text-[20px] xl:text-[24px] font-bold leading-none tracking-tight tabular-nums ${
+          className={`rounded px-1 font-mono text-[18px] xl:text-[22px] font-bold leading-none tracking-tight tabular-nums ${
             quote.tickDir === 1 ? "tx-flash-up text-emerald-400" : quote.tickDir === -1 ? "tx-flash-down text-rose-400" : "text-white"
           }`}
         >
           {def.currency === "USD" ? "$" : "₹"}{fmtPrice(quote.price)}
         </div>
         <div
-          className={`mb-0.5 flex items-center gap-0.5 rounded-md px-1.5 py-0.5 font-mono text-[11px] font-semibold tabular-nums ${
+          className={`flex items-center gap-0.5 rounded px-1.5 py-0.5 font-mono text-[10.5px] font-semibold tabular-nums ${
             up ? "bg-emerald-500/12 text-emerald-400" : "bg-rose-500/12 text-rose-400"
           }`}
         >
@@ -77,7 +78,7 @@ export default function SymbolHeader({ symbol, quote, candles }: { symbol: strin
       </div>
 
       {/* day range */}
-      <div className="hidden xl:block min-w-28 max-w-44 flex-1 shrink-0">
+      <div className="hidden 2xl:block min-w-28 max-w-40 flex-1 shrink-0 ml-2">
         <div className="mb-0.5 flex items-center justify-between font-mono text-[9px] text-white/40">
           <span>L {def.currency === "USD" ? "$" : "₹"}{fmtPrice(quote.dayLow)}</span>
           <span className="uppercase tracking-wider">Day Range</span>

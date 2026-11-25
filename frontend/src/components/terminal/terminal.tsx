@@ -276,14 +276,14 @@ export default function Terminal() {
       </div>
 
       {/* 5. Main Content Area */}
-      <main className="flex min-h-0 flex-1 flex-col gap-1.5 p-1.5 lg:flex-row lg:h-full lg:overflow-hidden">
+      <main className="flex min-h-0 flex-1 flex-col gap-1.5 p-1.5 lg:flex-row lg:overflow-hidden">
         {/* ========================================================================= */}
         {/* A. DESKTOP / LAPTOP LAYOUT (Width >= 1024px)                                */}
         {/* ========================================================================= */}
         <div className="hidden lg:contents">
           {/* Left Rail (Watchlist) with Smooth Collapse / Expand */}
           <div
-            className={`transition-all duration-300 ease-in-out shrink-0 flex flex-col h-full min-h-0 overflow-hidden ${
+            className={`transition-all duration-300 ease-in-out shrink-0 flex flex-col min-h-0 overflow-hidden ${
               leftRailCollapsed ? "w-11 items-center" : "w-60 xl:w-72 2xl:w-80"
             }`}
           >
@@ -315,7 +315,7 @@ export default function Terminal() {
           </div>
 
           {/* Center Column (Chart & Bottom Tabs OR Specialized Workspace) */}
-          <section className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-hidden pr-0.5">
+          <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-hidden pr-0.5">
             {workspace === "terminal" ? (
               <>
                 <div className="tx-panel shrink-0">
@@ -327,7 +327,7 @@ export default function Terminal() {
                   className={`tx-panel flex flex-col overflow-hidden transition-all duration-200 ${
                     chartExpanded
                       ? "flex-1 min-h-0"
-                      : "flex-1 min-h-[200px]"
+                      : "flex-1 min-h-[140px]"
                   }`}
                 >
                   <div className="tx-panel-head flex items-center justify-between px-3 py-2 shrink-0">
@@ -409,9 +409,9 @@ export default function Terminal() {
                   </div>
                 </div>
 
-                {/* Bottom Tabs (Positions & Orders - Balanced height for clear visibility of tables & trades) */}
+                {/* Bottom Tabs (Positions & Orders - Perfectly balanced height for full visibility) */}
                 {!chartExpanded && (
-                  <div className="h-44 xl:h-48 2xl:h-52 shrink-0 overflow-hidden">
+                  <div className="h-36 xl:h-40 2xl:h-44 shrink-0 overflow-hidden">
                     <BottomTabs positions={livePositions} orders={orders} />
                   </div>
                 )}
@@ -434,7 +434,7 @@ export default function Terminal() {
 
           {/* Right Rail (Order Ticket, Depth, AI) with Collapse Toggle */}
           <div
-            className={`transition-all duration-300 ease-in-out shrink-0 flex flex-col h-full min-h-0 overflow-hidden ${
+            className={`transition-all duration-300 ease-in-out shrink-0 flex flex-col min-h-0 overflow-hidden ${
               rightRailCollapsed ? "w-11 items-center" : "w-72 xl:w-80 2xl:w-88"
             }`}
           >

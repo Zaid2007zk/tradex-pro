@@ -69,7 +69,7 @@ export default function BottomTabs({ positions, orders }: Props) {
                 })}
                 {positions.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-3 py-3 text-center font-sans text-[11px] text-white/35">
+                    <td colSpan={6} className="px-3 py-2 text-center font-sans text-[10.5px] text-white/40">
                       No open positions — execute an order to start paper trading
                     </td>
                   </tr>
@@ -118,7 +118,7 @@ export default function BottomTabs({ positions, orders }: Props) {
                 ))}
                 {orders.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-3 py-3 text-center font-sans text-[11px] text-white/35">
+                    <td colSpan={6} className="px-3 py-2 text-center font-sans text-[10.5px] text-white/40">
                       Executed orders will appear here
                     </td>
                   </tr>
