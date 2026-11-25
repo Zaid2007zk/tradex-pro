@@ -302,14 +302,12 @@ export default function Terminal() {
               </div>
             ) : (
               <div className="relative h-full min-h-0 flex flex-col overflow-hidden">
-                <button
-                  onClick={() => setLeftRailCollapsed(true)}
-                  title="Collapse Watchlist"
-                  className="absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded border border-white/10 bg-white/5 text-white/50 hover:bg-white/15 hover:text-white transition"
-                >
-                  <ChevronLeft className="h-3.5 w-3.5" />
-                </button>
-                <Watchlist quotes={quotes} selected={symbol} onSelect={handleSelectSymbol} />
+                <Watchlist
+                  quotes={quotes}
+                  selected={symbol}
+                  onSelect={handleSelectSymbol}
+                  onCollapse={() => setLeftRailCollapsed(true)}
+                />
               </div>
             )}
           </div>
@@ -453,23 +451,15 @@ export default function Terminal() {
               </div>
             ) : (
               <aside className="tx-scroll relative flex h-full min-h-0 w-full flex-col gap-1.5 overflow-y-auto pb-4">
-                <div className="relative">
-                  <button
-                    onClick={() => setRightRailCollapsed(true)}
-                    title="Collapse Trade Panel"
-                    className="absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded border border-white/10 bg-white/5 text-white/50 hover:bg-white/15 hover:text-white transition"
-                  >
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </button>
-                  <OrderTicket
-                    symbol={symbol}
-                    quote={quote}
-                    balance={balance}
-                    onExecute={onExecute}
-                    defaultSide={orderSide}
-                    candles={candles}
-                  />
-                </div>
+                <OrderTicket
+                  symbol={symbol}
+                  quote={quote}
+                  balance={balance}
+                  onExecute={onExecute}
+                  defaultSide={orderSide}
+                  candles={candles}
+                  onCollapse={() => setRightRailCollapsed(true)}
+                />
                 <MarketDepth price={quote.price} />
                 <AiPanel symbol={symbol} candles={candles} />
               </aside>

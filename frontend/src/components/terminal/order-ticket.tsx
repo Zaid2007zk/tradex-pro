@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Minus, Plus, Zap, Sparkles, Target, ShieldAlert } from "lucide-react";
+import { Minus, Plus, Zap, Sparkles, Target, ShieldAlert, ChevronRight } from "lucide-react";
 import { STOCKS, fmtINR, fmtPrice, r2, computeSignals, type Candle } from "@/lib/market/engine";
 import type { Quote } from "@/hooks/use-market";
 import { useToast } from "@/hooks/use-toast";
@@ -33,6 +33,7 @@ type Props = {
   onExecute: (o: Omit<Order, "id" | "ts">) => void;
   defaultSide?: "BUY" | "SELL";
   candles?: Candle[];
+  onCollapse?: () => void;
 };
 
 const PRODUCTS: { key: ProductType; hint: string }[] = [
@@ -41,7 +42,7 @@ const PRODUCTS: { key: ProductType; hint: string }[] = [
   { key: "MTF", hint: "Margin · 4x" },
 ];
 
-export default function OrderTicket({ symbol, quote, balance, onExecute, defaultSide = "BUY", candles }: Props) {
+export default function OrderTicket({ symbol, quote, balance, onExecute, defaultSide = "BUY", candles, onCollapse }: Props) {
   const def = STOCKS.find((s) => s.symbol === symbol) || STOCKS[0];
   const currSym = def.currency === "USD" ? "$" : "₹";
   const [side, setSide] = useState<"BUY" | "SELL">(defaultSide);
@@ -113,7 +114,18 @@ export default function OrderTicket({ symbol, quote, balance, onExecute, default
     <div className="tx-panel flex shrink-0 flex-col">
       <div className="tx-panel-head flex items-center justify-between px-3 py-1.5">
         <span className="text-[12px] font-semibold tracking-wide">Order Ticket</span>
-        <span className="font-mono text-[10px] text-white/40">{symbol}</span>
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-[10px] text-white/40">{symbol}</span>
+          {onCollapse && (
+            <button
+              onClick={onCollapse}
+              title="Collapse Trade Panel"
+              className="flex h-5 w-5 items-center justify-center rounded border border-white/10 bg-white/5 text-white/50 hover:bg-white/15 hover:text-white transition"
+            >
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* BUY / SELL segmented */}

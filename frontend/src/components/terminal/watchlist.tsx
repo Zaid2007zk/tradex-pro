@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CalendarDays, ChevronDown, Clock, TrendingDown, TrendingUp } from "lucide-react";
+import { CalendarDays, ChevronDown, ChevronLeft, Clock, TrendingDown, TrendingUp } from "lucide-react";
 import { STOCKS, fmtPct, fmtPrice } from "@/lib/market/engine";
 import type { Quote } from "@/hooks/use-market";
 import Sparkline from "./sparkline";
@@ -11,6 +11,7 @@ type Props = {
   quotes: Record<string, Quote>;
   selected: string;
   onSelect: (s: string) => void;
+  onCollapse?: () => void;
 };
 
 type Mode = "all" | "gainers" | "losers";
@@ -32,7 +33,7 @@ const SEGMENTS: { key: Segment; label: string }[] = [
   { key: "BONDS", label: "Bonds & SGB" },
 ];
 
-export default function Watchlist({ quotes, selected, onSelect }: Props) {
+export default function Watchlist({ quotes, selected, onSelect, onCollapse }: Props) {
   const [mode, setMode] = useState<Mode>("all");
   const [segment, setSegment] = useState<Segment>("ALL");
   const [q, setQ] = useState("");
@@ -63,33 +64,45 @@ export default function Watchlist({ quotes, selected, onSelect }: Props) {
           <span className="text-[12.5px] font-semibold tracking-wide">Watchlist</span>
           <span className="rounded bg-white/8 px-1.5 py-0.5 font-mono text-[9.5px] text-white/50">{STOCKS.length}</span>
         </div>
-        <Popover>
-          <PopoverTrigger asChild>
-            <button className="flex items-center gap-0.5 text-[11px] text-white/45 transition hover:text-white">
-              {segment === "ALL" ? "Markets" : segment} <ChevronDown className="h-3 w-3" />
+        <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-0.5 text-[11px] text-white/45 transition hover:text-white">
+                {segment === "ALL" ? "Markets" : segment} <ChevronDown className="h-3 w-3" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-76 border-white/10 bg-[#0f1219] p-3 shadow-2xl z-50">
+              <div className="flex items-center gap-2 text-[12.5px] font-semibold">
+                <Clock className="h-3.5 w-3.5 text-emerald-400" /> Exchange Trading Sessions
+              </div>
+              <div className="mt-2 space-y-1.5 font-mono text-[11px] text-white/60">
+                <div className="flex justify-between"><span>NSE · BSE Equities</span><span className="text-white/85">09:15 – 15:30 IST</span></div>
+                <div className="flex justify-between"><span>US Markets (NASDAQ/NYSE)</span><span className="text-blue-400">19:00 – 01:30 IST</span></div>
+                <div className="flex justify-between"><span>MCX Commodities & Agri</span><span className="text-amber-400">09:00 – 23:30 IST</span></div>
+                <div className="flex justify-between"><span>Forex CDS & Bonds</span><span className="text-cyan-400">09:00 – 17:00 IST</span></div>
+                <div className="flex justify-between"><span>Crypto 24/7 Markets</span><span className="text-purple-400 font-bold">24 Hours / 7 Days</span></div>
+              </div>
+              <div className="mt-3 flex items-center gap-2 text-[12.5px] font-semibold">
+                <CalendarDays className="h-3.5 w-3.5 text-amber-300" /> Upcoming Holidays
+              </div>
+              <div className="mt-2 space-y-1 font-mono text-[11px] text-white/60">
+                <div className="flex justify-between"><span>Republic Day</span><span className="text-white/85">Jan 26</span></div>
+                <div className="flex justify-between"><span>Independence Day</span><span className="text-white/85">Aug 15</span></div>
+                <div className="flex justify-between"><span>Gandhi Jayanti</span><span className="text-white/85">Oct 02</span></div>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {onCollapse && (
+            <button
+              onClick={onCollapse}
+              title="Collapse Watchlist"
+              className="flex h-5 w-5 items-center justify-center rounded border border-white/10 bg-white/5 text-white/50 hover:bg-white/15 hover:text-white transition"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
             </button>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-76 border-white/10 bg-[#0f1219] p-3 shadow-2xl z-50">
-            <div className="flex items-center gap-2 text-[12.5px] font-semibold">
-              <Clock className="h-3.5 w-3.5 text-emerald-400" /> Exchange Trading Sessions
-            </div>
-            <div className="mt-2 space-y-1.5 font-mono text-[11px] text-white/60">
-              <div className="flex justify-between"><span>NSE · BSE Equities</span><span className="text-white/85">09:15 – 15:30 IST</span></div>
-              <div className="flex justify-between"><span>US Markets (NASDAQ/NYSE)</span><span className="text-blue-400">19:00 – 01:30 IST</span></div>
-              <div className="flex justify-between"><span>MCX Commodities & Agri</span><span className="text-amber-400">09:00 – 23:30 IST</span></div>
-              <div className="flex justify-between"><span>Forex CDS & Bonds</span><span className="text-cyan-400">09:00 – 17:00 IST</span></div>
-              <div className="flex justify-between"><span>Crypto 24/7 Markets</span><span className="text-purple-400 font-bold">24 Hours / 7 Days</span></div>
-            </div>
-            <div className="mt-3 flex items-center gap-2 text-[12.5px] font-semibold">
-              <CalendarDays className="h-3.5 w-3.5 text-amber-300" /> Upcoming Holidays
-            </div>
-            <div className="mt-2 space-y-1 font-mono text-[11px] text-white/60">
-              <div className="flex justify-between"><span>Republic Day</span><span className="text-white/85">Jan 26</span></div>
-              <div className="flex justify-between"><span>Independence Day</span><span className="text-white/85">Aug 15</span></div>
-              <div className="flex justify-between"><span>Gandhi Jayanti</span><span className="text-white/85">Oct 02</span></div>
-            </div>
-          </PopoverContent>
-        </Popover>
+          )}
+        </div>
       </div>
 
       {/* Segment Selector Tabs (NSE, MCX, Forex, Crypto) */}
