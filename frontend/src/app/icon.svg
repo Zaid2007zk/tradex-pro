@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none">
+  <defs>
+    <linearGradient id="txGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE68A" />
+      <stop offset="45%" stop-color="#F59E0B" />
+      <stop offset="100%" stop-color="#B45309" />
+    </linearGradient>
+    <linearGradient id="txGloss" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.12" />
+    </linearGradient>
+  </defs>
+
+  <!-- TradeX PRO Golden Squircle -->
+  <rect x="1" y="1" width="30" height="30" rx="7" fill="url(#txGold)" />
+  <rect x="1" y="1" width="30" height="30" rx="7" fill="url(#txGloss)" />
+  <rect x="1.5" y="1.5" width="29" height="29" rx="6.5" stroke="#FFFBEB" stroke-width="0.8" stroke-opacity="0.7" />
+
+  <!-- Candlestick Chart (TradeX PRO Quantum Terminal Emblem) -->
+  <g fill="#0A0E17" stroke="#0A0E17" stroke-linecap="round">
+    <!-- Candle 1 (Left) -->
+    <line x1="8.5" y1="9" x2="8.5" y2="23" stroke-width="1.8" />
+    <rect x="6.5" y="12" width="4" height="7" rx="0.8" stroke-width="0" />
+
+    <!-- Candle 2 (Center) -->
+    <line x1="16" y1="5.5" x2="16" y2="26.5" stroke-width="1.8" />
+    <rect x="14" y="8" width="4" height="13" rx="0.8" stroke-width="0" />
+
+    <!-- Candle 3 (Right) -->
+    <line x1="23.5" y1="6.5" x2="23.5" y2="20.5" stroke-width="1.8" />
+    <rect x="21.5" y="9.5" width="4" height="8" rx="0.8" stroke-width="0" />
+  </g>
+</svg>
