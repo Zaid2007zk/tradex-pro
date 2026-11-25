@@ -279,17 +279,38 @@ export default function CandleChart({ symbol, candles, timeframe, price }: Props
   const hoverUp = hoverCandle ? hoverCandle.close >= hoverCandle.open : true;
 
   return (
-    <div ref={wrapRef} className="relative h-full w-full" onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
+    <div ref={wrapRef} className="relative h-full w-full select-none" onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
       <canvas ref={canvasRef} className="h-full w-full cursor-crosshair" />
-      <div className="pointer-events-none absolute left-3 top-2 flex flex-wrap items-center gap-2 font-mono text-[10px]">
+
+      {/* Top Legend Bar (TradingView style: clean, horizontal, never covers candles or price axis!) */}
+      <div className="pointer-events-none absolute left-3 top-2 right-[190px] flex items-center gap-3 text-[10.5px] font-mono z-10 overflow-hidden">
         {showMa && (
-          <div className="flex items-center gap-2">
-            <span className="text-amber-400">MA20</span>
-            <span className="text-white/45">MA50</span>
+          <div className="flex items-center gap-1.5 text-[9.5px] shrink-0">
+            <span className="text-amber-400 font-semibold">MA20</span>
+            <span className="text-white/40 font-semibold">MA50</span>
           </div>
         )}
-        {showAiLevels && patternResult && (
-          <div className="flex items-center gap-1.5 rounded border border-purple-500/30 bg-[#0d1016]/90 px-2 py-0.5 text-[9.5px] font-sans font-medium backdrop-blur">
+
+        {/* Live OHLC Bar on Hover (clean, inline, zero-overlap) */}
+        {hover && hoverCandle ? (
+          <div className="flex items-center gap-2.5 text-[10px] tabular-nums shrink-0">
+            <span className="text-white/40">
+              {new Date(hoverCandle.time).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+            </span>
+            <span><span className="text-white/35">O:</span> {hoverCandle.open.toFixed(1)}</span>
+            <span><span className="text-white/35">H:</span> {hoverCandle.high.toFixed(1)}</span>
+            <span><span className="text-white/35">L:</span> {hoverCandle.low.toFixed(1)}</span>
+            <span className={hoverUp ? "text-emerald-400 font-semibold" : "text-rose-400 font-semibold"}>
+              <span className="text-white/35">C:</span> {hoverCandle.close.toFixed(1)}
+            </span>
+            {prev && (
+              <span className={`font-semibold ${hoverUp ? "text-emerald-400" : "text-rose-400"}`}>
+                {hoverUp ? "+" : ""}{(((hoverCandle.close - prev.close) / prev.close) * 100).toFixed(2)}%
+              </span>
+            )}
+          </div>
+        ) : showAiLevels && patternResult ? (
+          <div className="flex items-center gap-1.5 rounded border border-purple-500/30 bg-[#0d1016]/90 px-2 py-0.5 text-[9.5px] font-sans font-medium backdrop-blur shrink-0">
             <Sparkles className="h-3 w-3 text-purple-400 animate-pulse" />
             <span className="text-purple-300 font-semibold">{patternResult.pattern}</span>
             <span
@@ -304,9 +325,11 @@ export default function CandleChart({ symbol, candles, timeframe, price }: Props
               ({patternResult.confidence}%)
             </span>
           </div>
-        )}
+        ) : null}
       </div>
-      <div className="absolute right-[76px] top-2 flex items-center gap-1.5">
+
+      {/* Control Buttons (Right aligned, never obstructed) */}
+      <div className="absolute right-[76px] top-2 flex items-center gap-1.5 z-10">
         <button
           onClick={() => setShowAiLevels((s) => !s)}
           className={`rounded border px-2 py-0.5 text-[10px] font-semibold backdrop-blur transition ${
@@ -325,38 +348,6 @@ export default function CandleChart({ symbol, candles, timeframe, price }: Props
           {showMa ? "Hide MA" : "Show MA"}
         </button>
       </div>
-      {hover && hoverCandle && (
-        <div
-          className="pointer-events-none absolute z-10 rounded-lg border border-white/10 bg-[#0d1016]/95 px-3 py-2 font-mono text-[11px] shadow-xl backdrop-blur"
-          style={{ left: Math.min(hover.x + 14, size.w - 190), top: 12 }}
-        >
-          <div className="mb-1 text-[10px] text-white/50">
-            {new Date(hoverCandle.time).toLocaleString("en-IN", {
-              day: "2-digit",
-              month: "short",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </div>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
-            <span className="text-white/50">O</span>
-            <span className="text-right text-white/85">{hoverCandle.open.toFixed(2)}</span>
-            <span className="text-white/50">H</span>
-            <span className="text-right text-white/85">{hoverCandle.high.toFixed(2)}</span>
-            <span className="text-white/50">L</span>
-            <span className="text-right text-white/85">{hoverCandle.low.toFixed(2)}</span>
-            <span className="text-white/50">C</span>
-            <span className={`text-right ${hoverUp ? "text-emerald-400" : "text-rose-400"}`}>
-              {hoverCandle.close.toFixed(2)}
-            </span>
-          </div>
-          {prev && (
-            <div className={`mt-1 ${hoverUp ? "text-emerald-400" : "text-rose-400"}`}>
-              {(((hoverCandle.close - prev.close) / prev.close) * 100).toFixed(2)}%
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }
