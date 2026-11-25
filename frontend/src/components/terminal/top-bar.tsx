@@ -133,24 +133,47 @@ export default function TopBar({ quotes, onSelect, balance, onOpenAiCore, onOpen
           {marketStatus.label}
         </div>
 
-        {/* Index pills */}
-        <div className="hidden items-center gap-2 xl:flex">
-          {indexData.map(({ idx, value, chgPts, chgPct }) => (
+        {/* Index pills (Smart Responsive: 2 on laptops/desktops, 4 on large 2xl screens) */}
+        <div className="hidden items-center gap-1.5 xl:flex shrink-0">
+          {indexData.slice(0, 2).map(({ idx, value, chgPts, chgPct }) => (
             <div
               key={idx.symbol}
-              className="flex items-center gap-2 rounded-lg border border-white/8 bg-white/3 px-3 py-1.5"
+              className="flex items-center gap-1.5 rounded-lg border border-white/8 bg-white/3 px-2 py-1"
             >
               <div>
-                <div className="text-[9.5px] font-semibold uppercase tracking-wider text-white/45">{idx.name}</div>
-                <div className="font-mono text-[12.5px] font-semibold tabular-nums">{fmtPrice(value)}</div>
+                <div className="text-[9px] font-semibold uppercase tracking-wider text-white/45">{idx.name}</div>
+                <div className="font-mono text-[11.5px] font-semibold tabular-nums">{fmtPrice(value)}</div>
               </div>
               <div className="text-right">
-                <span className={`block font-mono text-[11px] font-medium tabular-nums ${chgColor(chgPct)}`}>
+                <span className={`block font-mono text-[10px] font-medium tabular-nums ${chgColor(chgPct)}`}>
                   {typeof chgPts === "number" && !isNaN(chgPts)
-                    ? (chgPts >= 0 ? `+${chgPts.toFixed(2)}` : chgPts.toFixed(2))
-                    : "+0.00"}
+                    ? (chgPts >= 0 ? `+${chgPts.toFixed(1)}` : chgPts.toFixed(1))
+                    : "+0.0"}
                 </span>
-                <span className={`block font-mono text-[9.5px] tabular-nums ${chgColor(chgPct)}`}>
+                <span className={`block font-mono text-[8.5px] tabular-nums ${chgColor(chgPct)}`}>
+                  ({fmtPct(typeof chgPct === "number" && !isNaN(chgPct) ? chgPct : 0)})
+                </span>
+              </div>
+            </div>
+          ))}
+
+          {/* 3rd and 4th indices only on wider 2xl screens */}
+          {indexData.slice(2, 4).map(({ idx, value, chgPts, chgPct }) => (
+            <div
+              key={idx.symbol}
+              className="hidden 2xl:flex items-center gap-1.5 rounded-lg border border-white/8 bg-white/3 px-2 py-1"
+            >
+              <div>
+                <div className="text-[9px] font-semibold uppercase tracking-wider text-white/45">{idx.name}</div>
+                <div className="font-mono text-[11.5px] font-semibold tabular-nums">{fmtPrice(value)}</div>
+              </div>
+              <div className="text-right">
+                <span className={`block font-mono text-[10px] font-medium tabular-nums ${chgColor(chgPct)}`}>
+                  {typeof chgPts === "number" && !isNaN(chgPts)
+                    ? (chgPts >= 0 ? `+${chgPts.toFixed(1)}` : chgPts.toFixed(1))
+                    : "+0.0"}
+                </span>
+                <span className={`block font-mono text-[8.5px] tabular-nums ${chgColor(chgPct)}`}>
                   ({fmtPct(typeof chgPct === "number" && !isNaN(chgPct) ? chgPct : 0)})
                 </span>
               </div>
@@ -161,10 +184,10 @@ export default function TopBar({ quotes, onSelect, balance, onOpenAiCore, onOpen
         {/* Search */}
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <button className="flex h-8 min-w-0 max-w-56 flex-1 items-center gap-2 rounded-lg border border-white/10 bg-white/4 px-3 text-[12.5px] text-white/45 transition hover:border-white/20 hover:text-white/70 sm:w-56 sm:flex-none">
-              <Search className="h-3.5 w-3.5" />
-              <span className="min-w-0 flex-1 truncate text-left">Search markets…</span>
-              <kbd className="hidden shrink-0 rounded border border-white/15 bg-white/8 px-1.5 py-0.5 font-mono text-[9px] text-white/50 sm:block">
+            <button className="flex h-8 min-w-0 w-28 sm:w-36 md:w-44 xl:w-52 shrink items-center gap-2 rounded-lg border border-white/10 bg-white/4 px-2.5 text-[12px] text-white/45 transition hover:border-white/20 hover:text-white/70">
+              <Search className="h-3.5 w-3.5 shrink-0" />
+              <span className="min-w-0 flex-1 truncate text-left">Search…</span>
+              <kbd className="hidden shrink-0 rounded border border-white/15 bg-white/8 px-1 py-0.5 font-mono text-[8.5px] text-white/50 xl:block">
                 ⌘K
               </kbd>
             </button>
@@ -208,12 +231,12 @@ export default function TopBar({ quotes, onSelect, balance, onOpenAiCore, onOpen
         </Popover>
 
         {/* Feature Action Pills */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 shrink-0">
           {/* AI Core Intelligence Launcher */}
           {onOpenAiCore && (
             <button
               onClick={onOpenAiCore}
-              className="flex items-center gap-1.5 rounded-lg border border-fuchsia-500/40 bg-gradient-to-r from-fuchsia-500/20 to-purple-600/20 px-2.5 py-1.5 text-[11px] font-bold text-fuchsia-200 transition hover:from-fuchsia-500/30 hover:to-purple-600/30 shadow-sm"
+              className="flex items-center gap-1.5 rounded-lg border border-fuchsia-500/40 bg-gradient-to-r from-fuchsia-500/20 to-purple-600/20 px-2 py-1.5 text-[11px] font-bold text-fuchsia-200 transition hover:from-fuchsia-500/30 hover:to-purple-600/30 shadow-sm shrink-0"
               title="Open ARIA AI Core — Chat, Ideas, NewsWire & Reports"
             >
               <BrainCircuit className="h-3.5 w-3.5 text-fuchsia-300" />
@@ -229,7 +252,7 @@ export default function TopBar({ quotes, onSelect, balance, onOpenAiCore, onOpen
           {onOpenVoice && (
             <button
               onClick={onOpenVoice}
-              className="flex items-center gap-1.5 rounded-lg border border-purple-500/35 bg-purple-500/10 px-2.5 py-1.5 text-[11px] font-bold text-purple-200 transition hover:bg-purple-500/20 shadow-sm"
+              className="flex items-center gap-1.5 rounded-lg border border-purple-500/35 bg-purple-500/10 px-2 py-1.5 text-[11px] font-bold text-purple-200 transition hover:bg-purple-500/20 shadow-sm shrink-0"
               title="TradeX Voice AI Assistant (Speech-to-Trade)"
             >
               <Mic className="h-3.5 w-3.5 text-purple-400 animate-pulse" />
@@ -240,22 +263,23 @@ export default function TopBar({ quotes, onSelect, balance, onOpenAiCore, onOpen
           {/* AI Engine Button */}
           <button
             onClick={() => setAiModalOpen(true)}
-            className="flex items-center gap-1.5 rounded-lg border border-purple-500/35 bg-purple-500/10 px-2.5 py-1.5 text-[11px] font-bold text-purple-300 transition hover:bg-purple-500/20 shadow-sm"
+            className="flex items-center gap-1.5 rounded-lg border border-purple-500/35 bg-purple-500/10 px-2 py-1.5 text-[11px] font-bold text-purple-300 transition hover:bg-purple-500/20 shadow-sm shrink-0"
             title="Configure AI Providers (Groq / Gemini / Autonomous)"
           >
             <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-            <span className="hidden sm:inline">AI Config</span>
+            <span className="hidden lg:inline">AI Config</span>
             <span className="rounded bg-emerald-500/25 px-1 py-0.5 text-[8.5px] font-bold text-emerald-300 font-mono">
               ACTIVE
             </span>
           </button>
 
-          {/* Mobile Tools Popover (Visible on mobile screens) */}
+          {/* Mobile & Laptop Tools Popover */}
           <Popover>
             <PopoverTrigger asChild>
               <button
-                className="flex sm:hidden h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/70 transition hover:bg-white/10"
+                className="flex 2xl:hidden h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/70 transition hover:bg-white/10 shrink-0"
                 aria-label="Terminal Tools"
+                title="More Tools"
               >
                 <SlidersHorizontal className="h-3.5 w-3.5" />
               </button>
@@ -295,57 +319,59 @@ export default function TopBar({ quotes, onSelect, balance, onOpenAiCore, onOpen
             </PopoverContent>
           </Popover>
 
-          {/* Broker DMA Button */}
+          {/* Broker DMA Button (2xl screens only to prevent overflow) */}
           <button
             onClick={() => setBrokerModalOpen(true)}
-            className="hidden sm:flex items-center gap-1.5 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1.5 text-[11px] font-bold text-cyan-300 transition hover:bg-cyan-500/20 shadow-sm"
+            className="hidden 2xl:flex items-center gap-1.5 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1.5 text-[11px] font-bold text-cyan-300 transition hover:bg-cyan-500/20 shadow-sm shrink-0"
           >
             <Zap className="h-3.5 w-3.5 text-cyan-400" />
             <span>Broker DMA</span>
           </button>
 
-          {/* Shariah Screener Button */}
+          {/* Shariah Screener Button (2xl screens only to prevent overflow) */}
           <button
             onClick={() => setShariahModalOpen(true)}
-            className="hidden md:flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-[11px] font-bold text-emerald-300 transition hover:bg-emerald-500/20 shadow-sm"
+            className="hidden 2xl:flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-[11px] font-bold text-emerald-300 transition hover:bg-emerald-500/20 shadow-sm shrink-0"
           >
             <Scale className="h-3.5 w-3.5 text-emerald-400" />
             <span>Halal Screener</span>
           </button>
         </div>
 
-        <div className="flex-1" />
+        <div className="flex-1 min-w-2" />
 
         {/* Paper trading balance (Desktop & Tablet) */}
-        <div className="hidden items-center gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/8 px-3 py-1.5 sm:flex">
-          <Wallet className="h-3.5 w-3.5 text-emerald-400" />
+        <div className="hidden items-center gap-1.5 rounded-lg border border-emerald-500/25 bg-emerald-500/8 px-2.5 py-1 sm:flex shrink-0">
+          <Wallet className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
           <div className="leading-none">
-            <div className="text-[9px] font-semibold uppercase tracking-wider text-emerald-300/70">Paper Funds</div>
-            <div className="mt-0.5 font-mono text-[12.5px] font-semibold tabular-nums text-emerald-300">
+            <div className="text-[8.5px] font-semibold uppercase tracking-wider text-emerald-300/70">Paper Funds</div>
+            <div className="mt-0.5 font-mono text-[11.5px] font-semibold tabular-nums text-emerald-300">
               {fmtINR(balance)}
             </div>
           </div>
         </div>
 
         {/* Paper trading balance (Mobile compact) */}
-        <div className="flex items-center gap-1.5 rounded-lg border border-emerald-500/25 bg-emerald-500/8 px-2 py-1 text-emerald-300 font-mono text-[11px] font-bold sm:hidden">
+        <div className="flex items-center gap-1 rounded-lg border border-emerald-500/25 bg-emerald-500/8 px-2 py-1 text-emerald-300 font-mono text-[10.5px] font-bold sm:hidden shrink-0">
           <Wallet className="h-3 w-3 text-emerald-400" />
           <span>₹{(balance / 100000).toFixed(1)}L</span>
         </div>
 
-        {/* Alerts */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <button
-              className="relative flex h-8.5 w-8.5 items-center justify-center rounded-lg border border-white/10 bg-white/4 transition hover:border-white/25"
-              aria-label="Alerts"
-            >
-              <Bell className="h-4 w-4 text-white/65" />
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white">
-                {alerts.filter((a) => a.triggered).length || alerts.length}
-              </span>
-            </button>
-          </PopoverTrigger>
+        {/* Alerts & Profile Container (Always anchored to the right) */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                className="relative flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/4 transition hover:border-white/25 shrink-0"
+                aria-label="Alerts"
+                title="Price & Volatility Alerts"
+              >
+                <Bell className="h-3.5 w-3.5 text-white/65" />
+                <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-rose-500 text-[8.5px] font-bold text-white">
+                  {alerts.filter((a) => a.triggered).length || alerts.length}
+                </span>
+              </button>
+            </PopoverTrigger>
           <PopoverContent align="end" className="w-84 border-slate-700/70 bg-[#0a0d15] p-3 shadow-[0_20px_50px_rgba(0,0,0,0.95)] z-[9999] ring-1 ring-white/10">
             <div className="flex items-center justify-between pb-2 border-b border-white/8">
               <span className="text-[12.5px] font-semibold text-white">Smart Price & Volatility Alerts</span>
@@ -482,6 +508,7 @@ export default function TopBar({ quotes, onSelect, balance, onOpenAiCore, onOpen
             </div>
           </PopoverContent>
         </Popover>
+        </div>
       </header>
 
       {/* Modals */}

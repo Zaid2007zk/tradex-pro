@@ -70,11 +70,11 @@ export default function CandleChart({ symbol, candles, timeframe, price }: Props
 
     const W = size.w;
     const H = size.h;
-    const padR = 64;
-    const padT = 14;
-    const volH = Math.min(64, H * 0.16);
-    const padB = volH + 24;
-    const chartW = W - padR - 8;
+    const padR = 56;
+    const padT = 8;
+    const volH = Math.min(36, H * 0.12);
+    const padB = volH + 16;
+    const chartW = W - padR - 6;
 
     const view = candles;
     const n = view.length;
@@ -91,7 +91,7 @@ export default function CandleChart({ symbol, candles, timeframe, price }: Props
       for (const v of maSeries.ma20) if (v) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
       for (const v of maSeries.ma50) if (v) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
     }
-    const pad = (hi - lo) * 0.08;
+    const pad = (hi - lo) * 0.05;
     lo -= pad;
     hi += pad;
     const y = (p: number) => padT + ((hi - p) / (hi - lo)) * (H - padT - padB);

@@ -65,9 +65,9 @@ export default function WorkspaceTabs({
           </button>
         );
       })}
-      <div className="ml-auto hidden shrink-0 items-center gap-2 pr-2 md:flex">
+      <div className="ml-auto hidden shrink-0 items-center gap-2 pr-2 2xl:flex">
         <BrainCircuit className="h-3.5 w-3.5 text-amber-400/70" />
-        <span className="text-[10.5px] text-white/40">
+        <span className="text-[10px] text-white/40">
           Aria is watching <span className="font-mono text-white/65">20 scripts</span> · Gemini-grade reasoning
         </span>
       </div>

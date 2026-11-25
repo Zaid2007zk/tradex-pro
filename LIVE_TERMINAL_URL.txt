@@ -1,11 +1,6 @@
-TradeX Pro — Live Institutional Trading Terminal URL
-=====================================================
-Public Live URL: https://9cc0404c3e564e.lhr.life
+TradeX PRO AI - Quantum Trading Terminal
+Official Live URL:
+https://fc0860264dd9c5.app.lhr.life
 
-Active Server Status:
-- Backend Engine: http://127.0.0.1:8000 (FastAPI Quantitative Engine)
-- Frontend Web App: http://127.0.0.1:3000 (Production Static Export Bundle)
-- Persistent Tunnel: https://9cc0404c3e564e.lhr.life (Auto-reconnecting TLS tunnel)
-- GitHub Repository: https://github.com/Zaid2007zk/stock-market-next-day-prediction.git
-- Baseline Preservation: 100% (app.py, Stock_market.ipynb, joblib models verified)
-- Test Suite: 91/91 Passed (100% Pass Rate)
+Local URL:
+http://localhost:3000

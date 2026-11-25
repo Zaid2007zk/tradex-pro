@@ -16,36 +16,32 @@ export default function SymbolHeader({ symbol, quote, candles }: { symbol: strin
   const sig = useMemo(() => (candles && candles.length ? computeSignals(candles) : null), [candles]);
 
   return (
-    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-3.5 py-2">
+    <div className="flex items-center justify-between gap-x-4 gap-y-1 px-3 py-1.5 overflow-x-auto tx-scroll flex-nowrap shrink-0">
       {/* identity + price */}
-      <div className="flex items-center gap-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[10px] font-bold text-amber-300">
+      <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[9.5px] font-bold text-amber-300">
           {def.symbol.slice(0, 4)}
         </div>
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-base font-bold tracking-tight">{symbol}</h1>
-            <span className="rounded border border-white/12 bg-white/6 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-white/55">
+          <div className="flex items-center gap-1.5">
+            <h1 className="text-[14px] font-bold tracking-tight">{symbol}</h1>
+            <span className="rounded border border-white/12 bg-white/6 px-1.5 py-0.5 text-[8.5px] font-bold tracking-wider text-white/55">
               {def.exchange || "NSE"}
             </span>
-            <span className="rounded border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-emerald-300">
+            <span className="rounded border border-emerald-500/25 bg-emerald-500/10 px-1.5 py-0.5 text-[8.5px] font-bold tracking-wider text-emerald-300">
               {def.exchange === "CRYPTO" ? "SPOT" : def.exchange === "MCX" ? "COMMODITY" : def.exchange === "FOREX" ? "CDS" : def.exchange === "GLOBAL" ? "US TECH" : def.exchange === "BONDS" ? "G-SEC" : "EQ"}
             </span>
-            <span className={`flex items-center gap-1 rounded border px-1.5 py-0.5 text-[9px] font-bold tracking-wider ${marketStatus.badgeClass}`}>
+            <span className={`hidden sm:flex items-center gap-1 rounded border px-1.5 py-0.5 text-[8.5px] font-bold tracking-wider ${marketStatus.badgeClass}`}>
               <span className={`h-1.5 w-1.5 rounded-full ${marketStatus.isOpen ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
               {marketStatus.label}
             </span>
             {isHalal ? (
-              <span className="rounded border border-emerald-500/35 bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-emerald-300">
+              <span className="hidden sm:inline-block rounded border border-emerald-500/35 bg-emerald-500/15 px-1.5 py-0.5 text-[8.5px] font-bold tracking-wider text-emerald-300">
                 ✓ HALAL
               </span>
-            ) : (
-              <span className="rounded border border-rose-500/35 bg-rose-500/15 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-rose-300">
-                NON-PERMISSIBLE
-              </span>
-            )}
+            ) : null}
             {sig && (
-              <span className="flex items-center gap-1 rounded border border-purple-500/35 bg-purple-500/15 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-purple-200">
+              <span className="hidden md:flex items-center gap-1 rounded border border-purple-500/35 bg-purple-500/15 px-1.5 py-0.5 text-[8.5px] font-bold tracking-wider text-purple-200">
                 <Sparkles className="h-2.5 w-2.5 text-purple-400" />
                 <span className="text-white/50">AI:</span>
                 <span className={sig.verdict.includes("BUY") ? "text-emerald-300 font-bold" : sig.verdict.includes("SELL") ? "text-rose-300 font-bold" : "text-amber-300 font-bold"}>
@@ -55,23 +51,23 @@ export default function SymbolHeader({ symbol, quote, candles }: { symbol: strin
               </span>
             )}
           </div>
-          <div className="text-[11px] text-white/45">
+          <div className="text-[10px] text-white/45">
             {def.name} · {def.sector}
           </div>
         </div>
       </div>
 
-      <div className="flex items-end gap-2.5">
+      <div className="flex items-end gap-2 shrink-0">
         <div
           key={quote.price}
-          className={`rounded-lg px-1 font-mono text-[24px] xl:text-[28px] font-bold leading-none tracking-tight tabular-nums ${
+          className={`rounded px-1 font-mono text-[20px] xl:text-[24px] font-bold leading-none tracking-tight tabular-nums ${
             quote.tickDir === 1 ? "tx-flash-up text-emerald-400" : quote.tickDir === -1 ? "tx-flash-down text-rose-400" : "text-white"
           }`}
         >
           {def.currency === "USD" ? "$" : "₹"}{fmtPrice(quote.price)}
         </div>
         <div
-          className={`mb-0.5 flex items-center gap-1 rounded-md px-2 py-0.5 font-mono text-[12px] font-semibold tabular-nums ${
+          className={`mb-0.5 flex items-center gap-0.5 rounded-md px-1.5 py-0.5 font-mono text-[11px] font-semibold tabular-nums ${
             up ? "bg-emerald-500/12 text-emerald-400" : "bg-rose-500/12 text-rose-400"
           }`}
         >
@@ -81,16 +77,16 @@ export default function SymbolHeader({ symbol, quote, candles }: { symbol: strin
       </div>
 
       {/* day range */}
-      <div className="w-full sm:w-auto sm:min-w-44 sm:flex-1">
-        <div className="mb-1 flex items-center justify-between font-mono text-[10px] text-white/40">
+      <div className="hidden lg:block min-w-36 max-w-56 flex-1 shrink-0">
+        <div className="mb-0.5 flex items-center justify-between font-mono text-[9px] text-white/40">
           <span>L {def.currency === "USD" ? "$" : "₹"}{fmtPrice(quote.dayLow)}</span>
           <span className="uppercase tracking-wider">Day Range</span>
           <span>H {def.currency === "USD" ? "$" : "₹"}{fmtPrice(quote.dayHigh)}</span>
         </div>
-        <div className="relative h-1.5 rounded-full bg-gradient-to-r from-rose-500/50 via-white/15 to-emerald-500/50">
+        <div className="relative h-1 rounded-full bg-gradient-to-r from-rose-500/50 via-white/15 to-emerald-500/50">
           <div
-            className="absolute top-1/2 h-3 w-3 -translate-y-1/2 rounded-full border-2 border-[#0a0c10] bg-amber-400 shadow-[0_0_10px_rgba(240,185,11,0.7)] transition-all duration-700"
-            style={{ left: `calc(${posInRange}% - 6px)` }}
+            className="absolute top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full border-2 border-[#0a0c10] bg-amber-400 shadow-[0_0_8px_rgba(240,185,11,0.7)] transition-all duration-700"
+            style={{ left: `calc(${posInRange}% - 5px)` }}
           />
         </div>
       </div>
