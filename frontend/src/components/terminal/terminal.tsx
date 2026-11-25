@@ -60,6 +60,7 @@ export default function Terminal() {
   // Responsive Layout States
   const [mobileTab, setMobileTab] = useState<MobileTab>("chart");
   const [orderSide, setOrderSide] = useState<"BUY" | "SELL">("BUY");
+  const [prefilledBracket, setPrefilledBracket] = useState<{ sl: number; tgt: number; side?: "BUY" | "SELL" } | null>(null);
   const [leftRailCollapsed, setLeftRailCollapsed] = useState(false);
   const [rightRailCollapsed, setRightRailCollapsed] = useState(false);
   const [chartExpanded, setChartExpanded] = useState(false);
@@ -67,6 +68,18 @@ export default function Terminal() {
   const [voiceModalOpen, setVoiceModalOpen] = useState(false);
 
   const quote = quotes[symbol];
+
+  const handleApplyAiLevels = useCallback(
+    (appliedSide: "BUY" | "SELL", sl: number, tgt: number) => {
+      setOrderSide(appliedSide);
+      setPrefilledBracket({ sl, tgt, side: appliedSide });
+      toast({
+        title: `⚡ AI Setup Applied to Order Ticket`,
+        description: `${symbol} ${appliedSide} · Target ₹${tgt} | Stop Loss ₹${sl}`,
+      });
+    },
+    [symbol, toast]
+  );
 
   // FPS meter
   useEffect(() => {
@@ -459,9 +472,10 @@ export default function Terminal() {
                   defaultSide={orderSide}
                   candles={candles}
                   onCollapse={() => setRightRailCollapsed(true)}
+                  prefilledBracket={prefilledBracket}
                 />
                 <MarketDepth price={quote.price} />
-                <AiPanel symbol={symbol} candles={candles} />
+                <AiPanel symbol={symbol} candles={candles} onApplyLevels={handleApplyAiLevels} />
               </aside>
             )}
           </div>
@@ -586,6 +600,7 @@ export default function Terminal() {
                     onExecute={onExecute}
                     defaultSide={orderSide}
                     candles={candles}
+                    prefilledBracket={prefilledBracket}
                   />
                   <MarketDepth price={quote.price} />
                 </div>
@@ -602,7 +617,14 @@ export default function Terminal() {
               {mobileTab === "depth" && (
                 <div className="flex flex-col gap-2 pb-6">
                   <MarketDepth price={quote.price} />
-                  <AiPanel symbol={symbol} candles={candles} />
+                  <AiPanel
+                    symbol={symbol}
+                    candles={candles}
+                    onApplyLevels={(side, sl, tgt) => {
+                      handleApplyAiLevels(side, sl, tgt);
+                      setMobileTab("trade");
+                    }}
+                  />
                 </div>
               )}
             </>

@@ -34,6 +34,7 @@ type Props = {
   defaultSide?: "BUY" | "SELL";
   candles?: Candle[];
   onCollapse?: () => void;
+  prefilledBracket?: { sl: number; tgt: number; side?: "BUY" | "SELL" } | null;
 };
 
 const PRODUCTS: { key: ProductType; hint: string }[] = [
@@ -42,7 +43,7 @@ const PRODUCTS: { key: ProductType; hint: string }[] = [
   { key: "MTF", hint: "Margin · 4x" },
 ];
 
-export default function OrderTicket({ symbol, quote, balance, onExecute, defaultSide = "BUY", candles, onCollapse }: Props) {
+export default function OrderTicket({ symbol, quote, balance, onExecute, defaultSide = "BUY", candles, onCollapse, prefilledBracket }: Props) {
   const def = STOCKS.find((s) => s.symbol === symbol) || STOCKS[0];
   const currSym = def.currency === "USD" ? "$" : "₹";
   const [side, setSide] = useState<"BUY" | "SELL">(defaultSide);
@@ -51,6 +52,16 @@ export default function OrderTicket({ symbol, quote, balance, onExecute, default
   const [isBracket, setIsBracket] = useState(false);
   const [stopLoss, setStopLoss] = useState<number | undefined>();
   const [takeProfit, setTakeProfit] = useState<number | undefined>();
+
+  // Sync with AI Panel 1-click level application
+  useEffect(() => {
+    if (prefilledBracket && prefilledBracket.sl && prefilledBracket.tgt) {
+      if (prefilledBracket.side) setSide(prefilledBracket.side);
+      setStopLoss(prefilledBracket.sl);
+      setTakeProfit(prefilledBracket.tgt);
+      setIsBracket(true);
+    }
+  }, [prefilledBracket]);
 
   const aiSl = useMemo(
     () => (quote.price ? r2(quote.price * (side === "SELL" ? 1.015 : 0.985)) : 0),
