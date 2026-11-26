@@ -22,24 +22,21 @@ const TEXT = "rgba(230,233,239,0.55)";
 
 function formatAxisTime(ts: number, tf: Timeframe, withSeconds = false): string {
   const d = new Date(ts);
-  if (tf === "1D") {
+  if (tf === "1s") {
+    return d.toLocaleTimeString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+  }
+  if (tf === "1m" || tf === "5m" || tf === "15m" || tf === "1H") {
     return d.toLocaleTimeString("en-IN", {
       timeZone: "Asia/Kolkata",
       hour: "2-digit",
       minute: "2-digit",
       ...(withSeconds ? { second: "2-digit" } : {}),
-      hour12: false,
-    });
-  }
-  if (tf === "1W") {
-    return d.toLocaleDateString("en-IN", {
-      timeZone: "Asia/Kolkata",
-      day: "2-digit",
-      month: "short",
-    }) + " " + d.toLocaleTimeString("en-IN", {
-      timeZone: "Asia/Kolkata",
-      hour: "2-digit",
-      minute: "2-digit",
       hour12: false,
     });
   }

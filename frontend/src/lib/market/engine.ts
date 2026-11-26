@@ -113,21 +113,35 @@ function hashCode(str: string): number {
 // Candles
 // ---------------------------------------------------------------------------
 
-export type Timeframe = "1D" | "1W" | "1M" | "3M";
+export type Timeframe = "1s" | "1m" | "5m" | "15m" | "1H" | "1D" | "1W" | "1M";
 
-export const TIMEFRAMES: { key: Timeframe; label: string; candles: number; stepMin: number }[] = [
-  { key: "1D", label: "1D", candles: 78, stepMin: 5 },
-  { key: "1W", label: "1W", candles: 84, stepMin: 60 },
-  { key: "1M", label: "1M", candles: 88, stepMin: 300 },
-  { key: "3M", label: "3M", candles: 66, stepMin: 1440 },
+export const TIMEFRAMES: { key: Timeframe; label: string; candles: number; stepSec: number }[] = [
+  { key: "1s", label: "1s", candles: 60, stepSec: 1 },
+  { key: "1m", label: "1m", candles: 75, stepSec: 60 },
+  { key: "5m", label: "5m", candles: 78, stepSec: 300 },
+  { key: "15m", label: "15m", candles: 78, stepSec: 900 },
+  { key: "1H", label: "1H", candles: 72, stepSec: 3600 },
+  { key: "1D", label: "1D", candles: 78, stepSec: 86400 },
+  { key: "1W", label: "1W", candles: 64, stepSec: 604800 },
+  { key: "1M", label: "1M", candles: 48, stepSec: 2592000 },
 ];
 
 /** Generate a deterministic candle series for a symbol/timeframe. */
 export function generateCandles(symbol: string, tf: Timeframe, targetPrice?: number): Candle[] {
   const def = STOCKS.find((s) => s.symbol === symbol) ?? STOCKS[0];
-  const conf = TIMEFRAMES.find((t) => t.key === tf)!;
+  const conf = TIMEFRAMES.find((t) => t.key === tf) ?? TIMEFRAMES[5];
   const rng = mulberry32(hashCode(symbol + tf));
-  const scale = tf === "1D" ? 0.05 : tf === "1W" ? 0.1 : tf === "1M" ? 0.22 : 0.4;
+  const scaleMap: Record<Timeframe, number> = {
+    "1s": 0.008,
+    "1m": 0.015,
+    "5m": 0.03,
+    "15m": 0.05,
+    "1H": 0.08,
+    "1D": 0.14,
+    "1W": 0.24,
+    "1M": 0.38,
+  };
+  const scale = scaleMap[tf] ?? 0.08;
   const vol = def.volatility * scale;
 
   const anchor = typeof targetPrice === "number" && targetPrice > 0 ? targetPrice : def.base;
@@ -156,7 +170,7 @@ export function generateCandles(symbol: string, tf: Timeframe, targetPrice?: num
       (200000 + rng() * 900000) * (1 + Math.abs(close - open) / (close * vol * 0.3)) * (def.capCr / 800000)
     );
     candles.push({
-      time: now - i * conf.stepMin * 60000,
+      time: now - i * conf.stepSec * 1000,
       open: r2(open),
       high: r2(high),
       low: r2(low),

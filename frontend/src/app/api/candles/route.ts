@@ -75,10 +75,14 @@ async function fetchBinanceKlines(symbol: string, tf: Timeframe): Promise<Candle
   if (!pair) return null;
 
   const intervalMap: Record<Timeframe, { interval: string; limit: number }> = {
-    "1D": { interval: "15m", limit: 78 },
-    "1W": { interval: "1h", limit: 84 },
-    "1M": { interval: "4h", limit: 88 },
-    "3M": { interval: "1d", limit: 66 },
+    "1s": { interval: "1s", limit: 60 },
+    "1m": { interval: "1m", limit: 75 },
+    "5m": { interval: "5m", limit: 78 },
+    "15m": { interval: "15m", limit: 78 },
+    "1H": { interval: "1h", limit: 72 },
+    "1D": { interval: "1d", limit: 78 },
+    "1W": { interval: "1w", limit: 64 },
+    "1M": { interval: "1M", limit: 48 },
   };
   const cfg = intervalMap[tf];
   const url = `https://data-api.binance.vision/api/v3/klines?symbol=${pair}&interval=${cfg.interval}&limit=${cfg.limit}`;
@@ -108,10 +112,14 @@ async function fetchBinanceKlines(symbol: string, tf: Timeframe): Promise<Candle
 async function fetchYahooCandles(symbol: string, tf: Timeframe): Promise<Candle[] | null> {
   const candidates = YAHOO_MAP[symbol] || [`${symbol}.NS`];
   const cfgMap: Record<Timeframe, { range: string; interval: string }> = {
-    "1D": { range: "5d", interval: "15m" },
-    "1W": { range: "1mo", interval: "1h" },
-    "1M": { range: "3mo", interval: "1d" },
-    "3M": { range: "6mo", interval: "1d" },
+    "1s": { range: "1d", interval: "1m" },
+    "1m": { range: "1d", interval: "1m" },
+    "5m": { range: "5d", interval: "5m" },
+    "15m": { range: "5d", interval: "15m" },
+    "1H": { range: "1mo", interval: "1h" },
+    "1D": { range: "3mo", interval: "1d" },
+    "1W": { range: "1y", interval: "1wk" },
+    "1M": { range: "2y", interval: "1mo" },
   };
   const cfg = cfgMap[tf];
 
@@ -168,12 +176,14 @@ async function fetchYahooCandles(symbol: string, tf: Timeframe): Promise<Candle[
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const symbol = (searchParams.get("symbol") || "RELIANCE").toUpperCase();
-  const tfRaw = (searchParams.get("timeframe") || "1D").toUpperCase();
-  const tf: Timeframe = tfRaw === "1W" || tfRaw === "1M" || tfRaw === "3M" ? tfRaw : "1D";
+  const tfRaw = searchParams.get("timeframe") || "1D";
+  const validTfs: Timeframe[] = ["1s", "1m", "5m", "15m", "1H", "1D", "1W", "1M"];
+  const tf: Timeframe = validTfs.find((t) => t.toLowerCase() === tfRaw.toLowerCase()) ?? "1D";
 
+  const cacheTtl = tf === "1s" ? 3000 : tf === "1m" ? 8000 : 30000;
   const cacheKey = `${symbol}:${tf}`;
   const cached = candleCache.get(cacheKey);
-  if (cached && Date.now() - cached.ts < 30000) {
+  if (cached && Date.now() - cached.ts < cacheTtl) {
     return NextResponse.json({
       ok: true,
       symbol,

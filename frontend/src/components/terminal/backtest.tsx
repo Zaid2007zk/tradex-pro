@@ -100,7 +100,7 @@ function runBacktest(candles: Candle[], strategy: Strategy): Result {
 export default function Backtest({ symbol, quotes }: { symbol: string; quotes: Record<string, Quote> }) {
   const [strategy, setStrategy] = useState<Strategy>("ma_cross");
   const [result, setResult] = useState<Result | null>(null);
-  const candles = useMemo(() => generateCandles(symbol, "3M"), [symbol]);
+  const candles = useMemo(() => generateCandles(symbol, "1M"), [symbol]);
   const quote = quotes[symbol];
 
   const run = () => setResult(runBacktest(candles, strategy));

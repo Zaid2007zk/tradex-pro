@@ -49,7 +49,7 @@ export default function Terminal() {
   const { toast } = useToast();
   const quotes = useMarket();
   const [symbol, setSymbol] = useState("RELIANCE");
-  const [timeframe, setTimeframe] = useState<Timeframe>("1D");
+  const [timeframe, setTimeframe] = useState<Timeframe>("5m");
   const [view, setView] = useState<"chart" | "heatmap">("chart");
   const [orders, setOrders] = useState<Order[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
@@ -126,7 +126,41 @@ export default function Terminal() {
     [symbol, timeframe, roundedBasePrice]
   );
   const baseCandles = realCandlesMap[`${symbol}:${timeframe}`] ?? simCandles;
-  const candles = useMemo(() => liveCandle(baseCandles, quote.price), [baseCandles, quote.price]);
+
+  // Live 1-second rolling candle stream when user selects "1s"
+  const [secStream, setSecStream] = useState<Candle[]>([]);
+  useEffect(() => {
+    if (timeframe !== "1s") return;
+    setSecStream(baseCandles.slice(-60));
+  }, [timeframe, symbol, baseCandles]);
+
+  useEffect(() => {
+    if (timeframe !== "1s" || !quote?.price) return;
+    const id = setInterval(() => {
+      setSecStream((prev) => {
+        const src = prev.length ? prev : baseCandles.slice(-60);
+        const last = src[src.length - 1];
+        const px = quote.price;
+        const open = last ? last.close : px;
+        const nextCandle: Candle = {
+          time: Date.now(),
+          open,
+          high: Math.max(open, px),
+          low: Math.min(open, px),
+          close: px,
+          volume: Math.max(50, Math.round((last?.volume || 1000) * (0.6 + Math.random() * 0.8))),
+        };
+        return [...src.slice(-59), nextCandle];
+      });
+    }, 1000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeframe, symbol, quote?.price]);
+
+  const candles = useMemo(
+    () => (timeframe === "1s" && secStream.length ? secStream : liveCandle(baseCandles, quote.price)),
+    [timeframe, secStream, baseCandles, quote.price]
+  );
 
   const marginUsed = positions.reduce(
     (a, p) => a + (p.price * p.qty) / (p.product === "MIS" ? 5 : p.product === "MTF" ? 4 : 1),
@@ -386,12 +420,12 @@ export default function Terminal() {
                         <Flame className="h-3.5 w-3.5" /> Heatmap
                       </button>
                       {view === "chart" && (
-                        <div className="ml-3 flex items-center gap-0.5 rounded-md border border-white/10 bg-white/4 p-0.5">
+                        <div className="ml-2 flex items-center gap-0.5 rounded-md border border-white/10 bg-white/4 p-0.5 overflow-x-auto tx-scroll">
                           {TIMEFRAMES.map((t) => (
                             <button
                               key={t.key}
                               onClick={() => setTimeframe(t.key)}
-                              className={`rounded px-2.5 py-1 font-mono text-[11px] font-semibold transition ${
+                              className={`rounded px-2 py-0.5 font-mono text-[10.5px] font-semibold transition shrink-0 ${
                                 timeframe === t.key
                                   ? "bg-white/14 text-white"
                                   : "text-white/45 hover:text-white/80"
