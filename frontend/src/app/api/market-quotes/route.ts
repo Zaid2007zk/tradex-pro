@@ -84,10 +84,12 @@ const INDEX_MAP: Record<string, { yahoo: string[]; fallbackPrice: number; fallba
 // In-memory cache for ultra-low latency & zero rate-limiting
 let cache: {
   timestamp: number;
+  cryptoSource: "binance_vision" | "yahoo_fallback";
   data: Record<string, LiveQuote>;
   indices: Record<string, { price: number; chgPct: number; chgPts: number }>;
 } = {
   timestamp: 0,
+  cryptoSource: "binance_vision",
   data: {},
   indices: {},
 };
@@ -193,6 +195,39 @@ async function fetchIndexQuote(
   };
 }
 
+const BINANCE_PAIRS: Record<string, string> = {
+  BTCUSDT: "BTC",
+  ETHUSDT: "ETH",
+  SOLUSDT: "SOL",
+  BNBUSDT: "BNB",
+};
+
+type BinanceTicker = {
+  symbol: string;
+  lastPrice: string;
+  prevClosePrice: string;
+  highPrice: string;
+  lowPrice: string;
+  priceChangePercent: string;
+  volume: string;
+};
+
+async function fetchBinanceCryptoRaw(): Promise<BinanceTicker[] | null> {
+  const symbolsParam = encodeURIComponent(JSON.stringify(Object.keys(BINANCE_PAIRS)));
+  const url = `https://data-api.binance.vision/api/v3/ticker/24hr?symbols=${symbolsParam}`;
+  try {
+    const res = await fetch(url, {
+      headers: { Accept: "application/json" },
+      next: { revalidate: 10 },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return Array.isArray(data) ? (data as BinanceTicker[]) : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET() {
   const now = Date.now();
   // Return cached data if under 15 seconds old
@@ -200,6 +235,7 @@ export async function GET() {
     return NextResponse.json({
       ok: true,
       source: "calibrated_cache",
+      cryptoSource: cache.cryptoSource,
       timestamp: cache.timestamp,
       quotes: cache.data,
       indices: cache.indices,
@@ -209,8 +245,9 @@ export async function GET() {
   const quotesMap: Record<string, LiveQuote> = {};
   const indicesMap: Record<string, { price: number; chgPct: number; chgPts: number }> = {};
 
-  // Fetch stocks & indices in parallel
-  const stockPromises = STOCKS.map((stock) => {
+  // Fetch non-crypto stocks, indices, and Binance crypto tickers in parallel
+  const nonCryptoStocks = STOCKS.filter((s) => s.exchange !== "CRYPTO");
+  const stockPromises = nonCryptoStocks.map((stock) => {
     const candidates = SYMBOL_MAP[stock.symbol] || [`${stock.symbol}.NS`];
     return fetchTickerQuote(stock.symbol, candidates, stock.base).then((q) => {
       quotesMap[stock.symbol] = q;
@@ -223,14 +260,66 @@ export async function GET() {
     });
   });
 
+  const binancePromise = fetchBinanceCryptoRaw();
+
+  let binanceTickers: BinanceTicker[] | null = null;
   try {
-    await Promise.all([...stockPromises, ...indexPromises]);
+    const [, binanceRes] = await Promise.all([
+      Promise.all([...stockPromises, ...indexPromises]),
+      binancePromise,
+    ]);
+    binanceTickers = binanceRes;
   } catch {
     // If entire batch errors, ensure we don't throw; fallbacks are populated
   }
 
+  // Convert live Binance USDT quotes to INR using live USDINR rate
+  const usdInr = quotesMap["USDINR"]?.price || 84.5;
+  let cryptoSource: "binance_vision" | "yahoo_fallback" = "yahoo_fallback";
+
+  if (binanceTickers && binanceTickers.length > 0) {
+    cryptoSource = "binance_vision";
+    for (const t of binanceTickers) {
+      const sym = BINANCE_PAIRS[t.symbol];
+      if (!sym) continue;
+      const last = parseFloat(t.lastPrice);
+      const prev = parseFloat(t.prevClosePrice);
+      const high = parseFloat(t.highPrice);
+      const low = parseFloat(t.lowPrice);
+      const pct = parseFloat(t.priceChangePercent);
+      const vol = parseFloat(t.volume);
+      if (!Number.isFinite(last) || last <= 0) continue;
+
+      quotesMap[sym] = {
+        symbol: sym,
+        price: Math.round(last * usdInr * 100) / 100,
+        prevClose: Math.round((Number.isFinite(prev) && prev > 0 ? prev : last) * usdInr * 100) / 100,
+        dayHigh: Math.round((Number.isFinite(high) && high > 0 ? high : last * 1.015) * usdInr * 100) / 100,
+        dayLow: Math.round((Number.isFinite(low) && low > 0 ? low : last * 0.985) * usdInr * 100) / 100,
+        chgPct: Number.isFinite(pct) ? Math.round(pct * 100) / 100 : 0,
+        volume: Number.isFinite(vol) ? Math.round(vol) : 100000,
+        updatedAt: now,
+        currency: "INR",
+      };
+    }
+  }
+
+  // Graceful fallback for any missing crypto symbol
+  const missingCrypto = STOCKS.filter((s) => s.exchange === "CRYPTO" && !quotesMap[s.symbol]);
+  if (missingCrypto.length > 0) {
+    await Promise.all(
+      missingCrypto.map((stock) => {
+        const candidates = SYMBOL_MAP[stock.symbol] || [`${stock.symbol}-INR`, `${stock.symbol}-USD`];
+        return fetchTickerQuote(stock.symbol, candidates, stock.base).then((q) => {
+          quotesMap[stock.symbol] = q;
+        });
+      })
+    );
+  }
+
   cache = {
     timestamp: now,
+    cryptoSource,
     data: quotesMap,
     indices: indicesMap,
   };
@@ -238,6 +327,7 @@ export async function GET() {
   return NextResponse.json({
     ok: true,
     source: "live_exchange",
+    cryptoSource,
     timestamp: now,
     quotes: quotesMap,
     indices: indicesMap,
