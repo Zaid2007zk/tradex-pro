@@ -334,6 +334,65 @@ function generateAutonomousResponse(
 
   if (task === "chat") {
     const qLower = question.toLowerCase();
+    const currSym = targetStock.currency === "USD" ? "$" : "₹";
+
+    // 0. Intent: Future Forecast & Profit/Loss Probability (e.g. "1 hafte baad buy karu to profit hoga ya loss?")
+    if (
+      /profit|loss|fayda|nuksan|nuksaan|hafte|hafta|week|month|mahin|mahina|agle|baad|\bbad\b|kal|tomorrow|future|forecast|predict|मुनाफा|नुकसान|हफ्ते|महीने|फायदा/i.test(
+        qLower
+      )
+    ) {
+      const isMonth = /month|mahin|mahina|30|महीने/i.test(qLower);
+      const isDay = /\bkal\b|tomorrow|1 day|next day|कल/i.test(qLower);
+      const days = isMonth ? 30 : isDay ? 1 : 7;
+      const horizonEn = isMonth ? "1 Month (30 Days)" : isDay ? "Next Session (1 Day)" : "1 Week (7 Days)";
+      const horizonHi = isMonth ? "1 Mahine (30 Din)" : isDay ? "Agle 1 Din" : "1 Hafte (7 Din)";
+      const horizonPureHi = isMonth ? "1 महीने (30 दिन)" : isDay ? "अगले 1 दिन" : "1 हफ्ते (7 दिन)";
+
+      const tfForHorizon = isMonth ? "1M" : isDay ? "1D" : "1W";
+      const hCandles = liveCandle(generateCandles(targetStock.symbol, tfForHorizon), px);
+      const hSig = computeSignals(hCandles);
+
+      const bullProb = Math.min(82, Math.max(22, Math.round(50 + hSig.score * 0.35)));
+      const bearProb = 100 - bullProb;
+      const movePct = Math.max(1.5, Math.min(14, targetStock.volatility * Math.sqrt(days) * 0.9));
+      const upsideTarget = (px * (1 + movePct / 100)).toFixed(2);
+      const idealDip = (px * (1 - (movePct * 0.35) / 100)).toFixed(2);
+      const downsideRisk = (px * (1 - (movePct * 0.65) / 100)).toFixed(2);
+      const hOverbought = hSig.rsi > 68;
+      const hOversold = hSig.rsi < 35;
+
+      if (isPureHindi) {
+        return (
+          `### 🔮 ${horizonPureHi} का पूर्वानुमान (Probability Forecast): ${targetStock.symbol}\n\n` +
+          `• **सीधा जवाब (लाभ या नुकसान?):** शेयर बाजार में 100% गारंटी नहीं होती, लेकिन मौजूदा डेटा के अनुसार **${bullProb}% तेजी (Profit) और ${bearProb}% गिरावट (Loss)** की संभावना है।\n` +
+          `• **संभावित प्राइस रेंज:** अगले ${horizonPureHi} में ${targetStock.symbol} **${currSym}${downsideRisk} से ${currSym}${upsideTarget}** के बीच ट्रेड कर सकता है (मौजूदा CMP: ${currSym}${px.toFixed(2)})।\n` +
+          `• **तकनीकी स्थिति:** RSI **${hSig.rsi.toFixed(1)}** (${hOverbought ? "ओवरबॉट — थोड़ी गिरावट पर खरीदें" : hOversold ? "ओवरसोल्ड — बाउंस की संभावना" : "संतुलित"}) · MACD **${hSig.macdBull ? "बुलिश" : "मंदा"}**।\n` +
+          `• **सही रणनीति:** ${hOverbought ? `1 हफ्ते में सीधे ऊपर खरीदने के बजाय **${currSym}${idealDip}** के सपोर्ट डिप पर एंट्री लें` : `**${currSym}${idealDip} – ${currSym}${px.toFixed(2)}** के बीच हिस्से में खरीदें`} और **${currSym}${downsideRisk}** पर सख्त स्टॉप-लॉस रखें।\n\n` +
+          `⚠️ अस्वीकरण: यह तकनीकी संभावना (Probability Model) है, 100% गारंटी या SEBI सलाह नहीं।`
+        );
+      }
+
+      if (isHindi) {
+        return (
+          `### 🔮 ${horizonHi} Forecast (Profit vs Loss Probability): ${targetStock.symbol}\n\n` +
+          `• **Direct Jawab (Profit hoga ya Loss?):** Market mein 100% guarantee koi nahi de sakta, lekin live technicals ke hisaab se **${bullProb}% Profit (Bullish) aur ${bearProb}% Loss (Bearish)** ki probability hai.\n` +
+          `• **Expected ${horizonHi} Range:** **${currSym}${downsideRisk} – ${currSym}${upsideTarget}** (Current CMP: **${currSym}${px.toFixed(2)}**).\n` +
+          `• **Technical Telemetry:** RSI **${hSig.rsi.toFixed(1)}** (${hOverbought ? "Overbought — jaldbazi na karein" : hOversold ? "Oversold — bounce possible" : "Healthy Momentum"}) · MACD **${hSig.macdBull ? "Bullish" : "Weak/Consolidation"}** · 50-SMA ke **${hSig.aboveMa50 ? "upar" : "niche"}**.\n` +
+          `• **Smart Buying Plan:** ${hOverbought ? `Abhi RSI high hai — ${horizonHi} mein jab **${currSym}${idealDip}** support zone par dip mile tab buy karna zyada safe rahega.` : `**${currSym}${idealDip} se ${currSym}${px.toFixed(2)}** ke beech accumulate karein, Target **${currSym}${upsideTarget}** (+${movePct.toFixed(1)}%) aur strict Stop-Loss **${currSym}${downsideRisk}** rakhein.`}\n\n` +
+          `⚠️ *Note: Ye data-backed probability forecast hai (paper-trading simulation ke liye), 100% fixed guarantee nahi.*`
+        );
+      }
+
+      return (
+        `### 🔮 ${horizonEn} Quantitative Forecast: ${targetStock.symbol} (${targetStock.name})\n\n` +
+        `• **Probability Split:** Market outcomes are never 100% guaranteed, but current multi-indicator telemetry indicates **${bullProb}% Bullish (Upside) vs ${bearProb}% Bearish (Downside)** probability.\n` +
+        `• **Expected ${horizonEn} Range:** **${currSym}${downsideRisk} – ${currSym}${upsideTarget}** (Current CMP: **${currSym}${px.toFixed(2)}**).\n` +
+        `• **Technical Drivers:** RSI(14) at **${hSig.rsi.toFixed(1)}** (${hOverbought ? "Overbought — pullback risk" : hOversold ? "Oversold — rebound setup" : "Balanced"}) · MACD **${hSig.macdBull ? "Bullish" : "Bearish/Flat"}** · Price is **${hSig.aboveMa50 ? "above" : "below"}** 50-SMA.\n` +
+        `• **Execution Plan:** ${hOverbought ? `Avoid chasing at highs; wait for a pullback entry near **${currSym}${idealDip}**` : `Accumulate in tranches between **${currSym}${idealDip}** and **${currSym}${px.toFixed(2)}**`} with Target **${currSym}${upsideTarget}** (+${movePct.toFixed(1)}%) and strict Stop-Loss **${currSym}${downsideRisk}**.\n\n` +
+        `⚠️ *Compliance Note: Probabilistic technical model for educational paper-trading only. Not guaranteed returns or SEBI investment advice.*`
+      );
+    }
 
     // 1. Intent: Full market brief in 5 bullets
     if (/market brief|brief in 5|overall market|nifty kaisa|aaj ka market|बाजार/i.test(qLower)) {

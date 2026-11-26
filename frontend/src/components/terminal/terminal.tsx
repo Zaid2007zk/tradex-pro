@@ -14,7 +14,7 @@ import {
   Maximize2,
   Minimize2,
 } from "lucide-react";
-import { generateCandles, liveCandle, fmtINR, fmtPrice, type Timeframe } from "@/lib/market/engine";
+import { generateCandles, liveCandle, fmtINR, fmtPrice, type Candle, type Timeframe } from "@/lib/market/engine";
 import { useMarket } from "@/hooks/use-market";
 import { TIMEFRAMES, STOCKS } from "@/lib/market/engine";
 import TopBar from "./top-bar";
@@ -101,11 +101,31 @@ export default function Terminal() {
     };
   }, []);
 
+  const [realCandlesMap, setRealCandlesMap] = useState<Record<string, Candle[]>>({});
+
+  useEffect(() => {
+    let active = true;
+    const key = `${symbol}:${timeframe}`;
+    fetch(`/api/candles?symbol=${encodeURIComponent(symbol)}&timeframe=${timeframe}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (active && data?.ok && Array.isArray(data.candles) && data.candles.length > 0) {
+          setRealCandlesMap((prev) => ({ ...prev, [key]: data.candles }));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [symbol, timeframe]);
+
   const basePrice = quote?.prevClose || quote?.price;
-  const baseCandles = useMemo(
+  const roundedBasePrice = Math.round(basePrice || 0);
+  const simCandles = useMemo(
     () => generateCandles(symbol, timeframe, basePrice),
-    [symbol, timeframe, Math.round(basePrice || 0)]
+    [symbol, timeframe, roundedBasePrice]
   );
+  const baseCandles = realCandlesMap[`${symbol}:${timeframe}`] ?? simCandles;
   const candles = useMemo(() => liveCandle(baseCandles, quote.price), [baseCandles, quote.price]);
 
   const marginUsed = positions.reduce(

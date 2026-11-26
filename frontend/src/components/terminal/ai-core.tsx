@@ -43,6 +43,7 @@ type NewsItem = {
 };
 
 const CHAT_ICEBREAKERS = [
+  "1 hafte baad buy karu to profit hoga ya loss?",
   "Full market brief in 5 bullets",
   "Is HDFCBANK a buy right now?",
   "What's the riskiest stock today?",
